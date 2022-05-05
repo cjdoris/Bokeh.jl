@@ -10,6 +10,7 @@ serialize(s::Serializer, x::Real) = convert(Float64, x)
 serialize(s::Serializer, x::AbstractString) = convert(String, x)
 serialize(s::Serializer, x::Symbol) = String(x)
 serialize(s::Serializer, x::AbstractVector) = [serialize(s,x) for x in x]
+serialize(s::Serializer, x::AbstractMatrix) = [serialize(s,x) for x in eachcol(x)]
 serialize(s::Serializer, x::AbstractDict) = Dict(serialize(s,k)=>serialize(s,v) for (k,v) in x)
 
 function serialize(s::Serializer, x::Field)

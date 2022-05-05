@@ -175,10 +175,12 @@ for t in [Scatter, VBar]
             line_alpha=alpha,
             fill_alpha=alpha,
             hatch_alpha=alpha,
+            level=Undefined(),
+            view=Undefined(),
             kw...,
         )
         glyph = $t(; line_color, fill_color, hatch_color, line_alpha, fill_alpha, hatch_alpha, kw...)
-        add_glyph!(plot, source, glyph)
+        add_glyph!(plot, source, glyph; level, view)
         return glyph
     end
     @eval export $f
@@ -191,10 +193,22 @@ for t in [Line]
             line_color=color,
             alpha=Undefined(),
             line_alpha=alpha,
+            level=Undefined(),
+            view=Undefined(),
             kw...,
         )
         glyph = $t(; line_color, line_alpha, kw...)
-        add_glyph!(plot, source, glyph)
+        add_glyph!(plot, source, glyph; level, view)
+        return glyph
+    end
+    @eval export $f
+end
+
+for t in [Image]
+    f = Symbol(lowercase(t.name), "!")
+    @eval function $f(plot::Model, source::Model; level=Undefined(), view=Undefined(), kw...)
+        glyph = $t(; kw...)
+        add_glyph!(plot, source, glyph; level, view)
         return glyph
     end
     @eval export $f

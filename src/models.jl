@@ -253,6 +253,75 @@ const CDSView = ModelType("CDSView";
 export CDSView
 
 
+### LAYOUTS
+
+const LayoutDOM = ModelType("LayoutDOM")
+
+
+### TRANSFORMS
+
+const Transform = ModelType("Transform")
+
+
+### MAPPERS
+
+const Mapper = ModelType("Mapper";
+    inherits = [Transform],
+)
+
+const ColorMapper = ModelType("ColorMapper";
+    inherits = [Mapper],
+    props = [
+        :palette => PaletteT(),
+        :nan_color => ColorT() |> DefaultT("gray"),
+    ],
+)
+
+const CategoricalMapper = ModelType("CategoricalMapper";
+    inherits = [Mapper],
+    props = [
+        :factors => FactorSeqT(),
+        :start => IntT() |> DefaultT(0),
+        :end => IntT() |> NullableT,
+    ],
+)
+
+const CategoricalColorMapper = ModelType("CategoricalColorMapper";
+    inherits = [ColorMapper, CategoricalMapper],
+)
+export CategoricalColorMapper
+
+const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
+    inherits = [CategoricalMapper],
+    props = [
+        :markers => ListT(MarkerT()),
+        :default_value => MarkerT() |> DefaultT("circle"),
+    ]
+)
+export CategoricalMarkerMapper
+
+const CategoricalPatternMapper = ModelType("CategoricalPatternMapper";
+    inherits = [CategoricalMapper],
+)
+export CategoricalPatternMapper
+
+const ContinuousColorMapper = ModelType("ContinuousColorMapper";
+    inherits = [ColorMapper],
+)
+export ContinuousColorMapper
+
+const LinearColorMapper = ModelType("LinearColorMapper";
+    inherits = [ContinuousColorMapper],
+)
+export LinearColorMapper
+
+const LogColorMapper = ModelType("LogColorMapper";
+    inherits = [ContinuousColorMapper],
+)
+export LogColorMapper
+
+
+
 ### GLYPHS
 
 const Glyph = ModelType("Glyph")
@@ -302,6 +371,21 @@ const Scatter = ModelType("Scatter";
     ],
 )
 export Scatter
+
+const Image = ModelType("Image";
+    inherits = [XYGlyph],
+    props = [
+        :image => NumberSpecT(default=Field("image")),
+        :x => NumberSpecT(default=Field("x")),
+        :y => NumberSpecT(default=Field("y")),
+        :dw => NumberSpecT(default=Field("dw")),
+        :dh => NumberSpecT(default=Field("dh")),
+        :global_alpha => NumberSpecT(default=1.0),
+        :dilate => BoolT(default=false),
+        :color_mapper => ModelInstanceT(ColorMapper, default=()->LinearColorMapper(palette="Greys9")),
+    ]
+)
+export Image
 
 const Line = ModelType("Line";
     inherits = [ConnectedXYGlyph, LineGlyph],
@@ -365,54 +449,6 @@ const GuideRenderer = ModelType("GuideRenderer";
         :level => DefaultT("guide"),
     ]
 )
-
-
-### LAYOUTS
-
-const LayoutDOM = ModelType("LayoutDOM")
-
-
-### TRANSFORMS
-
-const Transform = ModelType("Transform")
-
-
-### MAPPERS
-
-const Mapper = ModelType("Mapper";
-    inherits = [Transform],
-)
-
-const ColorMapper = ModelType("ColorMapper";
-    inherits = [Mapper],
-    props = [
-        :palette => PaletteT(),
-        :nan_color => ColorT() |> DefaultT("gray"),
-    ],
-)
-
-const CategoricalMapper = ModelType("CategoricalMapper";
-    inherits = [Mapper],
-    props = [
-        :factors => FactorSeqT(),
-        :start => IntT() |> DefaultT(0),
-        :end => IntT() |> NullableT,
-    ],
-)
-
-const CategoricalColorMapper = ModelType("CategoricalColorMapper";
-    inherits = [ColorMapper, CategoricalMapper],
-)
-export CategoricalColorMapper
-
-const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
-    inherits = [CategoricalMapper],
-    props = [
-        :markers => ListT(MarkerT()),
-        :default_value => MarkerT() |> DefaultT("circle"),
-    ]
-)
-export CategoricalMarkerMapper
 
 
 ### AXES
@@ -484,6 +520,11 @@ const DataRange = ModelType("DataRange";
 
 const DataRange1d = ModelType("DataRange1d";
     inherits = [Range1d, DataRange],
+    props = [
+        :range_padding => FloatT(default=0.1),
+        :start => EitherT(NullT(), FloatT()),
+        :end => EitherT(NullT(), FloatT()),
+    ]
 )
 export DataRange1d
 
