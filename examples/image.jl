@@ -10,6 +10,13 @@ using Pkg; Pkg.activate("pluto", shared=true);
 # ╔═╡ ef5b17f7-3c32-4f8e-9cd1-0813f3b7bcb8
 using Bokeh
 
+# ╔═╡ deb0d26c-80a1-4970-9d1d-cb3c409e7e46
+md"""
+# Images
+
+This example recreates the plot from: [https://docs.bokeh.org/en/latest/docs/gallery/image.html](https://docs.bokeh.org/en/latest/docs/gallery/image.html)
+"""
+
 # ╔═╡ 5e13c6e3-3622-4eaf-945d-34527bfc4538
 data = [
 	sin(x)*cos(y)
@@ -31,6 +38,7 @@ begin
 end
 
 # ╔═╡ Cell order:
+# ╟─deb0d26c-80a1-4970-9d1d-cb3c409e7e46
 # ╠═1a6e05e0-cc54-11ec-10e2-7961b6637467
 # ╠═ef5b17f7-3c32-4f8e-9cd1-0813f3b7bcb8
 # ╠═5e13c6e3-3622-4eaf-945d-34527bfc4538

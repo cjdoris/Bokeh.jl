@@ -251,8 +251,7 @@ function EitherT(ts::PropType...; kw...)
 end
 
 InstanceT(T::Type; kw...) = PropType(INSTANCE_T; result_type=T, kw...)
-
-ModelInstanceT(t::ModelType; kw...) = PropType(MODELINSTANCE_T; model_type=t, kw...)
+InstanceT(t::ModelType; kw...) = PropType(MODELINSTANCE_T; model_type=t, kw...)
 
 
 ### NUMERIC
@@ -264,6 +263,8 @@ IntT(; kw...) = PropType(INT_T; kw...)
 FloatT(; kw...) = PropType(FLOAT_T; kw...)
 
 ByteT(; kw...) = IntT(; validate=(x; detail) -> (0 ≤ x ≤ 255 ? x : Invalid(detail ? "must be between 0 and 255" : "")), kw...)
+
+NonNegativeIntT(; kw...) = IntT(; validate=(x; detail) -> (0 ≤ x ? x : Invalid(detail ? "must be at least 0" : "")), kw...)
 
 PercentT(; kw...) = FloatT(; validate=(x; detail) -> (0 ≤ x ≤ 1 ? x : Invalid(detail ? "must be between 0 and 1" : "")), kw...)
 
@@ -371,14 +372,25 @@ IntSpecT(; kw...) = DataSpecT(IntT(); kw...)
 AlphaSpecT(; kw...) = DataSpecT(AlphaT(); kw...)
 
 
-### MISC
+### OTHER ENUMS
+
+AlignT(; kw...) = EnumT(ALIGN_ENUM; kw...)
+
+AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
 
 LocationT(; kw...) = EnumT(LOCATION_ENUM; kw...)
 
 RenderLevelT(; kw...) = EnumT(RENDER_LEVEL_ENUM; kw...)
 
+SizingModeT(; kw...) = EnumT(SIZING_MODE_ENUM; kw...)
+
+SizingPolicyT(; kw...) = EnumT(SIZING_POLICY_ENUM; kw...)
+
+
+### MISC
+
 TitleT(; kw...) = EitherT(
-    ModelInstanceT(Title),
+    InstanceT(Title),
     StringT(
         validate = (x; detail) -> Title(text=x),
         result_type = Model,
@@ -386,4 +398,46 @@ TitleT(; kw...) = EitherT(
     kw...
 )
 
-AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
+MarginT(; kw...) = EitherT(
+    TupleT(IntT(), IntT(), IntT(), IntT()),
+    TupleT(IntT(), IntT();
+        validate = (x; detail) -> (x[1], x[2], x[1], x[2]),
+        result_type = NTuple{4,Integer},
+    ),
+    IntT(
+        validate = (x; detail) -> (x, x, x, x),
+        result_type = NTuple{4,Integer},
+    );
+    kw...
+)
+
+IntOrStringT(; kw...) = EitherT(IntT(), StringT(); kw...)
+
+QuickTrackSizingT(; kw...) = EitherT(IntT(), EnumT(QUICK_TRACK_SIZING_ENUM); kw...)
+
+TrackAlignT(; kw...) = EitherT(AutoT(), AlignT())
+
+RowSizingT(; kw...) = EitherT(
+    QuickTrackSizingT(),
+    # TODO: struct types
+)
+
+ColSizingT(; kw...) = EitherT(
+    QuickTrackSizingT(),
+    # TODO: struct types
+)
+
+MathStringT() = StringT()
+
+TextLikeT(; kw...) = EitherT(
+    InstanceT(BaseText),
+    MathStringT(),
+)
+
+TickerT(; kw...) = EitherT(
+    InstanceT(Ticker),
+    SeqT(FloatT();
+        validate = (x; detail) -> FixedTicker(ticks=x),
+        result_type = Model,
+    )
+)

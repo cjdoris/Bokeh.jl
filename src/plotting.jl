@@ -164,7 +164,7 @@ end
 add_tools!(plot::Model, tools::Model...; kw...) = add_tools!(plot, tools; kw...)
 export add_tools!
 
-for t in [Scatter, VBar]
+for t in [Scatter, Quad, VBar]
     f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, source::Model;
             color=Undefined(),
@@ -214,8 +214,8 @@ for t in [Image]
     @eval export $f
 end
 
-for t in [:LinearAxis, :LogAxis, :CategoricalAxis, :DateTimeAxis, :MercatorAxis]
-    f = Symbol(lowercase(string(t)), "!")
+for t in [LinearAxis, LogAxis, CategoricalAxis, DateTimeAxis, MercatorAxis]
+    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, loc::Symbol; kw...)
         axis = $t(; kw...)
         add_renderer!(plot, loc, axis)
@@ -224,8 +224,8 @@ for t in [:LinearAxis, :LogAxis, :CategoricalAxis, :DateTimeAxis, :MercatorAxis]
     @eval export $f
 end
 
-for t in [:Grid]
-    f = Symbol(lowercase(string(t)), "!")
+for t in [Grid]
+    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, axis::Model, dimension::Integer; kw...)
         grid = $t(; axis, dimension, kw...)
         add_renderer!(plot, :center, grid)
@@ -234,11 +234,11 @@ for t in [:Grid]
     @eval export $f
 end
 
-for t in [:PanTool, :RangeTool, :WheelPanTool, :WheelZoomTool, :SaveTool, :ResetTool,
-    :TapTool, :CrosshairTool, :BoxZoomTool, :ZoomInTool, :ZoomOutTool, :BoxSelectTool,
-    :LassoSelectTool, :PolySelectTool, :HelpTool,
+for t in [PanTool, RangeTool, WheelPanTool, WheelZoomTool, SaveTool, ResetTool, TapTool,
+    CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool, BoxSelectTool, LassoSelectTool,
+    PolySelectTool, HelpTool,
 ]
-    f = Symbol(lowercase(string(t)), "!")
+    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model; active::Bool=false, kw...)
         tool = $t(; kw...)
         add_tools!(plot, tool; active)
@@ -246,3 +246,40 @@ for t in [:PanTool, :RangeTool, :WheelPanTool, :WheelZoomTool, :SaveTool, :Reset
     end
     @eval export $f
 end
+
+
+### DOM
+
+vbox(children) = Div(; children, style=Styles(display="flex", flex_direction="column"))
+hbox(children) = Div(; children, style=Styles(display="flex", flex_direction="row"))
+export vbox, hbox
+
+
+### LAYOUT
+
+_layoutdom_has_auto_sizing(x) = x.sizing_mode === nothing && x.width_policy == "auto" && x.height_policy == "auto"
+
+function _rowcol_handle_child_sizing(children, sizing_mode)
+    for child in children
+        ismodelinstance(child, LayoutDOM) || error("child must be a LayoutDOM, got a $(modeltype(child).name)")
+        if sizing_mode !== nothing && _layoutdom_has_auto_sizing(child)
+            child.sizing_mode = sizing_mode
+        end
+    end
+end
+
+function row(children; sizing_mode=nothing, kw...)
+    children = collect(Model, children)
+    _rowcol_handle_child_sizing(children, sizing_mode)
+    return Row(; children, sizing_mode, kw...)
+end
+row(children::Model...; kw...) = row(children; kw...)
+export row
+
+function column(children; sizing_mode=nothing, kw...)
+    children = collect(Model, children)
+    _rowcol_handle_child_sizing(children, sizing_mode)
+    return Column(; children, sizing_mode, kw...)
+end
+column(children::Model...; kw...) = column(children; kw...)
+export column

@@ -10,6 +10,13 @@ using Pkg; Pkg.activate("pluto", shared=true);
 # ╔═╡ f40343e0-31e1-4c54-9b8b-716dca054fa9
 using Bokeh
 
+# ╔═╡ f26563d9-0865-43fb-9dce-6449c7f331bf
+md"""
+# Bar Charts
+
+This example reproduces the plot from: [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html)
+"""
+
 # ╔═╡ e21bd15a-c6dc-41e7-a4b0-5098950ca318
 fruits = ["Apples", "Pears", "Nectarines", "Plums", "Grapes", "Strawberries"];
 
@@ -35,7 +42,7 @@ begin
        	line_color="white",
 		fill_color=factor_cmap("fruits", "Spectral6", fruits),
 	)
-	p.center[1].grid_line_color = nothing # TODO p.xgrid.grid_line_color = nothing
+	p.x_grid.grid_line_color = nothing
 	p.y_range.start = 0
 	p.y_range.end = 9
 	# TODO p.legend_field.orientation = "horizontal"
@@ -44,6 +51,7 @@ begin
 end
 
 # ╔═╡ Cell order:
+# ╟─f26563d9-0865-43fb-9dce-6449c7f331bf
 # ╠═2c4f4270-cc4e-11ec-0e14-3baff984e3a2
 # ╠═f40343e0-31e1-4c54-9b8b-716dca054fa9
 # ╠═e21bd15a-c6dc-41e7-a4b0-5098950ca318

@@ -35,6 +35,18 @@ mutable struct PropType
     model_type::Any  # want ::Union{Nothing,ModelType} but Julia does not yet support mutually recursive types
 end
 
+@enum PropKind begin
+    TYPE_K
+    GETSET_K
+end
+
+mutable struct PropDesc
+    kind::PropKind
+    type::Union{Nothing,PropType}
+    getter::Union{Nothing,Function}
+    setter::Union{Nothing,Function}
+end
+
 
 ### MODELS
 
@@ -42,7 +54,7 @@ mutable struct ModelType
     name::String
     subname::Union{Nothing,String}
     inherits::Vector{ModelType}
-    proptypes::Dict{Symbol,PropType}
+    propdescs::Dict{Symbol,PropDesc}
     supers::IdSet{ModelType}
 end
 

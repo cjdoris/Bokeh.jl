@@ -1,3 +1,5 @@
+const ALIGN_ENUM = Set(["start", "center", "end"])
+
 const AUTO_ENUM = Set(["auto"])
 
 const LOCATION_ENUM = Set(["above", "below", "left", "right"])
@@ -37,4 +39,15 @@ const NAMED_COLOR_ENUM = Set([
 
 const NAMED_PALETTE_ENUM = Set(keys(PALETTES))
 
-const RENDER_LEVEL_ENUM = Set(["image", "underlay", "glyph", "guide", "annotation", "overlay"])
+const QUICK_TRACK_SIZING_ENUM = Set(["auto", "min", "fit", "max"])
+
+const RENDER_LEVEL_ENUM = Set([
+    "image", "underlay", "glyph", "guide", "annotation", "overlay",
+])
+
+const SIZING_MODE_ENUM = Set([
+    "stretch_width", "stretch_height", "stretch_both", "scale_width", "scale_height",
+    "scale_both", "fixed",
+])
+
+const SIZING_POLICY_ENUM = Set(["fixed", "fit", "min", "max"])

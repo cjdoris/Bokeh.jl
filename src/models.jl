@@ -4,28 +4,35 @@ function ModelType(name, subname=nothing;
     inherits=[BaseModel],
     props=[],
 )
-    proptypes = Dict{Symbol,PropType}()
+    propdescs = Dict{Symbol,PropDesc}()
     supers = IdSet{ModelType}()
     for t in inherits
-        mergeproptypes!(proptypes, t.proptypes)
+        mergepropdescs!(propdescs, t.propdescs)
         push!(supers, t)
         union!(supers, t.supers)
     end
-    mergeproptypes!(proptypes, props)
-    return ModelType(name, subname, inherits, proptypes, supers)
+    mergepropdescs!(propdescs, props)
+    return ModelType(name, subname, inherits, propdescs, supers)
 end
 
-function mergeproptypes!(ts, x; name=nothing)
-    if x isa PropType
-        ts[name] = x
+function mergepropdescs!(ds, x; name=nothing)
+    if x isa PropDesc
+        ds[name] = x
+    elseif x isa PropType
+        ds[name] = PropDesc(x)
     elseif x isa Pair
         name = name===nothing ? x.first : Symbol(name, "_", x.first)
-        mergeproptypes!(ts, x.second; name)
+        mergepropdescs!(ds, x.second; name)
     elseif x isa Function
-        ts[name] = x(ts[name])
+        d = ds[name]
+        if d.kind == TYPE_K
+            mergepropdescs!(ds, x(d.type); name)
+        else
+            mergepropdescs!(ds, x(d); name)
+        end
     else
-        for t in x
-            mergeproptypes!(ts, t; name)
+        for d in x
+            mergepropdescs!(ds, d; name)
         end
     end
 end
@@ -57,49 +64,71 @@ function Base.getproperty(m::Model, k::Symbol)
     vs = modelvalues(m)
     v = get(vs, k, Undefined())
     v === Undefined() || return v
-    # look up the type
+    # look up the descriptor
     mt = modeltype(m)
-    ts = mt.proptypes
-    t = get(ts, k, Undefined())
-    t === Undefined() && error("$(mt.name): .$k: invalid property")
-    # get the default value
-    d = t.default
-    if d isa Function
-        v = vs[k] = d()
+    ds = mt.propdescs
+    pd = get(ds, k, nothing)
+    pd === nothing && error("$(mt.name): .$k: invalid property")
+    # branch on the kind of the descriptor
+    kd = pd.kind
+    if kd == TYPE_K
+        # get the default value
+        t = pd.type::PropType
+        d = t.default
+        if d isa Function
+            v = vs[k] = d()
+        else
+            v = d
+        end
+        return v
+    elseif kd == GETSET_K
+        f = pd.getter
+        f === nothing && error("$(mt.name): .$k: property is not readable")
+        return f(m)
     else
-        v = d
+        @assert false
     end
-    return v
 end
 
 function Base.setproperty!(m::Model, k::Symbol, x)
-    if x === Undefined()
-        # delete the value
-        vs = modelvalues(m)
-        delete!(vs, k)
+    # look up the descriptor
+    mt = modeltype(m)
+    ds = mt.propdescs
+    pd = get(ds, k, nothing)
+    pd === nothing && error("$(mt.name): .$k: invalid property")
+    # branch on the kind of the descriptor
+    kd = pd.kind
+    if kd == TYPE_K
+        if x === Undefined()
+            # delete the value
+            vs = modelvalues(m)
+            delete!(vs, k)
+        else
+            # validate the value
+            t = pd.type::PropType
+            v = validate(t, x)
+            v isa Invalid && error("$(mt.name): .$k: $(v.msg)")
+            # set it
+            vs = modelvalues(m)
+            vs[k] = v
+        end
+    elseif kd == GETSET_K
+        f = pd.setter
+        f === nothing && error("$(mt.name): .$k: property is not writeable")
+        f(m, x)
     else
-        # look up the type
-        mt = modeltype(m)
-        ts = mt.proptypes
-        t = get(ts, k, Undefined())
-        t === Undefined() && error("$(mt.name): .$k: invalid property")
-        # validate the value
-        v = validate(t, x)
-        v isa Invalid && error("$(mt.name): .$k: $(v.msg)")
-        # set it
-        vs = modelvalues(m)
-        vs[k] = v
+        @assert false
     end
     return m
 end
 
 function Base.hasproperty(m::Model, k::Symbol)
-    ts = modeltype(m).proptypes
+    ts = modeltype(m).propdescs
     return haskey(ts, k)
 end
 
 function Base.propertynames(m::Model)
-    ts = modeltype(m).proptypes
+    ts = modeltype(m).propdescs
     return collect(keys(ts))
 end
 
@@ -228,6 +257,42 @@ const BaseModel = ModelType("Model",
 )
 
 
+### TEXT
+
+const BaseText = ModelType("BaseText";
+    props = [
+        :text => StringT(),
+    ]
+)
+
+const MathText = ModelType("MathText";
+    inherits = [BaseText],
+)
+
+const Ascii = ModelType("Ascii";
+    inherits = [MathText],
+)
+export Ascii
+
+const MathML = ModelType("MathML";
+    inherits = [MathText],
+)
+export MathML
+
+const TeX = ModelType("TeX";
+    inherits = [MathText],
+    props = [
+        :macros => DictT(StringT(), EitherT(StringT(), TupleT(StringT(), IntT()))),
+        :inline => BoolT(default=false),
+    ]
+)
+export TeX
+
+const PlainText = ModelType("PlainText";
+    inherits = [BaseText],
+)
+
+
 ### SOURCES
 
 const DataSource = ModelType("DataSource")
@@ -247,15 +312,90 @@ export ColumnDataSource
 const CDSView = ModelType("CDSView";
     props = [
         :filters => ListT(AnyT()),
-        :source => ModelInstanceT(ColumnarDataSource),
+        :source => InstanceT(ColumnarDataSource),
     ],
 )
 export CDSView
 
 
+### TICKERS
+
+const Ticker = ModelType("Ticker")
+
+const ContinuousTicker = ModelType("ContinuousTicker";
+    inherits = [Ticker],
+)
+
+const FixedTicker = ModelType("FixedTicker";
+    inherits = [ContinuousTicker],
+    props = [
+        :ticks => SeqT(FloatT()),
+        :minor_ticks => SeqT(FloatT()),
+    ]
+)
+
+
 ### LAYOUTS
 
-const LayoutDOM = ModelType("LayoutDOM")
+const LayoutDOM = ModelType("LayoutDOM";
+    props = [
+        :disabled => BoolT(default=false),
+        :visible => BoolT(default=true),
+        :width => NullableT(NonNegativeIntT()),
+        :height => NullableT(NonNegativeIntT()),
+        :min_width => NullableT(NonNegativeIntT()),
+        :min_height => NullableT(NonNegativeIntT()),
+        :max_width => NullableT(NonNegativeIntT()),
+        :max_height => NullableT(NonNegativeIntT()),
+        :margin => NullableT(MarginT(), default=(0,0,0,0)),
+        :width_policy => EitherT(AutoT(), SizingPolicyT(), default="auto"),
+        :height_policy => EitherT(AutoT(), SizingPolicyT(), default="auto"),
+        :aspect_ratio => EitherT(AutoT(), NullT(), FloatT()),
+        :sizing_mode => NullableT(SizingModeT()),
+        :align => EitherT(AlignT(), TupleT(AlignT(), AlignT()), default="start"),
+        :background => NullableT(ColorT()),
+        :css_classes => ListT(StringT()),
+    ]
+)
+
+const HTMLBox = ModelType("HTMLBox";
+    inherits = [LayoutDOM],
+)
+
+const Spacer = ModelType("Spacer";
+    inherits = [LayoutDOM]
+)
+export Spacer
+
+const GridBox = ModelType("GridBox";
+    inherits = [LayoutDOM],
+)
+export GridBox
+
+const Box = ModelType("Box";
+    inherits = [LayoutDOM],
+    props = [
+        :children => ListT(InstanceT(LayoutDOM)),
+        :spacing => IntT(default=0),
+    ]
+)
+
+const Row = ModelType("Row";
+    inherits = [Box],
+    props = [
+        :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), ColSizingT()), default="auto"),
+    ]
+)
+export Row
+
+const Column = ModelType("Column";
+    inherits = [Box],
+    props = [
+        :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), RowSizingT()), default="auto"),
+    ]
+)
+export Column
+
 
 
 ### TRANSFORMS
@@ -382,7 +522,7 @@ const Image = ModelType("Image";
         :dh => NumberSpecT(default=Field("dh")),
         :global_alpha => NumberSpecT(default=1.0),
         :dilate => BoolT(default=false),
-        :color_mapper => ModelInstanceT(ColorMapper, default=()->LinearColorMapper(palette="Greys9")),
+        :color_mapper => InstanceT(ColorMapper, default=()->LinearColorMapper(palette="Greys9")),
     ]
 )
 export Image
@@ -396,6 +536,20 @@ const Line = ModelType("Line";
     ],
 )
 export Line
+
+const Quad = ModelType("Quad";
+    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :left => NumberSpecT(default=Field("left")),
+        :right => NumberSpecT(default=Field("right")),
+        :bottom => NumberSpecT(default=Field("bottom")),
+        :top => NumberSpecT(default=Field("top")),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+export Quad
 
 const VBar = ModelType("VBar";
     inherits = [LineGlyph, FillGlyph, HatchGlyph],
@@ -433,9 +587,9 @@ const DataRenderer = ModelType("DataRenderer";
 const GlyphRenderer = ModelType("GlyphRenderer";
     inherits = [DataRenderer],
     props = [
-        :data_source => ModelInstanceT(DataSource),
-        :view => ModelInstanceT(CDSView),
-        :glyph => ModelInstanceT(Glyph),
+        :data_source => InstanceT(DataSource),
+        :view => InstanceT(CDSView),
+        :glyph => InstanceT(Glyph),
         :coordinates => NullT(), # TODO
         :group => NullT(), # TODO
         :hover_glyph => NullT(), # TODO
@@ -456,16 +610,9 @@ const GuideRenderer = ModelType("GuideRenderer";
 const Axis = ModelType("Axis";
     inherits = [GuideRenderer],
     props = [
-        # :bounds => PropType(Union{Auto,Tuple{Real,Real},Tuple{DateTime,DateTime},Tuple{Date,Date}}; default=Auto()),
-        # :ticker => PropType(Any; default=nothing),
-        # :formatter => PropType(Any; default=nothing),
-        :axis_label => StringT() |> NullableT,
-        # :axis_label_standoff => PropType(Any; default=nothing),
-        # :axis_label_props => PropType(Any; default=nothing),
-        # :axis_label_text_font_size => PropType(Any; default=nothing),
-        # :axis_label_text_font_style => PropType(Any; default=nothing),
-        # :major_label_standoff => PropType(Any; default=nothing),
-        # ETC
+        :axis_label => NullableT(StringT()),
+        :ticker => TickerT(),
+        :major_label_overrides => DictT(EitherT(FloatT(), StringT()), TextLikeT()),
     ],
 )
 
@@ -569,7 +716,7 @@ const Grid = ModelType("Grid";
     inherits = [GuideRenderer],
     props = [
         :dimension => IntT() |> DefaultT(0),
-        :axis => ModelInstanceT(Axis) |> NullableT,
+        :axis => InstanceT(Axis) |> NullableT,
         :grid => SCALAR_LINE_PROPS,
         :grid_line_color => DefaultT("#e5e5e5"),
         :minor_grid => SCALAR_LINE_PROPS,
@@ -604,6 +751,10 @@ const Title = ModelType("Title";
     ]
 )
 export Title
+
+const Legend = ModelType("Legend",
+    inherits = [Annotation],
+)
 
 
 ### TOOLS
@@ -725,18 +876,18 @@ const ToolbarBase = ModelType("ToolbarBase";
     props = [
         :logo => NullableT(EnumT(Set(["normal", "grey"])), default="normal"),
         :autohide => BoolT(default=false),
-        :tools => ListT(ModelInstanceT(Tool)),
+        :tools => ListT(InstanceT(Tool)),
     ]
 )
 
 const Toolbar = ModelType("Toolbar";
     inherits = [ToolbarBase],
     props = [
-        :active_drag => EitherT(NullT(), AutoT(), ModelInstanceT(Drag), default="auto"),
-        :active_inspect => EitherT(NullT(), AutoT(), ModelInstanceT(InspectTool), SeqT(ModelInstanceT(InspectTool)), default="auto"),
-        :active_scroll => EitherT(NullT(), AutoT(), ModelInstanceT(Scroll), default="auto"),
-        :active_tap => EitherT(NullT(), AutoT(), ModelInstanceT(Tap), default="auto"),
-        :active_multi => EitherT(NullT(), AutoT(), ModelInstanceT(GestureTool), default="auto"),
+        :active_drag => EitherT(NullT(), AutoT(), InstanceT(Drag), default="auto"),
+        :active_inspect => EitherT(NullT(), AutoT(), InstanceT(InspectTool), SeqT(InstanceT(InspectTool)), default="auto"),
+        :active_scroll => EitherT(NullT(), AutoT(), InstanceT(Scroll), default="auto"),
+        :active_tap => EitherT(NullT(), AutoT(), InstanceT(Tap), default="auto"),
+        :active_multi => EitherT(NullT(), AutoT(), InstanceT(GestureTool), default="auto"),
     ]
 )
 export Toolbar
@@ -744,7 +895,7 @@ export Toolbar
 const ProxyToolbar = ModelType("ProxyToolbar";
     inherits = [ToolbarBase],
     props = [
-        :toolbars => ListT(ModelInstanceT(Toolbar)),
+        :toolbars => ListT(InstanceT(Toolbar)),
     ]
 )
 export ProxyToolbar
@@ -760,13 +911,28 @@ export ToolbarBox
 
 ### PLOT
 
+plot_get_renderers(plot::Model; type, sides, filter=nothing) = Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))]
+plot_get_renderers(; kw...) = (plot::Model) -> plot_get_axes(plot; kw...)
+
+function plot_get_renderer(plot::Model; plural, kw...)
+    ms = plot_get_renderers(plot; kw...)
+    if length(ms) == 0
+        return Undefined()
+    elseif length(ms) == 1
+        return ms[1]
+    else
+        error("multiple $plural defined, consider using .$plural instead")
+    end
+end
+plot_get_renderer(; kw...) = (plot::Model) -> plot_get_renderer(plot; kw...)
+
 const Plot = ModelType("Plot";
     inherits = [LayoutDOM],
     props = [
-        :x_range => ModelInstanceT(Range, default=()->DataRange1d()),
-        :y_range => ModelInstanceT(Range, default=()->DataRange1d()),
-        :x_scale => ModelInstanceT(Scale, default=()->LinearScale()),
-        :y_scale => ModelInstanceT(Scale, default=()->LinearScale()),
+        :x_range => InstanceT(Range, default=()->DataRange1d()),
+        :y_range => InstanceT(Range, default=()->DataRange1d()),
+        :x_scale => InstanceT(Scale, default=()->LinearScale()),
+        :y_scale => InstanceT(Scale, default=()->LinearScale()),
         # :x_scale => PropType(Any; default=nothing),
         # :y_scale => PropType(Any; default=nothing),
         # :extra_x_ranges => PropType(Any; default=nothing),
@@ -778,15 +944,15 @@ const Plot = ModelType("Plot";
         :title_location => NullableT(LocationT(), default="above"),
         # :outline_props => PropType(Any; default=nothing),
         # :outline_line_color => PropType(Any; default=nothing),
-        :renderers => ListT(ModelInstanceT(Renderer)),
-        :toolbar => ModelInstanceT(Toolbar, default=()->Toolbar()),
+        :renderers => ListT(InstanceT(Renderer)),
+        :toolbar => InstanceT(Toolbar, default=()->Toolbar()),
         :toolbar_location => NullableT(LocationT(), default="right"),
         :toolbar_sticky => BoolT(default=true),
-        :left => ListT(ModelInstanceT(Renderer)),
-        :right => ListT(ModelInstanceT(Renderer)),
-        :above => ListT(ModelInstanceT(Renderer)),
-        :below => ListT(ModelInstanceT(Renderer)),
-        :center => ListT(ModelInstanceT(Renderer)),
+        :left => ListT(InstanceT(Renderer)),
+        :right => ListT(InstanceT(Renderer)),
+        :above => ListT(InstanceT(Renderer)),
+        :below => ListT(InstanceT(Renderer)),
+        :center => ListT(InstanceT(Renderer)),
         :width => NullableT(IntT(), default=600),
         :height => NullableT(IntT(), default=600),
         :frame_width => NullableT(IntT()),
@@ -812,9 +978,23 @@ const Plot = ModelType("Plot";
         # :match_aspect => PropType(Bool; default=false),
         # :aspect_scale => PropType(Real; default=1.0),
         # :reset_policy => PropType(AbstractString; default="standard"),
+        :x_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:above], plural=:x_axes)),
+        :y_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:left,:right], plural=:y_axes)),
+        :axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:left,:above,:right], plural=:axes)),
+        :x_axes => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:above])),
+        :y_axes => GetSetT(plot_get_renderers(type=Axis, sides=[:left,:right])),
+        :axes => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:left,:above,:right])),
+        :x_grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==0, plural=:x_grids)),
+        :y_grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==1, plural=:y_grids)),
+        :grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], plural=:grids)),
+        :x_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==0)),
+        :y_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==1)),
+        :grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center])),
+        :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
     ],
 )
 export Plot
+
 
 ### FIGURE
 
