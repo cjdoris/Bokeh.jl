@@ -257,8 +257,32 @@ export CDSView
 
 const Glyph = ModelType("Glyph")
 
-const Marker = ModelType("Marker";
+const XYGlyph = ModelType("XYGlyph";
     inherits = [Glyph],
+)
+
+const ConnectedXYGlyph = ModelType("ConnectedXYGlyph";
+    inherits = [XYGlyph],
+)
+
+const LineGlyph = ModelType("LineGlyph";
+    inherits = [Glyph],
+)
+
+const FillGlyph = ModelType("FillGlyph";
+    inherits = [Glyph],
+)
+
+const TextGlyph = ModelType("TextGlyph";
+    inherits = [Glyph],
+)
+
+const HatchGlyph = ModelType("HatchGlyph";
+    inherits = [Glyph],
+)
+
+const Marker = ModelType("Marker";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT() |> DefaultT(Field("x")),
         :y => NumberSpecT() |> DefaultT(Field("y")),
@@ -280,7 +304,7 @@ const Scatter = ModelType("Scatter";
 export Scatter
 
 const Line = ModelType("Line";
-    inherits = [Marker],
+    inherits = [ConnectedXYGlyph, LineGlyph],
     props = [
         :x => NumberSpecT() |> DefaultT(Field("x")),
         :y => NumberSpecT() |> DefaultT(Field("y")),
@@ -288,6 +312,20 @@ const Line = ModelType("Line";
     ],
 )
 export Line
+
+const VBar = ModelType("VBar";
+    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default=Field("x")),
+        :width => NumberSpecT(default=1.0),
+        :bottom => NumberSpecT(default=0.0),
+        :top => NumberSpecT(default=Field("top")),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+export VBar
 
 
 ### RENERERS

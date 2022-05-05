@@ -164,8 +164,8 @@ end
 add_tools!(plot::Model, tools::Model...; kw...) = add_tools!(plot, tools; kw...)
 export add_tools!
 
-for t in [:Scatter]
-    f = Symbol(lowercase(string(t)), "!")
+for t in [Scatter, VBar]
+    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, source::Model;
             color=Undefined(),
             line_color=color,
@@ -184,8 +184,8 @@ for t in [:Scatter]
     @eval export $f
 end
 
-for t in [:Line]
-    f = Symbol(lowercase(string(t)), "!")
+for t in [Line]
+    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, source::Model;
             color=Undefined(),
             line_color=color,
