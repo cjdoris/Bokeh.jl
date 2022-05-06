@@ -347,6 +347,8 @@ PaletteT(; kw...) = EitherT(
     kw...
 )
 
+FontSizeT(; kw...) = RegexT(r"^[0-9]+(.[0-9]+)?(%|em|ex|ch|ic|rem|vw|vh|vi|vb|vmin|vmax|cm|mm|q|in|pc|pt|px)$"i; kw...)
+
 
 ### FACTORS
 
@@ -376,20 +378,50 @@ IntSpecT(; kw...) = DataSpecT(IntT(); kw...)
 
 AlphaSpecT(; kw...) = DataSpecT(AlphaT(); kw...)
 
+NullStringSpecT(; kw...) = DataSpecT(NullableT(StringT()); kw...)
+
+FontStyleSpecT(; kw...) = DataSpecT(FontStyleT(); kw...)
+
+TextBaselineSpecT(; kw...) = DataSpecT(TextBaselineT(); kw...)
+
+FontSizeSpecT(; kw...) = DataSpecT(FontSizeT(); kw...)
+
+StringSpecT(; kw...) = DataSpecT(StringT(); kw...)
+
+TextAlignSpecT(; kw...) = DataSpecT(TextAlignT(); kw...)
+
 
 ### OTHER ENUMS
 
 AlignT(; kw...) = EnumT(ALIGN_ENUM; kw...)
 
+AnchorT(; kw...) = EnumT(ANCHOR_ENUM; kw...)
+
 AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
+
+FontStyleT(; kw...) = EnumT(FONT_STYLE_ENUM; kw...)
+
+LegendClickPolicyT(; kw...) = EnumT(LEGEND_CLICK_POLICY_ENUM; kw...)
+
+LegendLocationT(; kw...) = EnumT(LEGEND_LOCATION_ENUM; kw...)
 
 LocationT(; kw...) = EnumT(LOCATION_ENUM; kw...)
 
+OrientationT(; kw...) = EnumT(ORIENTATION_ENUM; kw...)
+
+OutputBackendT(; kw...) = EnumT(OUTPUT_BACKEND_ENUM; kw...)
+
 RenderLevelT(; kw...) = EnumT(RENDER_LEVEL_ENUM; kw...)
+
+ResetPolicyT(; kw...) = EnumT(RESET_POLICY_ENUM; kw...)
 
 SizingModeT(; kw...) = EnumT(SIZING_MODE_ENUM; kw...)
 
 SizingPolicyT(; kw...) = EnumT(SIZING_POLICY_ENUM; kw...)
+
+TextBaselineT(; kw...) = EnumT(TEXT_BASELINE_ENUM; kw...)
+
+TextAlignT(; kw...) = EnumT(TEXT_ALIGN_ENUM; kw...)
 
 
 ### MISC

@@ -12,6 +12,7 @@ serialize(s::Serializer, x::Symbol) = String(x)
 serialize(s::Serializer, x::AbstractVector) = [serialize(s,x) for x in x]
 serialize(s::Serializer, x::AbstractMatrix) = [serialize(s,x) for x in eachcol(x)]
 serialize(s::Serializer, x::AbstractDict) = Dict(serialize(s,k)=>serialize(s,v) for (k,v) in x)
+serialize(s::Serializer, x::Tuple) = [serialize(s,x) for x in x]
 
 function serialize(s::Serializer, x::Field)
     ans = Dict{String,Any}("field" => x.name)

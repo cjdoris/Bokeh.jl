@@ -36,15 +36,15 @@ begin
 		top="counts",
 		source=data,
 		width=0.9,
-		# TODO legend_field="fruits",
+		legend_field="fruits",
        	line_color="white",
 		fill_color=factor_cmap("fruits", "Spectral6", data.fruits),
 	)
 	p.x_grid.grid_line_color = nothing
 	p.y_range.start = 0
 	p.y_range.end = 9
-	# TODO p.legend_field.orientation = "horizontal"
-	# TODO p.legend.location = "top_center"
+	p.legend.orientation = "horizontal"
+	p.legend.location = "top_center"
 	Document(p)
 end
 

@@ -26,11 +26,14 @@ data = [
 
 # ╔═╡ e06ffd07-7a82-4b9a-9d1e-b8eda37e8a4d
 begin
-	p = figure() # TODO tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")]
-	p.x_range.range_padding = p.y_range.range_padding = 0
-	image!(p, image=[data], x=0, y=0, dw=10, dh=10, level="image",
-		color_mapper=LinearColorMapper(palette="Spectral11"), # TODO palette="..."
+	p = figure(
+		tooltips=[("x", "\$x"), ("y", "\$y"), ("value", "@image")]
 	)
+	p.x_range.range_padding = p.y_range.range_padding = 0
+	image!(p, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Spectral11")
+	for grid in p.grids
+		grid.grid_line_width = 0
+	end
 	Document(p)
 end
 

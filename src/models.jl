@@ -308,6 +308,7 @@ const ColumnDataSource = ModelType("ColumnDataSource";
     inherits = [ColumnarDataSource],
     props = [
         :data => ColumnDataT(),
+        :column_names => GetSetT(x->collect(String,keys(x.data))),
     ],
 )
 export ColumnDataSource
@@ -529,6 +530,20 @@ const Image = ModelType("Image";
     ]
 )
 export Image
+
+const ImageRGBA = ModelType("ImageRGBA";
+    inherits = [XYGlyph],
+    props = [
+        :image => NumberSpecT(default=Field("image")),
+        :x => NumberSpecT(default=Field("x")),
+        :y => NumberSpecT(default=Field("y")),
+        :dw => NumberSpecT(default=Field("dw")),
+        :dh => NumberSpecT(default=Field("dh")),
+        :global_alpha => NumberSpecT(default=1.0),
+        :dilate => BoolT(default=false),
+    ]
+)
+export ImageRGBA
 
 const Line = ModelType("Line";
     inherits = [ConnectedXYGlyph, LineGlyph],
@@ -755,9 +770,51 @@ const Title = ModelType("Title";
 )
 export Title
 
+const LegendItem = ModelType("LegendItem";
+    props = [
+        :label => NullStringSpecT(),
+        :renderers => ListT(InstanceT(GlyphRenderer)),
+        :index => NullableT(IntT()),
+        :visible => BoolT(default=true),
+    ]
+)
+export LegendItem
+
 const Legend = ModelType("Legend",
     inherits = [Annotation],
+    props = [
+        :location => EitherT(LegendLocationT(), TupleT(FloatT(), FloatT()), default="top_right"),
+        :orientation => OrientationT(default="vertical"),
+        :title => NullableT(StringT()),
+        :title => SCALAR_TEXT_PROPS,
+        :title_text_font_size => DefaultT("13px"),
+        :title_text_font_style => DefaultT("italic"),
+        :title_standoff => IntT(default=5),
+        :border => SCALAR_LINE_PROPS,
+        :border_line_color => DefaultT("#e5e5e5"),
+        :border_line_alpha => DefaultT(0.5),
+        :background => SCALAR_FILL_PROPS,
+        :inactive => SCALAR_FILL_PROPS,
+        :click_policy => LegendClickPolicyT(default="none"),
+        :background_fill_color => DefaultT("#ffffff"),
+        :background_fill_alpha => DefaultT(0.95),
+        :inactive_fill_color => DefaultT("white"),
+        :inactive_fill_alpha => DefaultT(0.7),
+        :label => SCALAR_TEXT_PROPS,
+        :label_text_baseline => DefaultT("middle"),
+        :label_text_font_size => DefaultT("13px"),
+        :label_standoff => IntT(default=5),
+        :label_height => IntT(default=20),
+        :label_width => IntT(default=20),
+        :glyph_height => IntT(default=20),
+        :glyph_width => IntT(default=20),
+        :margin => IntT(default=10),
+        :padding => IntT(default=10),
+        :spacing => IntT(default=3),
+        :items => ListT(InstanceT(LegendItem)),
+    ]
 )
+export Legend
 
 
 ### TOOLS
@@ -866,10 +923,85 @@ const PolySelectTool = ModelType("PolySelectTool";
 )
 export PolySelectTool
 
+const CustomJSHover = ModelType("CustomJSHover")
+export CustomJSHover
+
+const HoverTool = ModelType("HoverTool";
+    inherits = [InspectTool],
+    props = [
+        :names => ListT(StringT()),
+        :renderers => EitherT(AutoT(), ListT(InstanceT(DataRenderer)), default="auto"),
+        # :callback => NullableT(CallbackT()), TODO
+        :tooltips => EitherT(
+            NullT(),
+            # InstanceT(TemplateT()), TODO
+            StringT(),
+            ListT(TupleT(StringT(), StringT())),
+            default = [
+                ("index", "\$index"),
+                ("data (x, y)", "(\$x, \$y)"),
+                ("screen (x, y)", "(\$sx, \$sy)"),
+            ],
+            result_type = Any,
+        )
+    ]
+)
+export HoverTool
+
 const HelpTool = ModelType("HelpTool";
-    inherits = [ActionTool],
+    inherits = [ActionTool]
 )
 export HelpTool
+
+const UndoTool = ModelType("UndoTool";
+    inherits = [ActionTool]
+)
+export UndoTool
+
+const RedoTool = ModelType("RedoTool";
+    inherits = [ActionTool]
+)
+export RedoTool
+
+const EditTool = ModelType("EditTool";
+    inherits = [GestureTool]
+)
+
+const PolyTool = ModelType("PolyTool";
+    inherits = [EditTool]
+)
+
+const BoxEditTool = ModelType("BoxEditTool";
+    inherits = [EditTool, Drag, Tap]
+)
+export BoxEditTool
+
+const PointDrawTool = ModelType("PointDrawTool";
+    inherits = [EditTool, Drag, Tap]
+)
+export PointDrawTool
+
+const PolyDrawTool = ModelType("PolyDrawTool";
+    inherits = [PolyTool, Drag, Tap],
+)
+export PolyDrawTool
+
+const FreehandDrawTool = ModelType("FreehandDrawTool";
+    inherits = [EditTool, Drag, Tap],
+)
+export FreehandDrawTool
+
+const PolyEditTool = ModelType("PolyEditTool";
+    inherits = [PolyTool, Drag, Tap],
+)
+export PolyEditTool
+
+const LineEditTool = ModelType("LineEditTool";
+    inherits = [EditTool, Drag, Tap],
+)
+export LineEditTool
+
+
 
 
 
@@ -915,7 +1047,7 @@ export ToolbarBox
 ### PLOT
 
 plot_get_renderers(plot::Model; type, sides, filter=nothing) = Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))]
-plot_get_renderers(; kw...) = (plot::Model) -> plot_get_axes(plot; kw...)
+plot_get_renderers(; kw...) = (plot::Model) -> plot_get_renderers(plot; kw...)
 
 function plot_get_renderer(plot::Model; plural, kw...)
     ms = plot_get_renderers(plot; kw...)
@@ -936,17 +1068,15 @@ const Plot = ModelType("Plot";
         :y_range => InstanceT(Range, default=()->DataRange1d()),
         :x_scale => InstanceT(Scale, default=()->LinearScale()),
         :y_scale => InstanceT(Scale, default=()->LinearScale()),
-        # :x_scale => PropType(Any; default=nothing),
-        # :y_scale => PropType(Any; default=nothing),
-        # :extra_x_ranges => PropType(Any; default=nothing),
-        # :extra_y_ranges => PropType(Any; default=nothing),
-        # :extra_x_scales => PropType(Any; default=nothing),
-        # :extra_y_scales => PropType(Any; default=nothing),
+        :extra_x_ranges => DictT(StringT(), InstanceT(Range)),
+        :extra_y_ranges => DictT(StringT(), InstanceT(Range)),
+        :extra_x_scales => DictT(StringT(), InstanceT(Scale)),
+        :extra_y_scales => DictT(StringT(), InstanceT(Scale)),
         :hidpi => BoolT(default=true),
         :title => NullableT(TitleT(), default=()->Title()),
         :title_location => NullableT(LocationT(), default="above"),
-        # :outline_props => PropType(Any; default=nothing),
-        # :outline_line_color => PropType(Any; default=nothing),
+        :outline => SCALAR_LINE_PROPS,
+        :outline_line_color => DefaultT("#e5e5e5"),
         :renderers => ListT(InstanceT(Renderer)),
         :toolbar => InstanceT(Toolbar, default=()->Toolbar()),
         :toolbar_location => NullableT(LocationT(), default="right"),
@@ -968,19 +1098,21 @@ const Plot = ModelType("Plot";
         :background_fill_color => DefaultT("#ffffff"),
         :border => SCALAR_FILL_PROPS,
         :border_fill_color => DefaultT("#ffffff"),
-        # :min_border_top => PropType(Union{Integer,Nothing}; default=nothing),
-        # :min_border_bottom => PropType(Union{Integer,Nothing}; default=nothing),
-        # :min_border_left => PropType(Union{Integer,Nothing}; default=nothing),
-        # :min_border_right => PropType(Union{Integer,Nothing}; default=nothing),
-        # :min_border => PropType(Union{Integer,Nothing}; default=nothing),
-        # :lod_factor => PropType(Integer; default=10),
-        # :lod_threshold => PropType(Union{Integer,Nothing}; default=2000),
-        # :lod_interval => PropType(Integer; default=300),
-        # :lod_timeout => PropType(Integer; default=500),
-        # :output_backend => PropType(Any; default=nothing),
-        # :match_aspect => PropType(Bool; default=false),
-        # :aspect_scale => PropType(Real; default=1.0),
-        # :reset_policy => PropType(AbstractString; default="standard"),
+        :min_border_top => NullableT(IntT()),
+        :min_border_bottom => NullableT(IntT()),
+        :min_border_left => NullableT(IntT()),
+        :min_border_right => NullableT(IntT()),
+        :min_border_top => NullableT(IntT(), default=5),
+        :lod_factor => IntT(default=10),
+        :lod_threshold => NullableT(IntT(), default=2000),
+        :lod_interval => IntT(default=300),
+        :lod_timeout => IntT(default=500),
+        :output_backend => OutputBackendT(default="canvas"),
+        :match_aspect => BoolT(default=false),
+        :aspect_scale => FloatT(default=1.0),
+        :reset_policy => ResetPolicyT(default="standard"),
+
+        # getters/setters
         :x_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:above], plural=:x_axes)),
         :y_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:left,:right], plural=:y_axes)),
         :axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:left,:above,:right], plural=:axes)),
@@ -993,6 +1125,8 @@ const Plot = ModelType("Plot";
         :x_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==0)),
         :y_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==1)),
         :grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center])),
+        :legend => GetSetT(plot_get_renderer(type=Legend, sides=[:below,:left,:above,:right,:center], plural=:legends)),
+        :legends => GetSetT(plot_get_renderers(type=Legend, sides=[:below,:left,:above,:right,:center])),
         :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
     ],
 )

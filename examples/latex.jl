@@ -46,7 +46,7 @@ begin
 		bottom=0,
 		fill_color="skyblue",
 		line_color="white",
-		# TODO legend_label="$N random samples",
+		legend_label="$N random samples",
 	)
 
 	# Probability density function
@@ -57,7 +57,7 @@ begin
 		y=pdf,
 		line_width=2,
 		line_color="navy",
-    	# TODO legend_label="Probability Density Function",
+    	legend_label="Probability Density Function",
 	)
 
 	p.y_range.start = 0

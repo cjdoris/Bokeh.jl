@@ -11,3 +11,6 @@ end
 function new_global_id()
     return UUIDs.uuid4()
 end
+
+Base.:(==)(x::Field, y::Field) = x.name == y.name
+Base.:(==)(x::Value, y::Value) = x.value == y.value

@@ -1,7 +1,7 @@
 export factor_mark, factor_cmap
 export figure
 export add_layout!, add_glyph!, add_tools!
-export scatter!, quad!, vbar!, line!, image!
+export scatter!, quad!, vbar!, line!, image!, image_rgba!
 export row, column
 
 ### TRANSFORMS
@@ -81,14 +81,28 @@ function process_axis_and_grid(plot, axis_type, axis_location, minor_ticks, axis
             axis.axis_label = axis_label
         end
         grid = Grid(dimension=dim, axis=axis)
-        add_layout!(plot, grid; location="center")
+        add_layout!(plot, grid)
         if axis_location !== nothing
             add_layout!(plot, axis; location=axis_location)
         end
     end
 end
 
-function figure(; x_range=nothing, y_range=nothing, x_axis_type="auto", y_axis_type="auto", x_axis_location="below", y_axis_location="left", x_minor_ticks="auto", y_minor_ticks="auto", x_axis_label="", y_axis_label="", tools=nothing, kw...)
+function figure(;
+    x_range=nothing,
+    y_range=nothing,
+    x_axis_type="auto",
+    y_axis_type="auto",
+    x_axis_location="below",
+    y_axis_location="left",
+    x_minor_ticks="auto",
+    y_minor_ticks="auto",
+    x_axis_label="",
+    y_axis_label="",
+    tools=nothing,
+    tooltips=nothing,
+    kw...,
+)
     fig = Figure(; kw...)
     # ranges
     fig.x_range = get_range(x_range)
@@ -105,6 +119,9 @@ function figure(; x_range=nothing, y_range=nothing, x_axis_type="auto", y_axis_t
     else
         add_tools!(fig, tools)
     end
+    if tooltips !== nothing
+        add_tools!(fig, HoverTool(tooltips=tooltips))
+    end
 
     return fig
 end
@@ -112,7 +129,7 @@ end
 
 ### RENDERERS
 
-function add_layout!(plot::Model, renderer::Model; location)
+function add_layout!(plot::Model, renderer::Model; location="center")
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     ismodelinstance(renderer, Renderer) || error("renderer must be a Renderer")
     if location == "left"
@@ -145,7 +162,7 @@ for t in [Grid]
     f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model, axis::Model, dimension::Integer; kw...)
         grid = $t(; axis, dimension, kw...)
-        add_layout!(plot, grid; location="center")
+        add_layout!(plot, grid)
         return grid
     end
     @eval export $f
@@ -167,8 +184,7 @@ end
 
 ### GLYPHS
 
-function add_glyph_kw!(plot::Model, glyph::Model, kw::Vector{Kwarg})
-    ismodelinstance(plot, Plot) || error("plot must be a Plot")
+function _glyph_renderer_kw(glyph::Model, kw::Vector{Kwarg})
     ismodelinstance(glyph, Glyph) || error("glyph must be a Glyph")
     filters = Undefined()
     for (k, v) in (oldkw=kw; kw=Kwarg[]; oldkw)
@@ -184,6 +200,12 @@ function add_glyph_kw!(plot::Model, glyph::Model, kw::Vector{Kwarg})
     if renderer.view === Undefined()
         renderer.view = Model(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
     end
+    return renderer
+end
+
+function add_glyph_kw!(plot::Model, glyph::Model, kw::Vector{Kwarg})
+    ismodelinstance(plot, Plot) || error("plot must be a Plot")
+    renderer = _glyph_renderer_kw(glyph, kw)
     push!(plot.renderers, renderer)
     return renderer
 end
@@ -191,21 +213,13 @@ end
 function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     issubmodeltype(type, Glyph) || error("type must be a subtype of Glyph")
+    # process the kwargs
     kw, oldkw = Kwarg[], kw
     rkw = Kwarg[]
     have_source = false
+    legend_kwarg = nothing
     for (k, v) in oldkw
-        if k == :color
-            # color shorthand
-            for k2 in (:fill_color, :line_color, :hatch_color)
-                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
-            end
-        elseif k == :alpha
-            # alpha shorthand
-            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
-                haskey(type.propdescs, k2) && push!(k2, Kwarg(k2, v))
-            end
-        elseif k in (:source, :data_source)
+        if k in (:source, :data_source)
             # source -> data_source
             have_source = true
             if v === Undefined() || v isa Model
@@ -213,16 +227,37 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
             else
                 push!(rkw, Kwarg(:data_source, ColumnDataSource(data=v)))
             end
-        elseif k == :filters || haskey(GlyphRenderer.propdescs, k)
-            # separate out arguments for the renderer
+        elseif haskey(GlyphRenderer.propdescs, k)
+            # arguments for the renderer
             push!(rkw, Kwarg(k, v))
-        else
+        elseif haskey(type.propdescs, k)
+            # arguments for the glyph
             push!(kw, Kwarg(k, v))
+        elseif k == :filters
+            push!(rkw, Kwarg(k, v))
+        elseif k == :color
+            # color -> fill_color, etc
+            for k2 in (:fill_color, :line_color, :hatch_color)
+                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+            end
+        elseif k == :alpha
+            # alpha -> fill_alpha, etc
+            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
+                haskey(type.propdescs, k2) && push!(k2, Kwarg(k2, v))
+            end
+        elseif k == :palette && haskey(type.propdescs, :color_mapper)
+            # palette -> color_mapper
+            push!(kw, Kwarg(:color_mapper, LinearColorMapper(palette=v)))
+        elseif k in (:legend_label, :legend_field, :legend_group)
+            legend_kwarg === nothing || error("$(legend_kwarg[1]) and $k are mutually exclusive")
+            legend_kwarg = Kwarg(k, v)
+        else
+            error("invalid argument $k")
         end
     end
+    # if we haven't seen a source argument, create one by collecting all the dataspec
+    # arguments which are vectors, replacing the argument with a Field.
     if !have_source
-        # if we haven't seen a source argument, create one by collecting all the dataspec
-        # arguments which are vectors, replacing the argument with a Field.
         kw, oldkw = Kwarg[], kw
         data = Dict{String,AbstractVector}()
         for (k, v) in oldkw
@@ -237,9 +272,81 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
         source = ColumnDataSource(data=data)
         push!(rkw, Kwarg(:data_source, source))
     end
-    # finally make and add the glyph
+    # make the glyph and renderer
     glyph = Model(type, kw)
-    return add_glyph_kw!(plot, glyph, rkw)
+    renderer = _glyph_renderer_kw(glyph, rkw)
+    # handle the legend
+    if legend_kwarg !== nothing
+        let (k, v) = legend_kwarg
+            # get or create the legend
+            legends = plot.legends
+            if isempty(legends)
+                legend = Legend()
+                add_layout!(plot, legend)
+            elseif length(legends) == 1
+                legend = legends[1]::Model
+            else
+                error("$k: more than one legend in use")
+            end
+            # update the legend
+            if k == :legend_label
+                v isa AbstractString || error("$k: expecting a string")
+                v = convert(String, v)::String
+                label = Value(v)
+                found = false
+                for item in legend.items
+                    if item.label == label
+                        push!(item.renderers, renderer)
+                        found = true
+                        break
+                    end
+                end
+                if !found
+                    item = LegendItem(label=label, renderers=[renderer])
+                    push!(legend.items, item)
+                end
+            elseif k == :legend_field
+                v isa AbstractString || error("$k: expecting a string")
+                v = convert(String, v)::String
+                label = Field(v)
+                found = false
+                for item in legend.items
+                    if item.label == label
+                        push!(item.renderers, renderer)
+                        found = true
+                        break
+                    end
+                end
+                if !found
+                    item = LegendItem(label=label, renderers=[renderer])
+                    push!(legend.items, item)
+                end
+            elseif k == :legend_group
+                v isa AbstractString || error("$k: expecting a string")
+                v = convert(String, v)::String
+                source = renderer.data_source
+                if source === Undefined()
+                    error("$k: requires source to be set")
+                end
+                source::Model
+                if !(hasproperty(source, :column_names) && v in source.column_names)
+                    error("$k: source does not contain column $(repr(vstr))")
+                end
+                column = source.data[v]
+                uniq = Dict(x=>(i-1) for (i,x) in enumerate(column))
+                for (val, ind) in uniq
+                    label = Value(string(val))
+                    item = LegendItem(label=label, renderers=[renderer], index=ind)
+                    push!(legend.items, item)
+                end
+            else
+                @assert false
+            end
+        end
+    end
+    # finally add the renderer
+    push!(plot.renderers, renderer)
+    return renderer
 end
 
 function add_glyph!(plot::Model, glyph::Model; kw...)
@@ -257,6 +364,7 @@ quad!(plot::Model; kw...) = add_glyph_kw!(plot, Quad, collect(Kwarg, kw))
 vbar!(plot::Model; kw...) = add_glyph_kw!(plot, VBar, collect(Kwarg, kw))
 line!(plot::Model; kw...) = add_glyph_kw!(plot, Line, collect(Kwarg, kw))
 image!(plot::Model; kw...) = add_glyph_kw!(plot, Image, collect(Kwarg, kw))
+image_rgba!(plot::Model; kw...) = add_glyph_kw!(plot, ImageRGBA, collect(Kwarg, kw))
 
 function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")

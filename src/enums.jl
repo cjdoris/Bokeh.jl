@@ -1,6 +1,18 @@
 const ALIGN_ENUM = Set(["start", "center", "end"])
 
+const ANCHOR_ENUM = Set([
+    "top_left", "top_center", "top_right", "center_left", "center_center", "center_right",
+    "bottom_left", "bottom_center", "bottom_right", "top", "left", "center", "right",
+    "bottom",
+])
+
 const AUTO_ENUM = Set(["auto"])
+
+const FONT_STYLE_ENUM = Set(["normal", "italic", "bold", "bold italic"])
+
+const LEGEND_CLICK_POLICY_ENUM = Set(["none", "hide", "mute"])
+
+const LEGEND_LOCATION_ENUM = ANCHOR_ENUM
 
 const LOCATION_ENUM = Set(["above", "below", "left", "right"])
 
@@ -39,11 +51,17 @@ const NAMED_COLOR_ENUM = Set([
 
 const NAMED_PALETTE_ENUM = Set(keys(PALETTES))
 
+const ORIENTATION_ENUM = Set(["horizontal", "vertical"])
+
+const OUTPUT_BACKEND_ENUM = Set(["canvas", "svg", "webgl"])
+
 const QUICK_TRACK_SIZING_ENUM = Set(["auto", "min", "fit", "max"])
 
 const RENDER_LEVEL_ENUM = Set([
     "image", "underlay", "glyph", "guide", "annotation", "overlay",
 ])
+
+const RESET_POLICY_ENUM = Set(["standard", "event_only"])
 
 const SIZING_MODE_ENUM = Set([
     "stretch_width", "stretch_height", "stretch_both", "scale_width", "scale_height",
@@ -51,3 +69,9 @@ const SIZING_MODE_ENUM = Set([
 ])
 
 const SIZING_POLICY_ENUM = Set(["fixed", "fit", "min", "max"])
+
+const TEXT_ALIGN_ENUM = Set(["left", "right", "center"])
+
+const TEXT_BASELINE_ENUM = Set([
+    "top", "middle", "bottom", "alphabetic", "hanging", "ideographic",
+])

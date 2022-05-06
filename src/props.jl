@@ -45,3 +45,25 @@ const SCALAR_HATCH_PROPS = [
     :hatch_weight => SizeT() |> DefaultT(1.0),
     :hatch_extra => DictT(StringT(), AnyT()),
 ]
+
+const TEXT_PROPS = [
+    :text_color => ColorSpecT(default=Value("#444444")),
+    :text_alpha => AlphaSpecT(),
+    :text_font => StringSpecT(default=Value("helvetica")),
+    :text_font_size => FontSizeSpecT(default=Value("16px")),
+    :text_font_style => FontStyleSpecT(default=Value("normal")),
+    :text_align => TextAlignSpecT(default=Value("left")),
+    :text_baseline => TextBaselineSpecT(default=Value("bottom")),
+    :text_line_height => NumberSpecT(default=Value(1.2)),
+]
+
+const SCALAR_TEXT_PROPS = [
+    :text_color => NullableT(ColorT(), default="#444444"),
+    :text_alpha => AlphaT(),
+    :text_font => StringT(default="helvetica"),
+    :text_font_size => FontSizeT(default="16px"),
+    :text_font_style => FontStyleT(default="normal"),
+    :text_align => TextAlignT(default="left"),
+    :text_baseline => TextBaselineT(default="bottom"),
+    :text_line_height => FloatT(default=1.2),
+]
