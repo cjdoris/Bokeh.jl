@@ -1,10 +1,14 @@
+export factor_mark, factor_cmap
+export figure
+export add_layout!, add_glyph!, add_tools!
+export scatter!, quad!, vbar!, line!, image!
+export row, column
+
 ### TRANSFORMS
 
 factor_mark(field, markers, factors; kw...) = Field(field, transform=CategoricalMarkerMapper(; markers, factors, kw...))
-export factor_mark
 
 factor_cmap(field, palette, factors; kw...) = Field(field, transform=CategoricalColorMapper(; palette, factors, kw...))
-export factor_cmap
 
 
 ### FIGURE
@@ -77,9 +81,9 @@ function process_axis_and_grid(plot, axis_type, axis_location, minor_ticks, axis
             axis.axis_label = axis_label
         end
         grid = Grid(dimension=dim, axis=axis)
-        add_renderer!(plot, :center, grid)
+        add_layout!(plot, grid; location="center")
         if axis_location !== nothing
-            add_renderer!(plot, Symbol(axis_location), axis)
+            add_layout!(plot, axis; location=axis_location)
         end
     end
 end
@@ -104,36 +108,160 @@ function figure(; x_range=nothing, y_range=nothing, x_axis_type="auto", y_axis_t
 
     return fig
 end
-export figure
 
-### PLOTS
 
-function add_renderer!(plot::Model, loc::Symbol, renderer::Model)
+### RENDERERS
+
+function add_layout!(plot::Model, renderer::Model; location)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     ismodelinstance(renderer, Renderer) || error("renderer must be a Renderer")
-    loc in (:renderers, :left, :right, :above, :below, :center) || error("loc must be :left, :right, :above, :below, :center or :renderers")
-    push!(getproperty(plot, loc), renderer)
-    return plot
+    if location == "left"
+        push!(plot.left, renderer)
+    elseif location == "right"
+        push!(plot.right, renderer)
+    elseif location == "below"
+        push!(plot.below, renderer)
+    elseif location == "above"
+        push!(plot.above, renderer)
+    elseif location == "center"
+        push!(plot.center, renderer)
+    else
+        error("invalid location")
+    end
+    return renderer
 end
-export add_renderer!
 
-function add_glyph!(plot::Model, source::Model, glyph::Model; kw...)
+for t in [LinearAxis, LogAxis, CategoricalAxis, DateTimeAxis, MercatorAxis]
+    f = Symbol(lowercase(t.name), "!")
+    @eval function $f(plot::Model; location, kw...)
+        axis = $t(; kw...)
+        add_layout!(plot, axis; location)
+        return axis
+    end
+    @eval export $f
+end
+
+for t in [Grid]
+    f = Symbol(lowercase(t.name), "!")
+    @eval function $f(plot::Model, axis::Model, dimension::Integer; kw...)
+        grid = $t(; axis, dimension, kw...)
+        add_layout!(plot, grid; location="center")
+        return grid
+    end
+    @eval export $f
+end
+
+for t in [PanTool, RangeTool, WheelPanTool, WheelZoomTool, SaveTool, ResetTool, TapTool,
+    CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool, BoxSelectTool, LassoSelectTool,
+    PolySelectTool, HelpTool,
+]
+    f = Symbol(lowercase(t.name), "!")
+    @eval function $f(plot::Model; active::Bool=false, kw...)
+        tool = $t(; kw...)
+        add_tools!(plot, tool; active)
+        return tool
+    end
+    @eval export $f
+end
+
+
+### GLYPHS
+
+function add_glyph_kw!(plot::Model, glyph::Model, kw::Vector{Kwarg})
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    ismodelinstance(source, DataSource) || error("source must be a DataSource")
     ismodelinstance(glyph, Glyph) || error("glyph must be a Glyph")
-    renderer = GlyphRenderer(; data_source=source, glyph=glyph, kw...)
+    filters = Undefined()
+    for (k, v) in (oldkw=kw; kw=Kwarg[]; oldkw)
+        if k == :filters
+            filters = v
+        elseif k == :source
+            push!(kw, Kwarg(:data_source, v))
+        else
+            push!(kw, Kwarg(k, v))
+        end
+    end
+    renderer = Model(GlyphRenderer, [Kwarg(:glyph, glyph); kw])
     if renderer.view === Undefined()
-        renderer.view = CDSView(source=source)
+        renderer.view = Model(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
     end
     push!(plot.renderers, renderer)
-    return plot
+    return renderer
 end
-export add_glyph!
 
-function add_tools!(plot::Model, tools; active::Bool=false)
+function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
+    ismodelinstance(plot, Plot) || error("plot must be a Plot")
+    issubmodeltype(type, Glyph) || error("type must be a subtype of Glyph")
+    kw, oldkw = Kwarg[], kw
+    rkw = Kwarg[]
+    have_source = false
+    for (k, v) in oldkw
+        if k == :color
+            # color shorthand
+            for k2 in (:fill_color, :line_color, :hatch_color)
+                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+            end
+        elseif k == :alpha
+            # alpha shorthand
+            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
+                haskey(type.propdescs, k2) && push!(k2, Kwarg(k2, v))
+            end
+        elseif k in (:source, :data_source)
+            # source -> data_source
+            have_source = true
+            if v === Undefined() || v isa Model
+                push!(rkw, Kwarg(:data_source, v))
+            else
+                push!(rkw, Kwarg(:data_source, ColumnDataSource(data=v)))
+            end
+        elseif k == :filters || haskey(GlyphRenderer.propdescs, k)
+            # separate out arguments for the renderer
+            push!(rkw, Kwarg(k, v))
+        else
+            push!(kw, Kwarg(k, v))
+        end
+    end
+    if !have_source
+        # if we haven't seen a source argument, create one by collecting all the dataspec
+        # arguments which are vectors, replacing the argument with a Field.
+        kw, oldkw = Kwarg[], kw
+        data = Dict{String,AbstractVector}()
+        for (k, v) in oldkw
+            d = get(type.propdescs, k, nothing)
+            if d isa PropDesc && d.kind == TYPE_K && (d.type::PropType).prim == DATASPEC_T && v isa AbstractVector
+                data[string(k)] = v
+                push!(kw, Kwarg(k, Field(string(k))))
+            else
+                push!(kw, Kwarg(k, v))
+            end
+        end
+        source = ColumnDataSource(data=data)
+        push!(rkw, Kwarg(:data_source, source))
+    end
+    # finally make and add the glyph
+    glyph = Model(type, kw)
+    return add_glyph_kw!(plot, glyph, rkw)
+end
+
+function add_glyph!(plot::Model, glyph::Model; kw...)
+    @nospecialize
+    return add_glyph_kw!(plot, glyph, collect(Kwarg, kw))
+end
+
+function add_glyph!(plot::Model, type::ModelType; kw...)
+    @nospecialize
+    return add_glyph_kw!(plot, type, collect(Kwarg, kw))
+end
+
+scatter!(plot::Model; kw...) = add_glyph_kw!(plot, Scatter, collect(Kwarg, kw))
+quad!(plot::Model; kw...) = add_glyph_kw!(plot, Quad, collect(Kwarg, kw))
+vbar!(plot::Model; kw...) = add_glyph_kw!(plot, VBar, collect(Kwarg, kw))
+line!(plot::Model; kw...) = add_glyph_kw!(plot, Line, collect(Kwarg, kw))
+image!(plot::Model; kw...) = add_glyph_kw!(plot, Image, collect(Kwarg, kw))
+
+function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     toolbar = plot.toolbar::Model
-    for tool in collect(Model, tools)
+    for tool in tools
         ismodelinstance(tool, Tool) || error("tool must be a Tool")
         push!(toolbar.tools, tool)
         if active
@@ -161,98 +289,8 @@ function add_tools!(plot::Model, tools; active::Bool=false)
     end
     return plot
 end
-add_tools!(plot::Model, tools::Model...; kw...) = add_tools!(plot, tools; kw...)
-export add_tools!
-
-for t in [Scatter, Quad, VBar]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, source::Model;
-            color=Undefined(),
-            line_color=color,
-            fill_color=color,
-            hatch_color=color,
-            alpha=Undefined(),
-            line_alpha=alpha,
-            fill_alpha=alpha,
-            hatch_alpha=alpha,
-            level=Undefined(),
-            view=Undefined(),
-            kw...,
-        )
-        glyph = $t(; line_color, fill_color, hatch_color, line_alpha, fill_alpha, hatch_alpha, kw...)
-        add_glyph!(plot, source, glyph; level, view)
-        return glyph
-    end
-    @eval export $f
-end
-
-for t in [Line]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, source::Model;
-            color=Undefined(),
-            line_color=color,
-            alpha=Undefined(),
-            line_alpha=alpha,
-            level=Undefined(),
-            view=Undefined(),
-            kw...,
-        )
-        glyph = $t(; line_color, line_alpha, kw...)
-        add_glyph!(plot, source, glyph; level, view)
-        return glyph
-    end
-    @eval export $f
-end
-
-for t in [Image]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, source::Model; level=Undefined(), view=Undefined(), kw...)
-        glyph = $t(; kw...)
-        add_glyph!(plot, source, glyph; level, view)
-        return glyph
-    end
-    @eval export $f
-end
-
-for t in [LinearAxis, LogAxis, CategoricalAxis, DateTimeAxis, MercatorAxis]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, loc::Symbol; kw...)
-        axis = $t(; kw...)
-        add_renderer!(plot, loc, axis)
-        return axis
-    end
-    @eval export $f
-end
-
-for t in [Grid]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, axis::Model, dimension::Integer; kw...)
-        grid = $t(; axis, dimension, kw...)
-        add_renderer!(plot, :center, grid)
-        return grid
-    end
-    @eval export $f
-end
-
-for t in [PanTool, RangeTool, WheelPanTool, WheelZoomTool, SaveTool, ResetTool, TapTool,
-    CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool, BoxSelectTool, LassoSelectTool,
-    PolySelectTool, HelpTool,
-]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model; active::Bool=false, kw...)
-        tool = $t(; kw...)
-        add_tools!(plot, tool; active)
-        return tool
-    end
-    @eval export $f
-end
-
-
-### DOM
-
-vbox(children) = Div(; children, style=Styles(display="flex", flex_direction="column"))
-hbox(children) = Div(; children, style=Styles(display="flex", flex_direction="row"))
-export vbox, hbox
+add_tools!(plot::Model, tools; kw...) = add_tools!(plot, collect(Model, tools); kw...)
+add_tools!(plot::Model, tools::Model...; kw...) = add_tools!(plot, collect(Model, tools); kw...)
 
 
 ### LAYOUT
@@ -274,7 +312,6 @@ function row(children; sizing_mode=nothing, kw...)
     return Row(; children, sizing_mode, kw...)
 end
 row(children::Model...; kw...) = row(children; kw...)
-export row
 
 function column(children; sizing_mode=nothing, kw...)
     children = collect(Model, children)
@@ -282,4 +319,3 @@ function column(children; sizing_mode=nothing, kw...)
     return Column(; children, sizing_mode, kw...)
 end
 column(children::Model...; kw...) = column(children; kw...)
-export column

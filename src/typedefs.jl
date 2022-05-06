@@ -58,11 +58,14 @@ mutable struct ModelType
     supers::IdSet{ModelType}
 end
 
+const Arg = Any
+const Kwarg = Pair{Symbol,Any}
+
 struct Model
     id :: String
     type :: ModelType
     values :: Dict{Symbol,Any}
-    function Model(t::ModelType; kw...)
+    function Model(t::ModelType, kw::Vector{Kwarg})
         ans = new(new_id(), t, Dict{Symbol,Any}())
         for (k, v) in kw
             setproperty!(ans, k, v)

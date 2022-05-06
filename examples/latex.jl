@@ -8,7 +8,7 @@ using InteractiveUtils
 using Pkg; Pkg.activate("pluto", shared=true);
 
 # ╔═╡ 600c3b85-f6c2-4d1b-952d-893d9c5b3553
-using Bokeh, Statistics, StatsBase
+using Bokeh, StatsBase
 
 # ╔═╡ 4d19880e-b3af-4b07-8b0c-9121e8af9886
 md"""
@@ -17,9 +17,12 @@ md"""
 This example reproduces the plot from: [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html)
 """
 
+# ╔═╡ 281c11ed-0912-469d-bbc7-56f288c125bc
+N = 1000
+
 # ╔═╡ c11c0457-345e-4f11-b39b-79ed9b89ef28
 # Sample from a Gaussian distribution
-samples = randn(1000);
+samples = randn(N);
 
 # ╔═╡ ca8851ee-b0de-41eb-b2c8-73aad7dd58a5
 # Scale random data so that it has mean of 0 and standard deviation of 1
@@ -35,20 +38,23 @@ begin
 	)
 
 	# Plot the histogram
-	hist = StatsBase.normalize(fit(Histogram, scaled, range(-3, 3, length=40)))
-	# TODO: implicit source
-	quad!(p, ColumnDataSource(data=(left=hist.edges[1][1:end-1], right=hist.edges[1][2:end], top=hist.weights)),
+	hist = fit(Histogram, scaled, range(-3, 3, length=40)) |> StatsBase.normalize
+	quad!(p,
+		left=hist.edges[1][1:end-1],
+		right=hist.edges[1][2:end],
+		top=hist.weights,
 		bottom=0,
 		fill_color="skyblue",
 		line_color="white",
-		# TODO legend_label="1000 random samples",
+		# TODO legend_label="$N random samples",
 	)
 
 	# Probability density function
 	x = range(-3, 3, length=100)
 	pdf = @. exp(-0.5 * x^2) / sqrt(2 * pi)
-	# TODO: implicit source
-	line!(p, ColumnDataSource(data=(x=x, y=pdf)),
+	line!(p,
+		x=x,
+		y=pdf,
 		line_width=2,
 		line_color="navy",
     	# TODO legend_label="Probability Density Function",
@@ -96,6 +102,7 @@ end
 # ╟─4d19880e-b3af-4b07-8b0c-9121e8af9886
 # ╠═4c329b0e-cc8e-11ec-3802-29390f73d48b
 # ╠═600c3b85-f6c2-4d1b-952d-893d9c5b3553
+# ╠═281c11ed-0912-469d-bbc7-56f288c125bc
 # ╠═c11c0457-345e-4f11-b39b-79ed9b89ef28
 # ╠═ca8851ee-b0de-41eb-b2c8-73aad7dd58a5
 # ╠═b26cc8c3-855a-4267-a1d0-8067602726af

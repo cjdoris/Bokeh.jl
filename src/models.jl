@@ -37,7 +37,10 @@ function mergepropdescs!(ds, x; name=nothing)
     end
 end
 
-(t::ModelType)(; kw...) = Model(t; kw...)
+function (t::ModelType)(; kw...)
+    @nospecialize
+    Model(t, collect(Kwarg, kw))
+end
 
 issubmodeltype(t1::ModelType, t2::ModelType) = t1 === t2 || t2 in t1.supers
 

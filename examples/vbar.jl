@@ -17,30 +17,28 @@ md"""
 This example reproduces the plot from: [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html)
 """
 
-# ╔═╡ e21bd15a-c6dc-41e7-a4b0-5098950ca318
-fruits = ["Apples", "Pears", "Nectarines", "Plums", "Grapes", "Strawberries"];
-
-# ╔═╡ ec37bb66-6898-41e1-a4fa-66c23d935015
-counts = [5, 3, 4, 2, 4, 6];
-
-# ╔═╡ feea3661-a4e5-4096-b113-2a25b55c813f
-source = ColumnDataSource(data=(fruits=fruits, counts=counts));
+# ╔═╡ 68ac3560-cd33-461f-a531-7d92258b84e1
+data = (
+	fruits = ["Apples", "Pears", "Nectarines", "Plums", "Grapes", "Strawberries"],
+	counts = [5, 3, 4, 2, 4, 6],
+)
 
 # ╔═╡ 1035c887-f382-4e51-be62-be8e12058e46
 begin
 	p = figure(
-		x_range=fruits,
+		x_range=data.fruits,
 		height=350,
 		toolbar_location=nothing,
 		title="Fruit Counts",
 	)
-	vbar!(p, source,
+	vbar!(p,
 		x="fruits",
 		top="counts",
+		source=data,
 		width=0.9,
 		# TODO legend_field="fruits",
        	line_color="white",
-		fill_color=factor_cmap("fruits", "Spectral6", fruits),
+		fill_color=factor_cmap("fruits", "Spectral6", data.fruits),
 	)
 	p.x_grid.grid_line_color = nothing
 	p.y_range.start = 0
@@ -54,7 +52,5 @@ end
 # ╟─f26563d9-0865-43fb-9dce-6449c7f331bf
 # ╠═2c4f4270-cc4e-11ec-0e14-3baff984e3a2
 # ╠═f40343e0-31e1-4c54-9b8b-716dca054fa9
-# ╠═e21bd15a-c6dc-41e7-a4b0-5098950ca318
-# ╠═ec37bb66-6898-41e1-a4fa-66c23d935015
-# ╠═feea3661-a4e5-4096-b113-2a25b55c813f
+# ╠═68ac3560-cd33-461f-a531-7d92258b84e1
 # ╠═1035c887-f382-4e51-be62-be8e12058e46

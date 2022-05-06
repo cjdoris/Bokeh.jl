@@ -281,16 +281,21 @@ TupleT(ts::PropType...; kw...) = PropType(TUPLE_T; params=collect(PropType, ts),
 
 DictT(k::PropType, v::PropType, ::Type{K}=result_type(k), ::Type{V}=result_type(v); kw...) where {K,V} = PropType(DICT_T; params=[k,v], default=()->Dict{K,V}(), kw...)
 
-ColumnDataT(; kw...) = EitherT(
-    DictT(StringT(), ListT(AnyT())),
-    AnyT(validate=function (x; detail)
-        if Tables.istable(x)
-            t = Tables.dictcolumntable(x)
-            return Dict(string(c) => Tables.getcolumn(t, c) for c in Tables.columnnames(t))
-        else
-            return Invalid(detail ? "expecting a table" : "")
-        end
-    end),
+function validate_column_data(x; detail)
+    if x isa AbstractDict && all(k isa AbstractString && v isa AbstractVector for (k, v) in x)
+        return Dict{String,AbstractVector}(x)
+    elseif Tables.istable(x)
+        t = Tables.dictcolumntable(x)
+        return Dict{String,AbstractVector}(string(c) => Tables.getcolumn(t, c) for c in Tables.columnnames(t))
+    else
+        return Invalid(detail ? "expecting a dict mapping strings to vectors / expecting a table" : "", 1)
+    end
+end
+
+ColumnDataT(; kw...) = AnyT(;
+    validate = validate_column_data,
+    result_type = Dict{String,AbstractVector},
+    kw...
 )
 
 
