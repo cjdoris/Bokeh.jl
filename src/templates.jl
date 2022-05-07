@@ -214,11 +214,11 @@ end
 
 const BUNDLE_BOKEH_CDN = (
     js_urls = [
-        "https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.min.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.min.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.min.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-$(BOKEH_VERSION).min.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-gl-$(BOKEH_VERSION).min.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-$(BOKEH_VERSION).min.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-tables-$(BOKEH_VERSION).min.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-$(BOKEH_VERSION).min.js",
     ],
     css_urls = [],
     js_raw = [],
@@ -227,11 +227,11 @@ const BUNDLE_BOKEH_CDN = (
 
 const BUNDLE_BOKEH_CDN_NOMIN = (
     js_urls = [
-        "https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.js",
-        "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-$(BOKEH_VERSION).js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-gl-$(BOKEH_VERSION).js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-$(BOKEH_VERSION).js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-tables-$(BOKEH_VERSION).js",
+        "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-$(BOKEH_VERSION).js",
     ],
     css_urls = [],
     js_raw = [],

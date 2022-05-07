@@ -8,7 +8,7 @@ using InteractiveUtils
 using Pkg; Pkg.activate("pluto", shared=true);
 
 # ╔═╡ 600c3b85-f6c2-4d1b-952d-893d9c5b3553
-using Bokeh, StatsBase
+using Bokeh, Bokeh.Math, Bokeh.Widgets, StatsBase
 
 # ╔═╡ 4d19880e-b3af-4b07-8b0c-9121e8af9886
 md"""

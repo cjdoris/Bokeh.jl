@@ -19,7 +19,6 @@ const Markup = ModelType("Markup";
 const Paragraph = ModelType("Paragraph";
     inherits = [Markup]
 )
-export Paragraph
 
 const Div = ModelType("Div";
     inherits = [Markup],
@@ -27,9 +26,12 @@ const Div = ModelType("Div";
         :render_as_text => BoolT(default=false),
     ]
 )
-export Div
 
 const PreText = ModelType("PreText";
     inherits = [Markup]
 )
-export PreText
+
+module Widgets
+    import ..Bokeh: Widget, Markup, Paragraph, Div, PreText
+    export Widget, Markup, Paragraph, Div, PreText
+end

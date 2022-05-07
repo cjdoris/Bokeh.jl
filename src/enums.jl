@@ -8,7 +8,11 @@ const ANCHOR_ENUM = Set([
 
 const AUTO_ENUM = Set(["auto"])
 
+const DIRECTION_ENUM = Set(["clock", "anticlock"])
+
 const FONT_STYLE_ENUM = Set(["normal", "italic", "bold", "bold italic"])
+
+const LATLON_ENUM = Set(["lat", "lon"])
 
 const LEGEND_CLICK_POLICY_ENUM = Set(["none", "hide", "mute"])
 
@@ -51,6 +55,12 @@ const NAMED_COLOR_ENUM = Set([
 
 const NAMED_PALETTE_ENUM = Set(keys(PALETTES))
 
+const NUMERAL_LANGUAGE_ENUM = Set([
+    "be-nl", "chs", "cs", "da-dk", "de-ch", "de", "en", "en-gb", "es-ES", "es", "et", "fi",
+    "fr-CA", "fr-ch", "fr", "hu", "it", "ja", "nl-nl", "pl", "pt-br", "pt-pt", "ru",
+    "ru-UA", "sk", "th", "tr", "uk-UA",
+])
+
 const ORIENTATION_ENUM = Set(["horizontal", "vertical"])
 
 const OUTPUT_BACKEND_ENUM = Set(["canvas", "svg", "webgl"])
@@ -63,6 +73,10 @@ const RENDER_LEVEL_ENUM = Set([
 
 const RESET_POLICY_ENUM = Set(["standard", "event_only"])
 
+const ROUNDING_FUNCTION_ENUM = Set([
+    "round", "nearest", "floor", "rounddown", "ceil", "roundup",
+])
+
 const SIZING_MODE_ENUM = Set([
     "stretch_width", "stretch_height", "stretch_both", "scale_width", "scale_height",
     "scale_both", "fixed",
@@ -70,8 +84,12 @@ const SIZING_MODE_ENUM = Set([
 
 const SIZING_POLICY_ENUM = Set(["fixed", "fit", "min", "max"])
 
+const STEP_MODE_ENUM = Set(["before", "after", "center"])
+
 const TEXT_ALIGN_ENUM = Set(["left", "right", "center"])
 
 const TEXT_BASELINE_ENUM = Set([
     "top", "middle", "bottom", "alphabetic", "hanging", "ideographic",
 ])
+
+const TICK_LABEL_ORIENTATION_ENUM = Set(["horizontal", "vertical", "parallel", "normal"])

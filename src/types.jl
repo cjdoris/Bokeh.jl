@@ -298,6 +298,15 @@ ColumnDataT(; kw...) = AnyT(;
     kw...
 )
 
+function ListOrSingleT(t::PropType, ::Type{T}=result_type(t); kw...) where {T}
+    lt = ListT(t)
+    st = PropType(t;
+        validate = (x; detail) -> T[x],
+        result_type = result_type(lt),
+    )
+    return EitherT(lt, st; default=lt.default, kw...)
+end
+
 
 ### VISUAL
 
@@ -390,6 +399,12 @@ StringSpecT(; kw...) = DataSpecT(StringT(); kw...)
 
 TextAlignSpecT(; kw...) = DataSpecT(TextAlignT(); kw...)
 
+AngleSpecT(; kw...) = DataSpecT(FloatT(); kw...) # TODO: units
+
+DistanceSpecT(; kw...) = DataSpecT(SizeT(); kw...) # TODO: units
+
+NullDistanceSpecT(; kw...) = DataSpecT(NullableT(SizeT()); kw...) # TODO: units
+
 
 ### OTHER ENUMS
 
@@ -399,13 +414,19 @@ AnchorT(; kw...) = EnumT(ANCHOR_ENUM; kw...)
 
 AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
 
+DirectionT(; kw...) = EnumT(DIRECTION_ENUM; kw...)
+
 FontStyleT(; kw...) = EnumT(FONT_STYLE_ENUM; kw...)
+
+LatLonT(; kw...) = EnumT(LATLON_ENUM; kw...)
 
 LegendClickPolicyT(; kw...) = EnumT(LEGEND_CLICK_POLICY_ENUM; kw...)
 
 LegendLocationT(; kw...) = EnumT(LEGEND_LOCATION_ENUM; kw...)
 
 LocationT(; kw...) = EnumT(LOCATION_ENUM; kw...)
+
+NumeralLanguageT(; kw...) = EnumT(NUMERAL_LANGUAGE_ENUM; kw...)
 
 OrientationT(; kw...) = EnumT(ORIENTATION_ENUM; kw...)
 
@@ -415,13 +436,19 @@ RenderLevelT(; kw...) = EnumT(RENDER_LEVEL_ENUM; kw...)
 
 ResetPolicyT(; kw...) = EnumT(RESET_POLICY_ENUM; kw...)
 
+RoundingFunctionT(; kw...) = EnumT(ROUNDING_FUNCTION_ENUM; kw...)
+
 SizingModeT(; kw...) = EnumT(SIZING_MODE_ENUM; kw...)
 
 SizingPolicyT(; kw...) = EnumT(SIZING_POLICY_ENUM; kw...)
 
+StepModeT(; kw...) = EnumT(STEP_MODE_ENUM; kw...)
+
 TextBaselineT(; kw...) = EnumT(TEXT_BASELINE_ENUM; kw...)
 
 TextAlignT(; kw...) = EnumT(TEXT_ALIGN_ENUM; kw...)
+
+TickLabelOrientationT(; kw...) = EnumT(TICK_LABEL_ORIENTATION_ENUM; kw...)
 
 
 ### MISC

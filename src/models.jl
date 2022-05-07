@@ -78,10 +78,15 @@ function Base.getproperty(m::Model, k::Symbol)
         # get the default value
         t = pd.type::PropType
         d = t.default
-        if d isa Function
-            v = vs[k] = d()
-        else
+        if d === Undefined()
             v = d
+        elseif d isa Function
+            v = validate(t, d())
+            v isa Invalid && error("$(mt.name): .$k: invalid default value: $(v.msg)")
+            vs[k] = v
+        else
+            v = validate(t, d)
+            v isa Invalid && error("$(mt.name): .$k: invalid default value: $(v.msg)")
         end
         return v
     elseif kd == GETSET_K
@@ -275,12 +280,10 @@ const MathText = ModelType("MathText";
 const Ascii = ModelType("Ascii";
     inherits = [MathText],
 )
-export Ascii
 
 const MathML = ModelType("MathML";
     inherits = [MathText],
 )
-export MathML
 
 const TeX = ModelType("TeX";
     inherits = [MathText],
@@ -289,11 +292,15 @@ const TeX = ModelType("TeX";
         :inline => BoolT(default=false),
     ]
 )
-export TeX
 
 const PlainText = ModelType("PlainText";
     inherits = [BaseText],
 )
+
+module Math
+    import ..Bokeh: MathText, Ascii, MathML, TeX
+    export MathText, Ascii, MathML, TeX
+end
 
 
 ### SOURCES
@@ -311,7 +318,6 @@ const ColumnDataSource = ModelType("ColumnDataSource";
         :column_names => GetSetT(x->collect(String,keys(x.data))),
     ],
 )
-export ColumnDataSource
 
 const CDSView = ModelType("CDSView";
     props = [
@@ -319,8 +325,11 @@ const CDSView = ModelType("CDSView";
         :source => InstanceT(ColumnarDataSource),
     ],
 )
-export CDSView
 
+module Sources
+    import ..Bokeh: DataSource, ColumnarDataSource, ColumnDataSource, CDSView
+    export DataSource, ColumnarDataSource, ColumnDataSource, CDSView
+end
 
 ### TICKERS
 
@@ -328,6 +337,10 @@ const Ticker = ModelType("Ticker")
 
 const ContinuousTicker = ModelType("ContinuousTicker";
     inherits = [Ticker],
+    props = [
+        :num_minor_ticks => IntT(default=5),
+        :desired_num_ticks => IntT(default=6),
+    ]
 )
 
 const FixedTicker = ModelType("FixedTicker";
@@ -337,6 +350,206 @@ const FixedTicker = ModelType("FixedTicker";
         :minor_ticks => SeqT(FloatT()),
     ]
 )
+
+const AdaptiveTicker = ModelType("AdaptiveTicker";
+    inherits = [ContinuousTicker],
+    props = [
+        :base => FloatT(default=10.0),
+        :mantissas => SeqT(FloatT(), default=()->[1.0, 2.0, 5.0]),
+        :min_interval => FloatT(default=0.0),
+        :max_interval => NullableT(FloatT()),
+    ]
+)
+
+const CompositeTicker = ModelType("CompositeTicker";
+    inherits = [ContinuousTicker],
+    props = [
+        :tickers => SeqT(InstanceT(Ticker)),
+    ]
+)
+
+const SingleIntervalTicker = ModelType("SingleIntervalTicker";
+    inherits = [ContinuousTicker],
+    props = [
+        :interval => FloatT(),
+    ]
+)
+
+const DaysTicker = ModelType("DaysTicker";
+    inherits = [SingleIntervalTicker],
+    props = [
+        :days => SeqT(IntT()),
+        :num_minor_ticks => DefaultT(0),
+    ]
+)
+
+const MonthsTicker = ModelType("MonthsTicker";
+    inherits = [SingleIntervalTicker],
+    props = [
+        :months => SeqT(IntT()),
+    ]
+)
+
+const YearsTicker = ModelType("YearsTicker";
+    inherits = [SingleIntervalTicker],
+)
+
+const BasicTicker = ModelType("BasicTicker";
+    inherits = [AdaptiveTicker],
+)
+
+const LogTicker = ModelType("LogTicker";
+    inherits = [AdaptiveTicker],
+    props = [
+        :mantissas => DefaultT(()->[1.0, 5.0]),
+    ]
+)
+
+const MercatorTicker = ModelType("MercatorTicker";
+    inherits = [BasicTicker],
+    props = [
+        :dimension => NullableT(LatLonT()),
+    ]
+)
+
+const DatetimeTicker = ModelType("DatetimeTicker";
+    inherits = [CompositeTicker],
+    props = [
+        :num_minor_ticks => DefaultT(0),
+        :tickers => DefaultT(() -> [
+            AdaptiveTicker(
+                mantissas = [1, 2, 5],
+                base = 10,
+                min_interval = 0,
+                max_interval = 500,
+                num_minor_ticks = 0,
+            ),
+            AdaptiveTicker(
+                mantissas = [1, 2, 5, 10, 15, 20, 30],
+                base = 60,
+                min_interval = 1000,
+                max_interval = 30*60*1000,
+                num_minor_ticks = 0,
+            ),
+            AdaptiveTicker(
+                mantissas = [1, 2, 4, 6, 8, 12],
+                base = 60,
+                min_interval = 60*60*1000,
+                max_interval = 12*60*60*1000,
+                num_minor_ticks = 0,
+            ),
+            DaysTicker(days=collect(1:32)),
+            DaysTicker(days=collect(1:3:30)),
+            DaysTicker(days=[1,8,15,22]),
+            DaysTicker(days=[1,15]),
+            MonthsTicker(months=collect(0:1:11)),
+            MonthsTicker(months=collect(0:2:11)),
+            MonthsTicker(months=collect(0:3:11)),
+            MonthsTicker(months=collect(0:6:11)),
+            YearsTicker(),
+        ])
+    ]
+)
+
+const BinnedTicker = ModelType("BinnedTicker";
+    inherits = [Ticker],
+    props = [
+        # :mapper => InstanceT(ScanningColorMapper), TODO
+        :num_major_ticks => EitherT(IntT(), AutoT(), default=8),
+    ]
+)
+
+module Tickers
+    import ..Bokeh: Ticker, ContinuousTicker, FixedTicker, AdaptiveTicker, CompositeTicker,
+        SingleIntervalTicker, DaysTicker, MonthsTicker, YearsTicker, BasicTicker,
+        LogTicker, MercatorTicker, DatetimeTicker, BinnedTicker
+    export Ticker, ContinuousTicker, FixedTicker, AdaptiveTicker, CompositeTicker,
+        SingleIntervalTicker, DaysTicker, MonthsTicker, YearsTicker, BasicTicker,
+        LogTicker, MercatorTicker, DatetimeTicker, BinnedTicker
+end
+
+
+### TICK FORMATTERS
+
+const TickFormatter = ModelType("TickFormatter")
+
+const BasicTickFormatter = ModelType("BasicTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        :precision => EitherT(AutoT(), IntT()),
+        :use_scientific => BoolT(default=true),
+        :power_limit_high => IntT(default=5),
+        :power_limit_low => IntT(default=-3),
+    ]
+)
+
+const MercatorTickFormatter = ModelType("MercatorTickFormatter";
+    inherits = [BasicTickFormatter],
+    props = [
+        :dimension => NullableT(LatLonT()),
+    ]
+)
+
+const NumericalTickFormatter = ModelType("NumericalTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        :format => StringT(default="0,0"),
+        :language => NumeralLanguageT(default="en"),
+        :rounding => RoundingFunctionT(),
+    ]
+)
+
+const PrintfTickFormatter = ModelType("PrintfTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        :format => StringT(default="%s"),
+    ]
+)
+
+const LogTickFormatter = ModelType("LogTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        :ticker => NullableT(InstanceT(Ticker)),
+        :min_exponent => IntT(default=0),
+    ]
+)
+
+const CategoricalTickFormatter = ModelType("CategoricalTickFormatter";
+    inherits = [TickFormatter],
+)
+
+const FuncTickFormatter = ModelType("FuncTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        # TODO
+    ]
+)
+
+const DatetimeTickFormatter = ModelType("DatetimeTickFormatter";
+    inherits = [TickFormatter],
+    props = [
+        :microseconds => ListOrSingleT(StringT(), default=()->["%fus"]),
+        :milliseconds => ListOrSingleT(StringT(), default=()->["%3Nms", "%S.%3Ns"]),
+        :seconds => ListOrSingleT(StringT(), default=()->["%Ss"]),
+        :minsec => ListOrSingleT(StringT(), default=()->[":%M:%S"]),
+        :minutes => ListOrSingleT(StringT(), default=()->[":%M", "%Mm"]),
+        :hourmin => ListOrSingleT(StringT(), default=()->["%H:%M"]),
+        :hours => ListOrSingleT(StringT(), default=()->["%Hh", "%H:%M"]),
+        :days => ListOrSingleT(StringT(), default=()->["%m/%d", "%a%d"]),
+        :months => ListOrSingleT(StringT(), default=()->["%m/%Y", "%b %Y"]),
+        :years => ListOrSingleT(StringT(), default=()->["%Y"]),
+    ]
+)
+
+module TickFormatters
+    import ..Bokeh: TickFormatter, BasicTickFormatter, MercatorTickFormatter,
+        NumericalTickFormatter, PrintfTickFormatter, LogTickFormatter,
+        CategoricalTickFormatter, FuncTickFormatter, DatetimeTickFormatter
+    export TickFormatter, BasicTickFormatter, MercatorTickFormatter,
+        NumericalTickFormatter, PrintfTickFormatter, LogTickFormatter,
+        CategoricalTickFormatter, FuncTickFormatter, DatetimeTickFormatter
+end
+
 
 
 ### LAYOUTS
@@ -369,12 +582,10 @@ const HTMLBox = ModelType("HTMLBox";
 const Spacer = ModelType("Spacer";
     inherits = [LayoutDOM]
 )
-export Spacer
 
 const GridBox = ModelType("GridBox";
     inherits = [LayoutDOM],
 )
-export GridBox
 
 const Box = ModelType("Box";
     inherits = [LayoutDOM],
@@ -390,7 +601,6 @@ const Row = ModelType("Row";
         :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), ColSizingT()), default="auto"),
     ]
 )
-export Row
 
 const Column = ModelType("Column";
     inherits = [Box],
@@ -398,8 +608,11 @@ const Column = ModelType("Column";
         :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), RowSizingT()), default="auto"),
     ]
 )
-export Column
 
+module Layouts
+    import ..Bokeh: LayoutDOM, HTMLBox, Spacer, GridBox, Box, Row, Column
+    export LayoutDOM, HTMLBox, Spacer, GridBox, Box, Row, Column
+end
 
 
 ### TRANSFORMS
@@ -433,7 +646,6 @@ const CategoricalMapper = ModelType("CategoricalMapper";
 const CategoricalColorMapper = ModelType("CategoricalColorMapper";
     inherits = [ColorMapper, CategoricalMapper],
 )
-export CategoricalColorMapper
 
 const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
     inherits = [CategoricalMapper],
@@ -442,28 +654,31 @@ const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
         :default_value => MarkerT() |> DefaultT("circle"),
     ]
 )
-export CategoricalMarkerMapper
 
 const CategoricalPatternMapper = ModelType("CategoricalPatternMapper";
     inherits = [CategoricalMapper],
 )
-export CategoricalPatternMapper
 
 const ContinuousColorMapper = ModelType("ContinuousColorMapper";
     inherits = [ColorMapper],
 )
-export ContinuousColorMapper
 
 const LinearColorMapper = ModelType("LinearColorMapper";
     inherits = [ContinuousColorMapper],
 )
-export LinearColorMapper
 
 const LogColorMapper = ModelType("LogColorMapper";
     inherits = [ContinuousColorMapper],
 )
-export LogColorMapper
 
+module Mappers
+    import ..Bokeh: Mapper, ColorMapper, CategoricalMapper, CategoricalColorMapper,
+        CategoricalMarkerMapper, CategoricalPatternMapper, ContinuousColorMapper,
+        LinearColorMapper, LogColorMapper
+    export Mapper, ColorMapper, CategoricalMapper, CategoricalColorMapper,
+        CategoricalMarkerMapper, CategoricalPatternMapper, ContinuousColorMapper,
+        LinearColorMapper, LogColorMapper
+end
 
 
 ### GLYPHS
@@ -497,102 +712,414 @@ const HatchGlyph = ModelType("HatchGlyph";
 const Marker = ModelType("Marker";
     inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
-        :x => NumberSpecT() |> DefaultT(Field("x")),
-        :y => NumberSpecT() |> DefaultT(Field("y")),
-        :hit_dilation => FloatT() |> DefaultT(1.0),
-        :size => SizeSpecT() |> DefaultT(4.0),
-        # :angle => anglespec(default=0.0),
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :hit_dilation => FloatT(default=1.0),
+        :size => SizeSpecT(default=4.0),
+        :angle => AngleSpecT(default=0.0),
         LINE_PROPS,
         FILL_PROPS,
         HATCH_PROPS,
     ],
 )
 
-const Scatter = ModelType("Scatter";
+const AnnularWedge = ModelType("AnnularWedge";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :inner_radius => DistanceSpecT(default="inner_radius"),
+        :outer_radius => DistanceSpecT(default="outer_radius"),
+        :start_angle => AngleSpecT(default="start_angle"),
+        :end_angle => AngleSpecT(default="end_angle"),
+        :direction => DirectionT(default="anticlock"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const Annulus = ModelType("Annulus";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :inner_radius => DistanceSpecT(default="inner_radius"),
+        :outer_radius => DistanceSpecT(default="outer_radius"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const Arc = ModelType("Arc";
+    inherits = [XYGlyph, LineGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :radius => DistanceSpecT(default="inner_radius"),
+        :start_angle => AngleSpecT(default="start_angle"),
+        :end_angle => AngleSpecT(default="end_angle"),
+        :direction => DirectionT(default="anticlock"),
+        LINE_PROPS,
+    ]
+)
+
+const Bezier = ModelType("Bezier";
+    inherits = [LineGlyph],
+    props = [
+        :x0 => NumberSpecT(default="x0"),
+        :y0 => NumberSpecT(default="y0"),
+        :x1 => NumberSpecT(default="x1"),
+        :y1 => NumberSpecT(default="y1"),
+        :cx0 => NumberSpecT(default="cx0"),
+        :cy0 => NumberSpecT(default="cy0"),
+        :cx1 => NumberSpecT(default="cx1"),
+        :cy1 => NumberSpecT(default="cy1"),
+        LINE_PROPS,
+    ]
+)
+
+const Circle = ModelType("Circle";
     inherits = [Marker],
     props = [
-        :marker => MarkerSpecT() |> DefaultT("circle"),
-    ],
+        :radius => NullDistanceSpecT(),
+        :radius_dimension => EnumT(Set(["x", "y", "max", "min"])),
+    ]
 )
-export Scatter
+
+const Ellipse = ModelType("Ellipse";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :width => DistanceSpecT(default="width"),
+        :height => DistanceSpecT(default="height"),
+        :angle => AngleSpecT(default="angle"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const HArea = ModelType("HArea";
+    inherits = [FillGlyph, HatchGlyph],
+    props = [
+        :x1 => NumberSpecT(default="x1"),
+        :x2 => NumberSpecT(default="x2"),
+        :y => NumberSpecT(default="y"),
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const HBar = ModelType("HBar";
+    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :y => NumberSpecT(default="y"),
+        :height => NumberSpecT(default="height"),
+        :left => NumberSpecT(default="left"),
+        :right => NumberSpecT(default="right"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const HexTile = ModelType("HexTile";
+    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :size => FloatT(default=1.0),
+        :r => NumberSpecT(default="r"),
+        :q => NumberSpecT(default="q"),
+        :scale => NumberSpecT(default="scale"),
+        :orientation => StringT(default="pointytop"),
+        LINE_PROPS,
+        :line_color => DefaultT(nothing),
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
 
 const Image = ModelType("Image";
     inherits = [XYGlyph],
     props = [
-        :image => NumberSpecT(default=Field("image")),
-        :x => NumberSpecT(default=Field("x")),
-        :y => NumberSpecT(default=Field("y")),
-        :dw => NumberSpecT(default=Field("dw")),
-        :dh => NumberSpecT(default=Field("dh")),
+        :image => NumberSpecT(default="image"),
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :dw => DistanceSpecT(default="dw"),
+        :dh => DistanceSpecT(default="dh"),
         :global_alpha => NumberSpecT(default=1.0),
         :dilate => BoolT(default=false),
         :color_mapper => InstanceT(ColorMapper, default=()->LinearColorMapper(palette="Greys9")),
     ]
 )
-export Image
 
 const ImageRGBA = ModelType("ImageRGBA";
     inherits = [XYGlyph],
     props = [
-        :image => NumberSpecT(default=Field("image")),
-        :x => NumberSpecT(default=Field("x")),
-        :y => NumberSpecT(default=Field("y")),
-        :dw => NumberSpecT(default=Field("dw")),
-        :dh => NumberSpecT(default=Field("dh")),
+        :image => NumberSpecT(default="image"),
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :dw => DistanceSpecT(default="dw"),
+        :dh => DistanceSpecT(default="dh"),
         :global_alpha => NumberSpecT(default=1.0),
         :dilate => BoolT(default=false),
     ]
 )
-export ImageRGBA
+
+const ImageURL = ModelType("ImageURL";
+    inherits = [XYGlyph],
+    props = [
+        :url => StringSpecT(default=Field("url")),
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :w => NullDistanceSpecT(default="w"),
+        :h => NullDistanceSpecT(default="h"),
+        :angle => AngleSpecT(default="angle"),
+        :global_alpha => NumberSpecT(default=1.0),
+        :dilate => BoolT(default=false),
+        :anchor => AnchorT(),
+        :retry_attempts => IntT(default=0),
+        :retry_timeout => IntT(default=0),
+    ]
+)
 
 const Line = ModelType("Line";
     inherits = [ConnectedXYGlyph, LineGlyph],
     props = [
-        :x => NumberSpecT() |> DefaultT(Field("x")),
-        :y => NumberSpecT() |> DefaultT(Field("y")),
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
         SCALAR_LINE_PROPS,
     ],
 )
-export Line
+
+const MultiLine = ModelType("MultiLine";
+    inherits = [LineGlyph],
+    props = [
+        :xs => NumberSpecT(default="xs"),
+        :ys => NumberSpecT(default="ys"),
+        LINE_PROPS,
+    ]
+)
+
+const MultiPolygons = ModelType("MultiPolygons";
+    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :xs => NumberSpecT(default="xs"),
+        :ys => NumberSpecT(default="ys"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const Oval = ModelType("Oval";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :width => DistanceSpecT(default="width"),
+        :height => DistanceSpecT(default="height"),
+        :angle => AngleSpecT(default="angle"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const Patch = ModelType("Patch";
+    inherits = [ConnectedXYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        SCALAR_LINE_PROPS,
+        SCALAR_FILL_PROPS,
+        SCALAR_HATCH_PROPS,
+    ]
+)
+
+const Patches = ModelType("Patches";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :xs => NumberSpecT(default="xs"),
+        :ys => NumberSpecT(default="ys"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
 
 const Quad = ModelType("Quad";
     inherits = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
-        :left => NumberSpecT(default=Field("left")),
-        :right => NumberSpecT(default=Field("right")),
-        :bottom => NumberSpecT(default=Field("bottom")),
-        :top => NumberSpecT(default=Field("top")),
+        :left => NumberSpecT(default="left"),
+        :right => NumberSpecT(default="right"),
+        :bottom => NumberSpecT(default="bottom"),
+        :top => NumberSpecT(default="top"),
         LINE_PROPS,
         FILL_PROPS,
         HATCH_PROPS,
     ]
 )
-export Quad
+
+const Quadratic = ModelType("Quadratic";
+    inherits = [LineGlyph],
+    props = [
+        :x0 => NumberSpecT(default="x0"),
+        :y0 => NumberSpecT(default="y0"),
+        :x1 => NumberSpecT(default="x1"),
+        :y1 => NumberSpecT(default="y1"),
+        :cx => NumberSpecT(default="cx"),
+        :cy => NumberSpecT(default="cy"),
+        LINE_PROPS,
+    ]
+)
+
+const Ray = ModelType("Ray";
+    inherits = [XYGlyph, LineGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :angle => AngleSpecT(default=0.0),
+        :length => DistanceSpecT(default=0.0),
+        LINE_PROPS,
+    ]
+)
+
+const Rect = ModelType("Rect";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :width => DistanceSpecT(default="width"),
+        :height => DistanceSpecT(default="height"),
+        :angle => AngleSpecT(default=0.0),
+        :dilate => BoolT(default=false),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+const Scatter = ModelType("Scatter";
+    inherits = [Marker],
+    props = [
+        :marker => MarkerSpecT(default="circle"),
+    ],
+)
+
+const Segment = ModelType("Segment";
+    inherits = [LineGlyph],
+    props = [
+        :x0 => NumberSpecT(default="x0"),
+        :y0 => NumberSpecT(default="y0"),
+        :x1 => NumberSpecT(default="x1"),
+        :y1 => NumberSpecT(default="y1"),
+        LINE_PROPS,
+    ]
+)
+
+const Step = ModelType("Step";
+    inherits = [XYGlyph, LineGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        LINE_PROPS,
+        :mode => StepModeT(default="before"),
+    ]
+)
+
+const Text = ModelType("Text";
+    inherits = [XYGlyph, TextGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :text => StringSpecT(default=Field("text")),
+        :angle => AngleSpecT(default=0.0),
+        :x_offset => NumberSpecT(default=0.0),
+        :y_offset => NumberSpecT(default=0.0),
+        TEXT_PROPS,
+    ]
+)
+
+const VArea = ModelType("VArea";
+    inherits = [FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y1 => NumberSpecT(default="y1"),
+        :y2 => NumberSpecT(default="y2"),
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
 
 const VBar = ModelType("VBar";
     inherits = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
-        :x => NumberSpecT(default=Field("x")),
+        :x => NumberSpecT(default="x"),
         :width => NumberSpecT(default=1.0),
         :bottom => NumberSpecT(default=0.0),
-        :top => NumberSpecT(default=Field("top")),
+        :top => NumberSpecT(default="top"),
         LINE_PROPS,
         FILL_PROPS,
         HATCH_PROPS,
     ]
 )
-export VBar
+
+const Wedge = ModelType("Wedge";
+    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    props = [
+        :x => NumberSpecT(default="x"),
+        :y => NumberSpecT(default="y"),
+        :radius => DistanceSpecT(default="radius"),
+        :start_angle => AngleSpecT(default="start_angle"),
+        :end_angle => AngleSpecT(default="start_angle"),
+        :direction => DirectionT(default="anticlock"),
+        LINE_PROPS,
+        FILL_PROPS,
+        HATCH_PROPS,
+    ]
+)
+
+module Glyphs
+    import ..Bokeh: Glyph, XYGlyph, ConnectedXYGlyph, LineGlyph, FillGlyph, TextGlyph,
+        HatchGlyph, Marker, AnnularWedge, Annulus, Arc, Bezier, Circle, Ellipse, HArea,
+        HBar, HexTile, Image, ImageRGBA, ImageURL, Line, MultiLine, MultiPolygons, Oval,
+        Patch, Patches, Quad, Quadratic, Ray, Rect, Scatter, Segment, Step, Text, VArea,
+        VBar, Wedge
+    export Glyph, XYGlyph, ConnectedXYGlyph, LineGlyph, FillGlyph, TextGlyph,
+        HatchGlyph, Marker, AnnularWedge, Annulus, Arc, Bezier, Circle, Ellipse, HArea,
+        HBar, HexTile, Image, ImageRGBA, ImageURL, Line, MultiLine, MultiPolygons, Oval,
+        Patch, Patches, Quad, Quadratic, Ray, Rect, Scatter, Segment, Step, Text, VArea,
+        VBar, Wedge
+end
 
 
 ### RENERERS
+
+const RendererGroup = ModelType("RendererGroup";
+    props = [
+        :visible => BoolT(default=true),
+    ]
+)
 
 const Renderer = ModelType("Renderer";
     props = [
         :level => RenderLevelT(),
         :visible => BoolT() |> DefaultT(true),
-        :x_range_name => StringT() |> DefaultT("default"),
-        :y_range_name => StringT() |> DefaultT("default"),
+        # :coordinates => NullableT(InstanceT(CoordinateMapping)), TODO
+        :x_range_name => StringT(default="default"),
+        :y_range_name => StringT(default="default"),
+        :group => NullableT(InstanceT(RendererGroup)),
     ],
+)
+
+const TileRenderer = ModelType("TileRenderer";
+    inherits = [Renderer],
+    props = [
+        # TODO
+    ]
 )
 
 const DataRenderer = ModelType("DataRenderer";
@@ -608,12 +1135,20 @@ const GlyphRenderer = ModelType("GlyphRenderer";
         :data_source => InstanceT(DataSource),
         :view => InstanceT(CDSView),
         :glyph => InstanceT(Glyph),
-        :coordinates => NullT(), # TODO
-        :group => NullT(), # TODO
-        :hover_glyph => NullT(), # TODO
+        :selection_glyph => NullableT(EitherT(AutoT(), InstanceT(Glyph)), default="auto"),
+        :nonselection_glyph => NullableT(EitherT(AutoT(), InstanceT(Glyph)), default="auto"),
+        :hover_glyph => NullableT(InstanceT(Glyph)),
+        :muted_glyph => NullableT(EitherT(AutoT(), InstanceT(Glyph)), default="auto"),
+        :muted => BoolT(default=false),
     ],
 )
-export GlyphRenderer
+
+const GraphRenderer = ModelType("GraphRenderer";
+    inherits = [DataRenderer],
+    props = [
+        # TODO
+    ]
+)
 
 const GuideRenderer = ModelType("GuideRenderer";
     inherits = [Renderer],
@@ -622,15 +1157,68 @@ const GuideRenderer = ModelType("GuideRenderer";
     ]
 )
 
+module Renderers
+    import ..Bokeh: RendererGroup, Renderer, TileRenderer, DataRenderer, GlyphRenderer,
+        GraphRenderer, GuideRenderer
+    export RendererGroup, Renderer, TileRenderer, DataRenderer, GlyphRenderer,
+        GraphRenderer, GuideRenderer
+end
+
+
+### LABELING
+
+const LabelingPolicy = ModelType("LabelingPolicy")
+
+const AllLabels = ModelType("LabelingPolicy";
+    inherits = [LabelingPolicy],
+)
+
+const NoOverlap = ModelType("NoOverlap";
+    inherits = [LabelingPolicy],
+    props = [
+        :min_distance => IntT(default=5),
+    ]
+)
+
+const CustomLabelingPolicy = ModelType("CustomLabelingPolicy";
+    inherits = [LabelingPolicy],
+)
+
+module Labels
+    import ..Bokeh: LabelingPolicy, AllLabels, NoOverlap, CustomLabelingPolicy
+    export LabelingPolicy, AllLabels, NoOverlap, CustomLabelingPolicy
+end
+
 
 ### AXES
 
 const Axis = ModelType("Axis";
     inherits = [GuideRenderer],
     props = [
-        :axis_label => NullableT(StringT()),
+        :bounds => EitherT(AutoT(), TupleT(FloatT(), FloatT())), # TODO datetime
         :ticker => TickerT(),
+        :formatter => InstanceT(TickFormatter),
+        :axis_label => NullableT(StringT()),
+        :axis_label_standoff => IntT(default=5),
+        :axis_label => SCALAR_TEXT_PROPS,
+        :axis_label_text_font_size => DefaultT("13px"),
+        :axis_label_text_font_style => DefaultT("italic"),
+        :major_label_standoff => IntT(default=5),
+        :major_label_orientation => EitherT(OrientationT(), FloatT()),
         :major_label_overrides => DictT(EitherT(FloatT(), StringT()), TextLikeT()),
+        :major_label_policy => InstanceT(LabelingPolicy, default=()->AllLabels()),
+        :major_label => SCALAR_TEXT_PROPS,
+        :major_label_text_align => DefaultT("center"),
+        :major_label_text_baseline => DefaultT("alphabetic"),
+        :major_label_text_font_size => DefaultT("11px"),
+        :axis => SCALAR_LINE_PROPS,
+        :major_tick => SCALAR_LINE_PROPS,
+        :major_tick_in => IntT(default=2),
+        :major_tick_out => IntT(default=6),
+        :minor_tick => SCALAR_LINE_PROPS,
+        :minor_tick_in => IntT(default=0),
+        :minor_tick_out => IntT(default=4),
+        :fixed_location => EitherT(NullT(), FloatT(), FactorT()),
     ],
 )
 
@@ -640,28 +1228,64 @@ const ContinuousAxis = ModelType("ContinuousAxis";
 
 const LinearAxis = ModelType("LinearAxis";
     inherits = [ContinuousAxis],
+    props = [
+        :ticker => DefaultT(()->BasicTicker()),
+        :formatter => DefaultT(()->BasicTickFormatter()),
+    ]
 )
-export LinearAxis
 
 const LogAxis = ModelType("LogAxis";
     inherits = [ContinuousAxis],
+    props = [
+        :ticker => DefaultT(()->LogTicker()),
+        :formatter => DefaultT(()->LogTickFormatter()),
+    ]
 )
-export LogAxis
 
 const CategoricalAxis = ModelType("CategoricalAxis";
     inherits = [Axis],
+    props = [
+        :ticker => DefaultT(()->CategoricalTicker()),
+        :formatter => DefaultT(()->CategoricalTickFormatter()),
+        :separator => SCALAR_LINE_PROPS,
+        :separator_line_color => DefaultT("lightgrey"),
+        :separator_line_width => DefaultT(2),
+        :group => SCALAR_TEXT_PROPS,
+        :group_label_orientation => EitherT(TickLabelOrientationT(), FloatT(), default="parallel"),
+        :group_text_font_size => DefaultT("11px"),
+        :group_text_font_style => DefaultT("bold"),
+        :group_text_color => DefaultT("grey"),
+        :subgroup => SCALAR_TEXT_PROPS,
+        :subgroup_label_orientation => EitherT(TickLabelOrientationT(), FloatT(), default="parallel"),
+        :subgroup_text_font_size => DefaultT("11px"),
+        :subgroup_text_font_style => DefaultT("bold"),
+    ]
 )
-export CategoricalAxis
 
-const DateTimeAxis = ModelType("DateTimeAxis";
+const DatetimeAxis = ModelType("DatetimeAxis";
     inherits = [LinearAxis],
+    props = [
+        :ticker => DefaultT(()->DatetimeTicker()),
+        :formatter => DefaultT(()->DatetimeTickFormatter()),
+    ]
 )
-export DateTimeAxis
 
 const MercatorAxis = ModelType("MercatorAxis";
+    # TODO: the python constructor has a "dimension" argument which sets the dimension on
+    # the ticker and formatter
     inherits = [LinearAxis],
+    props = [
+        :ticker => DefaultT(()->MercatorTicker()),
+        :formatter => DefaultT(()->MercatorTickFormatter()),
+    ]
 )
-export MercatorAxis
+
+module Axes
+    import ..Bokeh: Axis, ContinuousAxis, LinearAxis, LogAxis, CategoricalAxis,
+        DatetimeAxis, MercatorAxis
+    export Axis, ContinuousAxis, LinearAxis, LogAxis, CategoricalAxis,
+        DatetimeAxis, MercatorAxis
+end
 
 
 ### RANGES
@@ -677,7 +1301,6 @@ const Range1d = ModelType("Range1d";
         :reset_end => EitherT(NullT(), FloatT()) |> DefaultT(nothing),
     ],
 )
-export Range1d
 
 const DataRange = ModelType("DataRange";
     inherits = [Range],
@@ -691,7 +1314,6 @@ const DataRange1d = ModelType("DataRange1d";
         :end => EitherT(NullT(), FloatT()),
     ]
 )
-export DataRange1d
 
 const FactorRange = ModelType("FactorRange";
     inherits = [Range],
@@ -699,7 +1321,11 @@ const FactorRange = ModelType("FactorRange";
         :factors => FactorSeqT(),
     ],
 )
-export FactorRange
+
+module Ranges
+    import ..Bokeh: Range, Range1d, DataRange, DataRange1d, FactorRange
+    export Range, Range1d, DataRange, DataRange1d, FactorRange
+end
 
 
 ### SCALES
@@ -715,17 +1341,19 @@ const ContinuousScale = ModelType("ContinuousScale";
 const LinearScale = ModelType("LinearScale";
     inherits = [ContinuousScale],
 )
-export LinearScale
 
 const LogScale = ModelType("LogScale";
     inherits = [ContinuousScale],
 )
-export LogScale
 
 const CategoricalScale = ModelType("CategoricalScale";
     inherits = [Scale],
 )
-export CategoricalScale
+
+module Scales
+    import ..Bokeh: Scale, ContinuousScale, LinearScale, LogScale, CategoricalScale
+    export Scale, ContinuousScale, LinearScale, LogScale, CategoricalScale
+end
 
 
 ### GRIDS
@@ -746,7 +1374,11 @@ const Grid = ModelType("Grid";
         :level => DefaultT("underlay"),
     ],
 )
-export Grid
+
+module Grids
+    import ..Bokeh: Grid
+    export Grid
+end
 
 
 ### ANNOTATIONS
@@ -768,7 +1400,6 @@ const Title = ModelType("Title";
         :text => StringT(default=""),
     ]
 )
-export Title
 
 const LegendItem = ModelType("LegendItem";
     props = [
@@ -778,7 +1409,6 @@ const LegendItem = ModelType("LegendItem";
         :visible => BoolT(default=true),
     ]
 )
-export LegendItem
 
 const Legend = ModelType("Legend",
     inherits = [Annotation],
@@ -814,7 +1444,11 @@ const Legend = ModelType("Legend",
         :items => ListT(InstanceT(LegendItem)),
     ]
 )
-export Legend
+
+module Annotations
+    import ..Bokeh: Annotation, TextAnnotation, Title, LegendItem, Legend
+    export Annotation, TextAnnotation, Title, LegendItem, Legend
+end
 
 
 ### TOOLS
@@ -852,22 +1486,18 @@ const InspectTool = ModelType("InspectTool";
 const PanTool = ModelType("PanTool";
     inherits = [Drag],
 )
-export PanTool
 
 const RangeTool = ModelType("RangeTool";
     inherits = [Drag],
 )
-export RangeTool
 
 const WheelPanTool = ModelType("WheelPanTool";
     inherits = [Scroll],
 )
-export WheelPanTool
 
 const WheelZoomTool = ModelType("WheelZoomTool";
     inherits = [Scroll],
 )
-export WheelZoomTool
 
 const CustomAction = ModelType("CustomAction";
     inherits = [ActionTool],
@@ -876,55 +1506,44 @@ const CustomAction = ModelType("CustomAction";
 const SaveTool = ModelType("SaveTool";
     inherits = [ActionTool],
 )
-export SaveTool
 
 const ResetTool = ModelType("ResetTool";
     inherits = [ActionTool],
 )
-export ResetTool
 
 const TapTool = ModelType("TapTool";
     inherits = [Tap, SelectTool],
 )
-export TapTool
 
 const CrosshairTool = ModelType("CrosshairTool";
     inherits = [InspectTool],
 )
-export CrosshairTool
 
 const BoxZoomTool = ModelType("BoxZoomTool";
     inherits = [Drag],
 )
-export BoxZoomTool
 
 const ZoomInTool = ModelType("ZoomInTool";
     inherits = [ActionTool],
 )
-export ZoomInTool
 
 const ZoomOutTool = ModelType("ZoomOutTool";
     inherits = [ActionTool],
 )
-export ZoomOutTool
 
 const BoxSelectTool = ModelType("BoxSelectTool";
     inherits = [Drag, SelectTool],
 )
-export BoxSelectTool
 
 const LassoSelectTool = ModelType("LassoSelectTool";
     inherits = [Drag, SelectTool],
 )
-export LassoSelectTool
 
 const PolySelectTool = ModelType("PolySelectTool";
     inherits = [Tap, SelectTool],
 )
-export PolySelectTool
 
 const CustomJSHover = ModelType("CustomJSHover")
-export CustomJSHover
 
 const HoverTool = ModelType("HoverTool";
     inherits = [InspectTool],
@@ -946,22 +1565,18 @@ const HoverTool = ModelType("HoverTool";
         )
     ]
 )
-export HoverTool
 
 const HelpTool = ModelType("HelpTool";
     inherits = [ActionTool]
 )
-export HelpTool
 
 const UndoTool = ModelType("UndoTool";
     inherits = [ActionTool]
 )
-export UndoTool
 
 const RedoTool = ModelType("RedoTool";
     inherits = [ActionTool]
 )
-export RedoTool
 
 const EditTool = ModelType("EditTool";
     inherits = [GestureTool]
@@ -974,34 +1589,41 @@ const PolyTool = ModelType("PolyTool";
 const BoxEditTool = ModelType("BoxEditTool";
     inherits = [EditTool, Drag, Tap]
 )
-export BoxEditTool
 
 const PointDrawTool = ModelType("PointDrawTool";
     inherits = [EditTool, Drag, Tap]
 )
-export PointDrawTool
 
 const PolyDrawTool = ModelType("PolyDrawTool";
     inherits = [PolyTool, Drag, Tap],
 )
-export PolyDrawTool
 
 const FreehandDrawTool = ModelType("FreehandDrawTool";
     inherits = [EditTool, Drag, Tap],
 )
-export FreehandDrawTool
 
 const PolyEditTool = ModelType("PolyEditTool";
     inherits = [PolyTool, Drag, Tap],
 )
-export PolyEditTool
 
 const LineEditTool = ModelType("LineEditTool";
     inherits = [EditTool, Drag, Tap],
 )
-export LineEditTool
 
-
+module Tools
+    import ..Bokeh: Tool, ActionTool, GestureTool, Drag, Scroll, Tap, SelectTool,
+        InspectTool, PanTool, RangeTool, WheelPanTool, WheelZoomTool, CustomAction,
+        SaveTool, ResetTool, TapTool, CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool,
+        BoxSelectTool, LassoSelectTool, PolySelectTool, CustomJSHover, HoverTool, HelpTool,
+        UndoTool, RedoTool, EditTool, PolyTool, BoxEditTool, PointDrawTool, PolyDrawTool,
+        FreehandDrawTool, PolyEditTool, LineEditTool
+    export Tool, ActionTool, GestureTool, Drag, Scroll, Tap, SelectTool,
+        InspectTool, PanTool, RangeTool, WheelPanTool, WheelZoomTool, CustomAction,
+        SaveTool, ResetTool, TapTool, CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool,
+        BoxSelectTool, LassoSelectTool, PolySelectTool, CustomJSHover, HoverTool, HelpTool,
+        UndoTool, RedoTool, EditTool, PolyTool, BoxEditTool, PointDrawTool, PolyDrawTool,
+        FreehandDrawTool, PolyEditTool, LineEditTool
+end
 
 
 
@@ -1025,7 +1647,6 @@ const Toolbar = ModelType("Toolbar";
         :active_multi => EitherT(NullT(), AutoT(), InstanceT(GestureTool), default="auto"),
     ]
 )
-export Toolbar
 
 const ProxyToolbar = ModelType("ProxyToolbar";
     inherits = [ToolbarBase],
@@ -1033,7 +1654,6 @@ const ProxyToolbar = ModelType("ProxyToolbar";
         :toolbars => ListT(InstanceT(Toolbar)),
     ]
 )
-export ProxyToolbar
 
 const ToolbarBox = ModelType("ToolbarBox";
     inherits = [LayoutDOM],
@@ -1041,12 +1661,15 @@ const ToolbarBox = ModelType("ToolbarBox";
         :toolbar_location => LocationT(default="right"),
     ],
 )
-export ToolbarBox
 
+module Toolbars
+    import ..Bokeh: ToolbarBase, Toolbar, ProxyToolbar, ToolbarBox
+    export ToolbarBase, Toolbar, ProxyToolbar, ToolbarBox
+end
 
 ### PLOT
 
-plot_get_renderers(plot::Model; type, sides, filter=nothing) = Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))]
+plot_get_renderers(plot::Model; type, sides, filter=nothing) = PropVector(Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))])
 plot_get_renderers(; kw...) = (plot::Model) -> plot_get_renderers(plot; kw...)
 
 function plot_get_renderer(plot::Model; plural, kw...)
@@ -1130,7 +1753,6 @@ const Plot = ModelType("Plot";
         :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
     ],
 )
-export Plot
 
 
 ### FIGURE
@@ -1138,4 +1760,3 @@ export Plot
 const Figure = ModelType("Plot", "Figure";
     inherits = [Plot],
 )
-export Figure

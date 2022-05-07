@@ -87,7 +87,6 @@ struct Value
         new(value, transform)
     end
 end
-export Value
 
 struct Field
     name::String
@@ -97,11 +96,14 @@ struct Field
         new(convert(String, name), transform)
     end
 end
-export Field
 
 struct Invalid
     msg::String
     level::Int
+end
+
+struct PropVector{T} <: AbstractVector{T}
+    parent::Vector{T}
 end
 
 
@@ -110,4 +112,3 @@ end
 mutable struct Document
     roots::Vector{Model}
 end
-export Document

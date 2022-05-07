@@ -1,9 +1,3 @@
-export factor_mark, factor_cmap
-export figure
-export add_layout!, add_glyph!, add_tools!
-export scatter!, quad!, vbar!, line!, image!, image_rgba!
-export row, column
-
 ### TRANSFORMS
 
 factor_mark(field, markers, factors; kw...) = Field(field, transform=CategoricalMarkerMapper(; markers, factors, kw...))
@@ -148,7 +142,7 @@ function add_layout!(plot::Model, renderer::Model; location="center")
     return renderer
 end
 
-for t in [LinearAxis, LogAxis, CategoricalAxis, DateTimeAxis, MercatorAxis]
+for t in [LinearAxis, LogAxis, CategoricalAxis, DatetimeAxis, MercatorAxis]
     f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::Model; location, kw...)
         axis = $t(; kw...)
@@ -243,7 +237,7 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
         elseif k == :alpha
             # alpha -> fill_alpha, etc
             for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
-                haskey(type.propdescs, k2) && push!(k2, Kwarg(k2, v))
+                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
             end
         elseif k == :palette && haskey(type.propdescs, :color_mapper)
             # palette -> color_mapper
@@ -359,12 +353,35 @@ function add_glyph!(plot::Model, type::ModelType; kw...)
     return add_glyph_kw!(plot, type, collect(Kwarg, kw))
 end
 
-scatter!(plot::Model; kw...) = add_glyph_kw!(plot, Scatter, collect(Kwarg, kw))
-quad!(plot::Model; kw...) = add_glyph_kw!(plot, Quad, collect(Kwarg, kw))
-vbar!(plot::Model; kw...) = add_glyph_kw!(plot, VBar, collect(Kwarg, kw))
-line!(plot::Model; kw...) = add_glyph_kw!(plot, Line, collect(Kwarg, kw))
+annular_wedge!(plot::Model; kw...) = add_glyph_kw!(plot, AnnularWedge, collect(Kwarg, kw))
+annulus!(plot::Model; kw...) = add_glyph_kw!(plot, Annulus, collect(Kwarg, kw))
+arc!(plot::Model; kw...) = add_glyph_kw!(plot, Arc, collect(Kwarg, kw))
+bezier!(plot::Model; kw...) = add_glyph_kw!(plot, Bezier, collect(Kwarg, kw))
+circle!(plot::Model; kw...) = add_glyph_kw!(plot, Circle, collect(Kwarg, kw))
+ellipse!(plot::Model; kw...) = add_glyph_kw!(plot, Ellipse, collect(Kwarg, kw))
+harea!(plot::Model; kw...) = add_glyph_kw!(plot, HArea, collect(Kwarg, kw))
+hbar!(plot::Model; kw...) = add_glyph_kw!(plot, HBar, collect(Kwarg, kw))
+hextile!(plot::Model; kw...) = add_glyph_kw!(plot, HexTile, collect(Kwarg, kw))
 image!(plot::Model; kw...) = add_glyph_kw!(plot, Image, collect(Kwarg, kw))
 image_rgba!(plot::Model; kw...) = add_glyph_kw!(plot, ImageRGBA, collect(Kwarg, kw))
+image_url!(plot::Model; kw...) = add_glyph_kw!(plot, ImageURL, collect(Kwarg, kw))
+line!(plot::Model; kw...) = add_glyph_kw!(plot, Line, collect(Kwarg, kw))
+lines!(plot::Model; kw...) = add_glyph_kw!(plot, MultiLine, collect(Kwarg, kw))
+polygons!(plot::Model; kw...) = add_glyph_kw!(plot, MultiPolygons, collect(Kwarg, kw))
+oval!(plot::Model; kw...) = add_glyph_kw!(plot, Oval, collect(Kwarg, kw))
+patch!(plot::Model; kw...) = add_glyph_kw!(plot, Patch, collect(Kwarg, kw))
+patches!(plot::Model; kw...) = add_glyph_kw!(plot, Patches, collect(Kwarg, kw))
+quad!(plot::Model; kw...) = add_glyph_kw!(plot, Quad, collect(Kwarg, kw))
+quadratic!(plot::Model; kw...) = add_glyph_kw!(plot, Quadratic, collect(Kwarg, kw))
+ray!(plot::Model; kw...) = add_glyph_kw!(plot, Ray, collect(Kwarg, kw))
+rect!(plot::Model; kw...) = add_glyph_kw!(plot, Rect, collect(Kwarg, kw))
+scatter!(plot::Model; kw...) = add_glyph_kw!(plot, Scatter, collect(Kwarg, kw))
+segment!(plot::Model; kw...) = add_glyph_kw!(plot, Segment, collect(Kwarg, kw))
+step!(plot::Model; kw...) = add_glyph_kw!(plot, Step, collect(Kwarg, kw))
+text!(plot::Model; kw...) = add_glyph_kw!(plot, Text, collect(Kwarg, kw))
+varea!(plot::Model; kw...) = add_glyph_kw!(plot, VArea, collect(Kwarg, kw))
+vbar!(plot::Model; kw...) = add_glyph_kw!(plot, VBar, collect(Kwarg, kw))
+wedge!(plot::Model; kw...) = add_glyph_kw!(plot, Wedge, collect(Kwarg, kw))
 
 function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
