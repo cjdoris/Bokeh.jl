@@ -1725,7 +1725,7 @@ const Plot = ModelType("Plot";
         :min_border_bottom => NullableT(IntT()),
         :min_border_left => NullableT(IntT()),
         :min_border_right => NullableT(IntT()),
-        :min_border_top => NullableT(IntT(), default=5),
+        :min_border => NullableT(IntT(), default=5),
         :lod_factor => IntT(default=10),
         :lod_threshold => NullableT(IntT(), default=2000),
         :lod_interval => IntT(default=300),
@@ -1751,6 +1751,8 @@ const Plot = ModelType("Plot";
         :legend => GetSetT(plot_get_renderer(type=Legend, sides=[:below,:left,:above,:right,:center], plural=:legends)),
         :legends => GetSetT(plot_get_renderers(type=Legend, sides=[:below,:left,:above,:right,:center])),
         :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
+        :ranges => GetSetT(m->PropVector([m.x_range::Model, m.y_range::Model])),
+        :scales => GetSetT(m->PropVector([m.x_scale::Model, m.y_scale::Model])),
     ],
 )
 
