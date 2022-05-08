@@ -17,6 +17,7 @@ Creating a plot generally consists of three steps:
 3. Display the figure by wrapping it as a `Document`.
 
 ```@example
+using Bokeh
 p = figure()
 scatter!(p, x=rand(100), y=rand(100))
 Document(p)
