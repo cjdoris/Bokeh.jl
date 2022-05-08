@@ -6,9 +6,9 @@ Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image.ht
 using Bokeh
 
 data = [
-	Float32(sin(x)*cos(y))
-	for x in range(0, 10, length=500),
-	    y in range(0, 10, length=500)
+    Float32(sin(x)*cos(y))
+    for x in range(0, 10, length=500),
+        y in range(0, 10, length=500)
 ]
 
 p = figure(

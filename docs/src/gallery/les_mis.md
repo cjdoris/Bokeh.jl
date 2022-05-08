@@ -12,24 +12,24 @@ data = Downloads.download(data_url, IOBuffer()) |> seekstart |> JSON3.read
 names = [node.name for node in sort(data.nodes, by=x->x.group)]
 
 counts = Dict(
-	(s ? (x.source, x.target) : (x.target, x.source)) => x.value
-	for x in data.links
-	for s in (true, false)
+    (s ? (x.source, x.target) : (x.target, x.source)) => x.value
+    for x in data.links
+    for s in (true, false)
 )
 
 colormap = ["#444444", "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99",
             "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a"]
 
 pairdata = [
-	(
-		xname = node1.name,
-		yname = node2.name,
-		alpha = min(get(counts, (i1 - 1, i2 - 1), 0) / 4, 0.9) + 0.1,
-		color = node1.group == node2.group ? colormap[node1.group + 1] : "lightgrey",
-		count = get(counts, (i1 - 1, i2 - 1), 0),
-	)
-	for (i1, node1) in enumerate(data.nodes)
-	for (i2, node2) in enumerate(data.nodes)
+    (
+        xname = node1.name,
+        yname = node2.name,
+        alpha = min(get(counts, (i1 - 1, i2 - 1), 0) / 4, 0.9) + 0.1,
+        color = node1.group == node2.group ? colormap[node1.group + 1] : "lightgrey",
+        count = get(counts, (i1 - 1, i2 - 1), 0),
+    )
+    for (i1, node1) in enumerate(data.nodes)
+    for (i2, node2) in enumerate(data.nodes)
 ]
 
 p = figure(
