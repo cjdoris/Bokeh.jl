@@ -51,8 +51,8 @@ p = figure(
 )
 
 lines!(p,
-    xs = vec_split(x′, 7),
-    ys = vec_split(z, 7),
+    xs = vec_split(Float32.(x′), 7),
+    ys = vec_split(Float32.(z), 7),
     line_color = colors,
     line_alpha = 0.8,
     line_width = 1.5,

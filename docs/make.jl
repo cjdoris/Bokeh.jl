@@ -6,6 +6,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Gallery" => [
+            "gallery/mandelbrot.md",
             "gallery/penguins.md",
             "gallery/vbar.md",
             "gallery/lorenz.md",
