@@ -16,6 +16,8 @@ scatter!(p; x, y, color, alpha=0.4, size=10)
 Document(p)
 ```
 
+## How it works
+
 Although Bokeh is mainly a Python library, all the actual plotting happens in the browser
 using [BokehJS](https://docs.bokeh.org/en/latest/docs/user_guide/bokehjs.html). This package
 wraps BokehJS directly without using Python.
