@@ -13,5 +13,16 @@ Although Bokeh is mainly a Python library, all the actual plotting happens in th
 using [BokehJS](https://docs.bokeh.org/en/latest/docs/user_guide/bokehjs.html). This package
 wraps BokehJS directly without using Python.
 
-- ℹ [**Documentation**](https://cjdoris.github.io/Bokeh.jl/dev)
-- 🖼 [**Gallery**](https://cjdoris.github.io/Bokeh.jl/dev/gallery/penguins)
+## 🎨 Example
+
+Here is an example from [**the gallery**](https://cjdoris.github.io/Bokeh.jl/dev/gallery/mandelbrot):
+
+![Mandelbrot example](https://raw.githubusercontent.com/cjdoris/Bokeh.jl/main/mandelbrot.png)
+
+## 📦 Install
+
+```
+pkg> add https://github.com/cjdoris/Bokeh.jl
+```
+
+Then head over to [**the documentation**](https://cjdoris.github.io/Bokeh.jl).
