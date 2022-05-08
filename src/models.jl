@@ -241,11 +241,20 @@ function serialize_noref(s::Serializer, m::Model)
         return s.refscache[id]
     end
     mt = modeltype(m)
+    ds = mt.propdescs
     vs = modelvalues(m)
+    attrs = Dict{String,Any}()
+    for (k, v) in vs
+        v === Undefined() && continue
+        f = (ds[k].type::PropType).serialize
+        k2 = string(k)
+        v2 = f === nothing ? serialize(s, v) : f(s, v)
+        attrs[k2] = v2
+    end
     ans = Dict(
         "type"=>mt.name,
         "id"=>id,
-        "attributes"=>Dict{String,Any}(string(k)=>serialize(s,v) for (k,v) in vs if v !== Undefined()),
+        "attributes"=>attrs,
     )
     s.refs[id] = m
     s.refscache[id] = ans

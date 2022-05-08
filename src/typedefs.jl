@@ -33,6 +33,7 @@ mutable struct PropType
     regex::Union{Nothing,Regex}
     result_type::Union{Nothing,Type}
     model_type::Any  # want ::Union{Nothing,ModelType} but Julia does not yet support mutually recursive types
+    serialize::Union{Nothing,Function}
 end
 
 @enum PropKind begin

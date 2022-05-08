@@ -1,6 +1,7 @@
 module Bokeh
 
 import Base: IdSet
+import Base64
 import Colors
 import Dates
 import JSON3

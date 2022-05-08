@@ -5,8 +5,9 @@ PropType(prim::PrimType;
     enumvals=nothing,
     regex=nothing,
     result_type=nothing,
-    model_type=nothing
-) = PropType(prim, default, validate, params, enumvals, regex, result_type, model_type)
+    model_type=nothing,
+    serialize=nothing,
+) = PropType(prim, default, validate, params, enumvals, regex, result_type, model_type, serialize)
 
 PropType(
     base::PropType;
@@ -17,7 +18,8 @@ PropType(
     regex=base.regex,
     result_type=base.result_type,
     model_type=base.model_type,
-) = PropType(base.prim, default, validate, params, enumvals, regex, result_type, model_type)
+    serialize=base.serialize,
+) = PropType(base.prim, default, validate, params, enumvals, regex, result_type, model_type, serialize)
 
 function Base.show(io::IO, t::PropType)
     show(io, typeof(t))
@@ -292,8 +294,56 @@ function validate_column_data(x; detail)
     end
 end
 
+function try_serialize_ndarray(x::AbstractArray{T}) where {T}
+    # TODO: convert datetime/timedelta
+    # TODO: convert Integer -> Int32
+    # TODO: convert Real -> Float64
+    if T == Float64
+        dtype = "float64"
+    elseif T == Float32
+        dtype = "float32"
+    elseif T == UInt8
+        dtype = "uint8"
+    elseif T == UInt16
+        dtype = "uint16"
+    elseif T == UInt32
+        dtype = "uint32"
+    elseif T == Int8
+        dtype = "int8"
+    elseif T == Int16
+        dtype = "int16"
+    elseif T == Int32
+        dtype = "int32"
+    else
+        return nothing
+    end
+    return Dict(
+        "__ndarray__" => Base64.base64encode(convert(Array, x)::Array),
+        "shape" => reverse!(collect(Int, size(x))),
+        "dtype" => dtype,
+        "order" => Base.ENDIAN_BOM == 0x04030201 ? "little" : "big",
+    )
+end
+
+function serialize_column_data(s::Serializer, x::Dict{String,AbstractVector})
+    ans = Dict{String,Any}()
+    for (k, v) in x
+        k2 = serialize(s, k)
+        v2 = try_serialize_ndarray(v)
+        if v2 === nothing
+            v2 = map(v) do z
+                z2 = z isa AbstractArray ? try_serialize_ndarray(z) : nothing
+                return z2 === nothing ? serialize(s, z) : z2
+            end
+        end
+        ans[k2] = v2
+    end
+    return ans
+end
+
 ColumnDataT(; kw...) = AnyT(;
     validate = validate_column_data,
+    serialize = serialize_column_data,
     result_type = Dict{String,AbstractVector},
     kw...
 )
