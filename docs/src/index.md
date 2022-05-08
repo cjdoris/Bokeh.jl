@@ -1,9 +1,8 @@
 # Bokeh.jl
 
-[Bokeh.jl](https://github.com/cjdoris/Bokeh.jl) is a [Julia](https://julialang.org/) front-
-end for the [Bokeh](https://bokeh.org/) plotting library.
-
-Bokeh makes it simple to create interactive plots like this:
+[Bokeh.jl](https://github.com/cjdoris/Bokeh.jl) is a [Julia](https://julialang.org/)
+front-end for the [Bokeh](https://bokeh.org/) plotting library. Bokeh makes it simple to
+create interactive plots like this:
 
 ```@example
 using Bokeh

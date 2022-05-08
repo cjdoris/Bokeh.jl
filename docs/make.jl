@@ -5,6 +5,7 @@ makedocs(
     modules = [Bokeh],
     pages = [
         "Home" => "index.md",
+        "guide.md",
         "Gallery" => [
             "gallery/mandelbrot.md",
             "gallery/penguins.md",
