@@ -1,4 +1,153 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>User Guide · Bokeh</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">Bokeh</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Gallery</span><ul><li><a class="tocitem" href="../gallery/mandelbrot/">Mandelbrot Set (<code>image!</code>)</a></li><li><a class="tocitem" href="../gallery/penguins/">Penguins (<code>scatter!</code>, <code>factor_mark</code>, <code>factor_cmap</code>)</a></li><li><a class="tocitem" href="../gallery/vbar/">Bar Charts (<code>vbar!</code>, <code>factor_cmap</code>)</a></li><li><a class="tocitem" href="../gallery/lorenz/">Lorenz Attractor (<code>lines!</code>)</a></li><li><a class="tocitem" href="../gallery/image/">Heatmap (<code>image!</code>)</a></li><li><a class="tocitem" href="../gallery/image_rgba/">Colours (<code>image_rgba!</code>)</a></li><li><a class="tocitem" href="../gallery/latex/">Gaussian Distribution (<code>TeX</code>, <code>Div</code>, <code>column</code>, <code>quad!</code>, <code>line!</code>)</a></li><li><a class="tocitem" href="../gallery/les_mis/">Les Misérables Co-occurrences (<code>rect!</code>, <code>tools</code>)</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>User Guide</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>User Guide</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cjdoris/Bokeh.jl/blob/master/docs/src/guide.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="User-Guide"><a class="docs-heading-anchor" href="#User-Guide">User Guide</a><a id="User-Guide-1"></a><a class="docs-heading-anchor-permalink" href="#User-Guide" title="Permalink"></a></h1><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>In Julia, press <code>]</code> to enter the Pkg REPL and do</p><pre><code class="language-julia-repl hljs">pkg&gt; add Bokeh</code></pre><h2 id="Create-your-first-plot"><a class="docs-heading-anchor" href="#Create-your-first-plot">Create your first plot</a><a id="Create-your-first-plot-1"></a><a class="docs-heading-anchor-permalink" href="#Create-your-first-plot" title="Permalink"></a></h2><p>You will need to use Pluto, Jupyter, or some other environment capable of displaying HTML.</p><p>Creating a plot generally consists of three steps:</p><ol><li>Create an empty figure.</li><li>Add glyphs to the figure.</li><li>Display the figure by wrapping it as a <code>Document</code>.</li></ol><pre><code class="language- hljs">p = figure()
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>User Guide · Bokeh</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">Bokeh</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Gallery</span><ul><li><a class="tocitem" href="../gallery/mandelbrot/">Mandelbrot Set (<code>image!</code>)</a></li><li><a class="tocitem" href="../gallery/penguins/">Penguins (<code>scatter!</code>, <code>factor_mark</code>, <code>factor_cmap</code>)</a></li><li><a class="tocitem" href="../gallery/vbar/">Bar Charts (<code>vbar!</code>, <code>factor_cmap</code>)</a></li><li><a class="tocitem" href="../gallery/lorenz/">Lorenz Attractor (<code>lines!</code>)</a></li><li><a class="tocitem" href="../gallery/image/">Heatmap (<code>image!</code>)</a></li><li><a class="tocitem" href="../gallery/image_rgba/">Colours (<code>image_rgba!</code>)</a></li><li><a class="tocitem" href="../gallery/latex/">Gaussian Distribution (<code>TeX</code>, <code>Div</code>, <code>column</code>, <code>quad!</code>, <code>line!</code>)</a></li><li><a class="tocitem" href="../gallery/les_mis/">Les Misérables Co-occurrences (<code>rect!</code>, <code>tools</code>)</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>User Guide</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>User Guide</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cjdoris/Bokeh.jl/blob/master/docs/src/guide.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="User-Guide"><a class="docs-heading-anchor" href="#User-Guide">User Guide</a><a id="User-Guide-1"></a><a class="docs-heading-anchor-permalink" href="#User-Guide" title="Permalink"></a></h1><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>In Julia, press <code>]</code> to enter the Pkg REPL and do</p><pre><code class="language-julia-repl hljs">pkg&gt; add Bokeh</code></pre><h2 id="Create-your-first-plot"><a class="docs-heading-anchor" href="#Create-your-first-plot">Create your first plot</a><a id="Create-your-first-plot-1"></a><a class="docs-heading-anchor-permalink" href="#Create-your-first-plot" title="Permalink"></a></h2><p>You will need to use Pluto, Jupyter, or some other environment capable of displaying HTML.</p><p>Creating a plot generally consists of three steps:</p><ol><li>Create an empty figure.</li><li>Add glyphs to the figure.</li><li>Display the figure by wrapping it as a <code>Document</code>.</li></ol><pre><code class="language-julia hljs">using Bokeh
+p = figure()
 scatter!(p, x=rand(100), y=rand(100))
-Document(p)</code></pre><p>A <code>Document</code> is displayable as HTML, so returning it from a notebook cell will render it for you. You may instead <code>display</code> the document.</p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.16 on <span class="colophon-date" title="Sunday 8 May 2022 12:32">Sunday 8 May 2022</span>. Using Julia version 1.6.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Document(p)</code></pre><script id="46dc4304-96ae-426f-b5db-c3e85dfcb7e9">
+    (function(root) {
+        function now() {
+            return new Date();
+        }
+    
+        const force = false;
+    
+        if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+            root._bokeh_onload_callbacks = [];
+            root._bokeh_is_loading = undefined;
+        }
+    
+        
+    
+        const element = document.getElementById("46dc4304-96ae-426f-b5db-c3e85dfcb7e9");
+        if (element == null) {
+            console.warn("Bokeh: autoload.js configured with elementid '46dc4304-96ae-426f-b5db-c3e85dfcb7e9' but no matching script tag was found.")
+        }
+    
+        function run_callbacks() {
+            try {
+            root._bokeh_onload_callbacks.forEach(function(callback) {
+                if (callback != null)
+                callback();
+            });
+            } finally {
+            delete root._bokeh_onload_callbacks
+            }
+            console.debug("Bokeh: all callbacks have finished");
+        }
+    
+        function load_libs(css_urls, js_urls, callback) {
+            if (css_urls == null) css_urls = [];
+            if (js_urls == null) js_urls = [];
+    
+            root._bokeh_onload_callbacks.push(callback);
+            if (root._bokeh_is_loading > 0) {
+                console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+                return null;
+            }
+            if (js_urls == null || js_urls.length === 0) {
+                run_callbacks();
+                return null;
+            }
+            console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+            root._bokeh_is_loading = css_urls.length + js_urls.length;
+    
+            function on_load() {
+                root._bokeh_is_loading--;
+                if (root._bokeh_is_loading === 0) {
+                    console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+                    run_callbacks()
+                }
+            }
+    
+            function on_error(url) {
+                console.error("failed to load " + url);
+            }
+    
+            for (let i = 0; i < css_urls.length; i++) {
+                const url = css_urls[i];
+                const element = document.createElement("link");
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.rel = "stylesheet";
+                element.type = "text/css";
+                element.href = url;
+                console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+                document.body.appendChild(element);
+            }
+    
+            for (let i = 0; i < js_urls.length; i++) {
+                const url = js_urls[i];
+                const element = document.createElement('script');
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.async = false;
+                element.src = url;
+                console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+                document.head.appendChild(element);
+            }
+        };
+    
+        function inject_raw_css(css) {
+            const element = document.createElement("style");
+            element.appendChild(document.createTextNode(css));
+            document.body.appendChild(element);
+        }
+    
+        const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.js","https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.js","https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.js","https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.js","https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.js"];
+        const css_urls = [];
+    
+        const inline_js = [
+            function(Bokeh) {
+                (function() {
+                    const fn = function() {
+                        Bokeh.safely(function() {
+                            (function(root) {
+                                function embed_document(root) {
+                                    const docs_json = {"cb12156e-7603-4023-8cc0-1d35615de514":{"roots":{"references":[{"attributes":{},"id":"204","type":"PanTool"},{"attributes":{"x":{"field":"x"},"y":{"field":"y"}},"id":"212","type":"Scatter"},{"attributes":{"tools":[{"id":"204"},{"id":"205"},{"id":"206"},{"id":"207"},{"id":"208"},{"id":"209"}]},"id":"210","type":"Toolbar"},{"attributes":{"data":{"x":{"dtype":"float64","shape":[100],"__ndarray__":"sKwr6FL42z+OF/CqZ1bjP56h/jzliek/Pq/e3mGe7T/S/CHRE2rsP5BhdLRjsuY/uKDA4TS+5j9G0IEMb9fvP4jjiDikXc8/jF0hoRja3j/4q/VpjPjiP7ArM50Oqts/eGWSwJtqxz8wNmEE6mPIP4AEzlBxNaw/KOoz+lOR1T/yyMRIC+LnP9hNBbvGvMo/gPm8AA1svj+4aPWtqunmPwCJWD7AbdU/YAnhJjQytz/w51Kbre3oP2RjCFtcytM/dJ1hgDce6D+wdXGmPvXtP5j8YE6aJto/gB+qNSAM6D/QrIB8forYP2BrOMqAc88/kKIR1+9j5T+GJlAKRsrhP8BVpYB1bLA/fG0DSNk52D+kiI28/tjqP6CQOsS689w/QGtvDv9AlD9wC06xENPiPzDOoc63osQ/vAzl8Flo3z/kcUHYL4buP9AiLIRR/tU//spc4h+N7z88FQEYKuPeP1BuQuONUr4/WPMTQcYg6j9m00m3D8XvPzSgQqKEw9Y/lkQE+89O6z8qUbjU573gP9CANEbphrM/MA/zo/bP0T/YD9FVYBDIP0SMVneX8tg/1IdIcf1H5j8ckta/EpLoPxCi1e1+NMk/CDe6y6Ekxj+QlKDcPI+2P2bYn+GJx+c/vKB1ttYr4j+Oa6fXx7XvP6gBKOBCQuU/oITuzQyi5D90McJeklfrPwYeTUZM++Q/bNAKz+bH6j8kZogDdMvYP0B5q7IF6+g/hFhp61e55D/AN3TX+wicP8QJZQN1b9s/gIbhy62Y1D800ehuCZXsP9ZpfBsQg+Q/GE4iZj2m5j82EUIcMFTkP8ZvFH2AO+c/uOaFoZnH6j/AomN4niiuP0DPhhZfwMw/vPnQybuS7D9AUcjvtnG9PyaEhx6vlu8/Jt1RQu605j+eIP3WwtXiP8ixPlifmuA/qrUX/3Zn6T8qXk0d2PXhP1jU9kwXocQ/GO93ZkWx7T94gSZN7UbTP+RVmujdjNc/ADGT3bBI7D+48Ad9f7HQPwR52nyeBd8/oii+I/kn4T+sB9gC0KzpP0xBeCZgH90/wBGOc4165T8=","order":"little"},"y":{"dtype":"float64","shape":[100],"__ndarray__":"wMsZ698U0T8weZZHxUDqPwYuK5lgcek/BOz4VAZD4T8AGId5UjS+P6ZFmIlnN+M/sDWlLv4H6j9YTIbUmXrZP2QQcSQbKd4/gMf1vn6jpz+c4INYsxDePyptplc/Yus/+BV81iWz1D84kamQem/pP8AttmDzBqs/nI055C8b1z+wQSZdRkLgPwwEovBJkug/DDaTcoev4D9qXz1FQ7zqP1icKRZizOw/KLNlAeXn5z/Akc8NQ7HBP4jVtRNVg94/VC5Q/l4G3j+iD9X+qizuP5Sy4ryMOO4/mudCDj9E6j/s2BcFug3oPzRTnBCha+A/PK2xpy8C3D+6FQIPBrHtP9xQSqATM+E/2MrA7TNiyT8Wmm1Qs+jpP2xhS3rmzto/pNPb4Imr1j/IjoeD92nWP7SEIK0Z19U/AK6DSXnhrT+UaYr3V/fgPySOmuUgzeU/cFzLItRHvj8QloSh3+bjPy7gxy3VUu4/Ck4UxVlh7T/8BIQ1/dDjP3B6uJb0f7o/QMfI6a4HoT94PrILGknqP/Y+ZHBNZ+4/ENtEuIaT6T8A1fzTAm66P3SZelsmytg/un9mR2415T+S9CFVC0XhP3izY7QA1+o/MDEoAVqZ3j8Qc/I8qvvRPwBYccBqTcc/YIg8M5+w3z8C09jCeUbmP9pvQTRx0+0/8AkxQOdw7z94aFI8dqPjP4hvo/b3yeQ/SAtwWPH70j+KSERvl8zpP/gVAemsFeM/NNcosEoW7j/QkDFCRvDhP2TljbAWauc/bBqtsA4Y7j/Sq6b39o7jP05kS4gtSOE/cGK7hORO1z+gWxYjuOjZPyC2D2y7Y+w/ULfkoUrUsD8YPEZPWt7DPzp8JySKH+Y/MJffMh15sT+EMNZBCm7uP/SOGHN6RtE/wIWzlbYHqT9wPGpIgMyyP8az/KWhhuE/kDWbDJu7uj+sww4zQrzjP1znxcFiXd0/MsThwAFM5z+wfq6GD6i9P4D3zMpOuaU/bm5lebys6T9QKrsZcnW7P0xKmd9/POI/QBYsRAtf0j/AYrKcnCWvPzCN+wBSiL0/tNlnl1Us2T8=","order":"little"}}},"id":"211","type":"ColumnDataSource"},{"attributes":{"axis":{"id":"202"},"dimension":1},"id":"203","type":"Grid"},{"attributes":{},"id":"197","type":"DataRange1d"},{"attributes":{},"id":"209","type":"HelpTool"},{"attributes":{},"id":"206","type":"WheelZoomTool"},{"attributes":{},"id":"196","type":"DataRange1d"},{"attributes":{},"id":"205","type":"BoxZoomTool"},{"attributes":{"axis":{"id":"200"},"dimension":0},"id":"201","type":"Grid"},{"attributes":{"below":[{"id":"200"}],"left":[{"id":"202"}],"toolbar":{"id":"210"},"renderers":[{"id":"213"}],"x_range":{"id":"196"},"y_range":{"id":"197"},"y_scale":{"id":"199"},"x_scale":{"id":"198"},"center":[{"id":"201"},{"id":"203"}]},"id":"195","type":"Plot"},{"attributes":{},"id":"199","type":"LinearScale"},{"attributes":{},"id":"198","type":"LinearScale"},{"attributes":{},"id":"208","type":"ResetTool"},{"attributes":{"glyph":{"id":"212"},"view":{"id":"214"},"data_source":{"id":"211"}},"id":"213","type":"GlyphRenderer"},{"attributes":{"source":{"id":"211"}},"id":"214","type":"CDSView"},{"attributes":{},"id":"202","type":"LinearAxis"},{"attributes":{},"id":"207","type":"SaveTool"},{"attributes":{},"id":"200","type":"LinearAxis"}],"root_ids":["195"]},"title":"Bokeh Application","defs":[],"version":"2.4.2"}};
+                                    const render_items = [{"roots":{"195":"46dc4304-96ae-426f-b5db-c3e85dfcb7e9"},"docid":"cb12156e-7603-4023-8cc0-1d35615de514","root_ids":["195"]}];
+                                    root.Bokeh.embed.embed_items(docs_json, render_items);
+                                }
+                                if (root.Bokeh !== undefined) {
+                                  embed_document(root);
+                                } else {
+                                  let attempts = 0;
+                                  const timer = setInterval(function(root) {
+                                    if (root.Bokeh !== undefined) {
+                                      clearInterval(timer);
+                                      embed_document(root);
+                                    } else {
+                                      attempts++;
+                                      if (attempts > 100) {
+                                        clearInterval(timer);
+                                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                                      }
+                                    }
+                                  }, 10, root)
+                                }
+                              })(window);
+                              
+                        });
+                    };
+                    if (document.readyState != "loading") fn();
+                    else document.addEventListener("DOMContentLoaded", fn);
+                })();
+            }
+        ];
+    
+        function run_inline_js() {
+            for (let i = 0; i < inline_js.length; i++) {
+                inline_js[i].call(root, root.Bokeh);
+            }
+        }
+    
+        if (root._bokeh_is_loading === 0) {
+            console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+            run_inline_js();
+        } else {
+            load_libs(css_urls, js_urls, function() {
+            console.debug("Bokeh: BokehJS plotting callback run at", now());
+            run_inline_js();
+            });
+        }
+    }(window));
+</script>
+<p>A <code>Document</code> is displayable as HTML, so returning it from a notebook cell will render it for you. You may instead <code>display</code> the document.</p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.16 on <span class="colophon-date" title="Sunday 8 May 2022 12:35">Sunday 8 May 2022</span>. Using Julia version 1.6.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
