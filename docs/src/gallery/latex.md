@@ -52,10 +52,10 @@ p.x_axis.major_label_overrides = Dict(
     "-3" => TeX(text=raw"\overline{x} - 3\sigma"),
     "-2" => TeX(text=raw"\overline{x} - 2\sigma"),
     "-1" => TeX(text=raw"\overline{x} - \sigma"),
-        "0" => TeX(text=raw"\overline{x}"),
-        "1" => TeX(text=raw"\overline{x} + \sigma"),
-        "2" => TeX(text=raw"\overline{x} + 2\sigma"),
-        "3" => TeX(text=raw"\overline{x} + 3\sigma"),
+    "0" => TeX(text=raw"\overline{x}"),
+    "1" => TeX(text=raw"\overline{x} + \sigma"),
+    "2" => TeX(text=raw"\overline{x} + 2\sigma"),
+    "3" => TeX(text=raw"\overline{x} + 3\sigma"),
 )
 
 p.y_axis.ticker = [0, 0.1, 0.2, 0.3, 0.4]
