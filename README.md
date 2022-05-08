@@ -22,7 +22,7 @@ Here is an example from [**the gallery**](https://cjdoris.github.io/Bokeh.jl/dev
 ## 📦 Install
 
 ```
-pkg> add https://github.com/cjdoris/Bokeh.jl
+pkg> add Bokeh
 ```
 
 Then head over to [**the documentation**](https://cjdoris.github.io/Bokeh.jl).
