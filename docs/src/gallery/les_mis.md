@@ -63,5 +63,5 @@ rect!(p,
     # hover_line_color="black", TODO
 )
 
-Document(p)
+p
 ```

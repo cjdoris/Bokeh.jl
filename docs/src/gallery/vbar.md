@@ -33,5 +33,5 @@ p.y_range.end = 9
 p.legend.orientation = "horizontal"
 p.legend.location = "top_center"
 
-Document(p)
+p
 ```

@@ -30,5 +30,5 @@ scatter!(plot,
     color=factor_cmap("species", "Category10_3", species),
 )
 
-Document(plot)
+plot
 ```

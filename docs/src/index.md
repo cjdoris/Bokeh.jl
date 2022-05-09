@@ -1,5 +1,7 @@
 # Bokeh.jl
 
+## Overview
+
 [Bokeh.jl](https://github.com/cjdoris/Bokeh.jl) is a [Julia](https://julialang.org/)
 front-end for the [Bokeh](https://bokeh.org/) plotting library. Bokeh makes it simple to
 create interactive plots like this:
@@ -13,7 +15,7 @@ y = randn(n) .+ [-1, 3, -1][z]
 color = ["#cb3c33", "#389826", "#9558b2"][z]
 p = figure(title="Julia Logo")
 scatter!(p; x, y, color, alpha=0.4, size=10)
-Document(p)
+p
 ```
 
 ## How it works

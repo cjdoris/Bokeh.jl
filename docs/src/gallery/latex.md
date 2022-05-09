@@ -78,5 +78,5 @@ div = Div(text=raw"""
     $$
     """)
 
-Document(column(p, div))
+column(p, div)
 ```

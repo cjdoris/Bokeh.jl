@@ -56,5 +56,5 @@ lines!(p,
     line_width = 1.5,
 )
 
-Document(p)
+p
 ```

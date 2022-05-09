@@ -20,5 +20,5 @@ p.grids.grid_line_width = 0
 
 image!(p, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Spectral11")
 
-Document(p)
+p
 ```

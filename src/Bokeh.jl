@@ -60,5 +60,6 @@ include("models.jl")
 include("plotting.jl")
 include("templates.jl")
 include("document.jl")
+include("display.jl")
 
 end

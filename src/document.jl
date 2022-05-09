@@ -90,6 +90,11 @@ function doc_standalone_html(doc; kw...)
 end
 
 function Base.show(io::IO, ::MIME"text/html", doc::Document)
-    write(io, doc_autoload_inline_html(doc; bundle=BUNDLE_BOKEH_CDN_NOMIN))
+    write(io, doc_autoload_inline_html(doc; bundle=BUNDLE_BOKEH_CDN))
     return
+end
+
+function Base.show(io::IO, m::MIME"text/html", x::Model)
+    ismodelinstance(x, LayoutDOM) || throw(MethodError(show, (io, m, x)))
+    show(io, m, Document(x))
 end

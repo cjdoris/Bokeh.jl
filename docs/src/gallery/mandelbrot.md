@@ -42,5 +42,5 @@ image!(p,
     palette = "Magma256",
 )
 
-Document(p)
+p
 ```
