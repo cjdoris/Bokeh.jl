@@ -57,6 +57,7 @@ mutable struct ModelType
     inherits::Vector{ModelType}
     propdescs::Dict{Symbol,PropDesc}
     supers::IdSet{ModelType}
+    abstract::Bool
 end
 
 const Arg = Any
@@ -67,6 +68,7 @@ struct Model
     type :: ModelType
     values :: Dict{Symbol,Any}
     function Model(t::ModelType, kw::Vector{Kwarg})
+        t.abstract && error("cannot instantiate abstract model type $(t.name)")
         ans = new(new_id(), t, Dict{Symbol,Any}())
         for (k, v) in kw
             setproperty!(ans, k, v)

@@ -1,6 +1,7 @@
 ### WIDGET
 
 const Widget = ModelType("Widget";
+    abstract = true,
     inherits = [LayoutDOM]
 )
 
@@ -8,6 +9,7 @@ const Widget = ModelType("Widget";
 ### MARKUP
 
 const Markup = ModelType("Markup";
+    abstract = true,
     inherits = [Widget],
     props = [
         :text => StringT(default=""),
@@ -30,8 +32,3 @@ const Div = ModelType("Div";
 const PreText = ModelType("PreText";
     inherits = [Markup]
 )
-
-module Widgets
-    import ..Bokeh: Widget, Markup, Paragraph, Div, PreText
-    export Widget, Markup, Paragraph, Div, PreText
-end

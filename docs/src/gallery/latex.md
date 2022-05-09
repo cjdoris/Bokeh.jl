@@ -3,7 +3,7 @@
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html).
 
 ```@example
-using Bokeh, Bokeh.Math, Bokeh.Widgets, StatsBase
+using Bokeh, StatsBase
 
 N = 1000
 

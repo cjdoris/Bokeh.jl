@@ -3,7 +3,7 @@
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).
 
 ```@example
-using Bokeh, Bokeh.Tools, Downloads, JSON3
+using Bokeh, Downloads, JSON3
 
 data_url = "https://cdn.jsdelivr.net/gh/bokeh/bokeh@2.4.2/bokeh/sampledata/_data/les_mis.json"
 
