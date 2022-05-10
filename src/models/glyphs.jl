@@ -4,37 +4,37 @@ const Glyph = ModelType("Glyph";
 
 const XYGlyph = ModelType("XYGlyph";
     abstract = true,
-    inherits = [Glyph],
+    bases = [Glyph],
 )
 
 const ConnectedXYGlyph = ModelType("ConnectedXYGlyph";
     abstract = true,
-    inherits = [XYGlyph],
+    bases = [XYGlyph],
 )
 
 const LineGlyph = ModelType("LineGlyph";
     abstract = true,
-    inherits = [Glyph],
+    bases = [Glyph],
 )
 
 const FillGlyph = ModelType("FillGlyph";
     abstract = true,
-    inherits = [Glyph],
+    bases = [Glyph],
 )
 
 const TextGlyph = ModelType("TextGlyph";
     abstract = true,
-    inherits = [Glyph],
+    bases = [Glyph],
 )
 
 const HatchGlyph = ModelType("HatchGlyph";
     abstract = true,
-    inherits = [Glyph],
+    bases = [Glyph],
 )
 
 const Marker = ModelType("Marker";
     abstract = true,
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -48,7 +48,7 @@ const Marker = ModelType("Marker";
 )
 
 const AnnularWedge = ModelType("AnnularWedge";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -64,7 +64,7 @@ const AnnularWedge = ModelType("AnnularWedge";
 )
 
 const Annulus = ModelType("Annulus";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -77,7 +77,7 @@ const Annulus = ModelType("Annulus";
 )
 
 const Arc = ModelType("Arc";
-    inherits = [XYGlyph, LineGlyph],
+    bases = [XYGlyph, LineGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -90,7 +90,7 @@ const Arc = ModelType("Arc";
 )
 
 const Bezier = ModelType("Bezier";
-    inherits = [LineGlyph],
+    bases = [LineGlyph],
     props = [
         :x0 => NumberSpecT(default="x0"),
         :y0 => NumberSpecT(default="y0"),
@@ -105,7 +105,7 @@ const Bezier = ModelType("Bezier";
 )
 
 const Circle = ModelType("Circle";
-    inherits = [Marker],
+    bases = [Marker],
     props = [
         :radius => NullDistanceSpecT(),
         :radius_dimension => EnumT(Set(["x", "y", "max", "min"])),
@@ -113,7 +113,7 @@ const Circle = ModelType("Circle";
 )
 
 const Ellipse = ModelType("Ellipse";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -127,7 +127,7 @@ const Ellipse = ModelType("Ellipse";
 )
 
 const HArea = ModelType("HArea";
-    inherits = [FillGlyph, HatchGlyph],
+    bases = [FillGlyph, HatchGlyph],
     props = [
         :x1 => NumberSpecT(default="x1"),
         :x2 => NumberSpecT(default="x2"),
@@ -138,7 +138,7 @@ const HArea = ModelType("HArea";
 )
 
 const HBar = ModelType("HBar";
-    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    bases = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :y => NumberSpecT(default="y"),
         :height => NumberSpecT(default="height"),
@@ -151,7 +151,7 @@ const HBar = ModelType("HBar";
 )
 
 const HexTile = ModelType("HexTile";
-    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    bases = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :size => FloatT(default=1.0),
         :r => NumberSpecT(default="r"),
@@ -166,7 +166,7 @@ const HexTile = ModelType("HexTile";
 )
 
 const Image = ModelType("Image";
-    inherits = [XYGlyph],
+    bases = [XYGlyph],
     props = [
         :image => NumberSpecT(default="image"),
         :x => NumberSpecT(default="x"),
@@ -180,7 +180,7 @@ const Image = ModelType("Image";
 )
 
 const ImageRGBA = ModelType("ImageRGBA";
-    inherits = [XYGlyph],
+    bases = [XYGlyph],
     props = [
         :image => NumberSpecT(default="image"),
         :x => NumberSpecT(default="x"),
@@ -193,7 +193,7 @@ const ImageRGBA = ModelType("ImageRGBA";
 )
 
 const ImageURL = ModelType("ImageURL";
-    inherits = [XYGlyph],
+    bases = [XYGlyph],
     props = [
         :url => StringSpecT(default=Field("url")),
         :x => NumberSpecT(default="x"),
@@ -210,7 +210,7 @@ const ImageURL = ModelType("ImageURL";
 )
 
 const Line = ModelType("Line";
-    inherits = [ConnectedXYGlyph, LineGlyph],
+    bases = [ConnectedXYGlyph, LineGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -219,7 +219,7 @@ const Line = ModelType("Line";
 )
 
 const MultiLine = ModelType("MultiLine";
-    inherits = [LineGlyph],
+    bases = [LineGlyph],
     props = [
         :xs => NumberSpecT(default="xs"),
         :ys => NumberSpecT(default="ys"),
@@ -228,7 +228,7 @@ const MultiLine = ModelType("MultiLine";
 )
 
 const MultiPolygons = ModelType("MultiPolygons";
-    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    bases = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :xs => NumberSpecT(default="xs"),
         :ys => NumberSpecT(default="ys"),
@@ -239,7 +239,7 @@ const MultiPolygons = ModelType("MultiPolygons";
 )
 
 const Oval = ModelType("Oval";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -253,7 +253,7 @@ const Oval = ModelType("Oval";
 )
 
 const Patch = ModelType("Patch";
-    inherits = [ConnectedXYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [ConnectedXYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -264,7 +264,7 @@ const Patch = ModelType("Patch";
 )
 
 const Patches = ModelType("Patches";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :xs => NumberSpecT(default="xs"),
         :ys => NumberSpecT(default="ys"),
@@ -275,7 +275,7 @@ const Patches = ModelType("Patches";
 )
 
 const Quad = ModelType("Quad";
-    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    bases = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :left => NumberSpecT(default="left"),
         :right => NumberSpecT(default="right"),
@@ -288,7 +288,7 @@ const Quad = ModelType("Quad";
 )
 
 const Quadratic = ModelType("Quadratic";
-    inherits = [LineGlyph],
+    bases = [LineGlyph],
     props = [
         :x0 => NumberSpecT(default="x0"),
         :y0 => NumberSpecT(default="y0"),
@@ -301,7 +301,7 @@ const Quadratic = ModelType("Quadratic";
 )
 
 const Ray = ModelType("Ray";
-    inherits = [XYGlyph, LineGlyph],
+    bases = [XYGlyph, LineGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -312,7 +312,7 @@ const Ray = ModelType("Ray";
 )
 
 const Rect = ModelType("Rect";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -327,14 +327,14 @@ const Rect = ModelType("Rect";
 )
 
 const Scatter = ModelType("Scatter";
-    inherits = [Marker],
+    bases = [Marker],
     props = [
         :marker => MarkerSpecT(default="circle"),
     ],
 )
 
 const Segment = ModelType("Segment";
-    inherits = [LineGlyph],
+    bases = [LineGlyph],
     props = [
         :x0 => NumberSpecT(default="x0"),
         :y0 => NumberSpecT(default="y0"),
@@ -345,7 +345,7 @@ const Segment = ModelType("Segment";
 )
 
 const Step = ModelType("Step";
-    inherits = [XYGlyph, LineGlyph],
+    bases = [XYGlyph, LineGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -355,7 +355,7 @@ const Step = ModelType("Step";
 )
 
 const Text = ModelType("Text";
-    inherits = [XYGlyph, TextGlyph],
+    bases = [XYGlyph, TextGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),
@@ -368,7 +368,7 @@ const Text = ModelType("Text";
 )
 
 const VArea = ModelType("VArea";
-    inherits = [FillGlyph, HatchGlyph],
+    bases = [FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y1 => NumberSpecT(default="y1"),
@@ -379,7 +379,7 @@ const VArea = ModelType("VArea";
 )
 
 const VBar = ModelType("VBar";
-    inherits = [LineGlyph, FillGlyph, HatchGlyph],
+    bases = [LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :width => NumberSpecT(default=1.0),
@@ -392,7 +392,7 @@ const VBar = ModelType("VBar";
 )
 
 const Wedge = ModelType("Wedge";
-    inherits = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
+    bases = [XYGlyph, LineGlyph, FillGlyph, HatchGlyph],
     props = [
         :x => NumberSpecT(default="x"),
         :y => NumberSpecT(default="y"),

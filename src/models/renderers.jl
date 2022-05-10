@@ -17,7 +17,7 @@ const Renderer = ModelType("Renderer";
 )
 
 const TileRenderer = ModelType("TileRenderer";
-    inherits = [Renderer],
+    bases = [Renderer],
     props = [
         # TODO
     ]
@@ -25,14 +25,14 @@ const TileRenderer = ModelType("TileRenderer";
 
 const DataRenderer = ModelType("DataRenderer";
     abstract = true,
-    inherits = [Renderer],
+    bases = [Renderer],
     props = [
         :level => DefaultT("glyph"),
     ],
 )
 
 const GlyphRenderer = ModelType("GlyphRenderer";
-    inherits = [DataRenderer],
+    bases = [DataRenderer],
     props = [
         :data_source => InstanceT(DataSource),
         :view => InstanceT(CDSView),
@@ -46,7 +46,7 @@ const GlyphRenderer = ModelType("GlyphRenderer";
 )
 
 const GraphRenderer = ModelType("GraphRenderer";
-    inherits = [DataRenderer],
+    bases = [DataRenderer],
     props = [
         # TODO
     ]
@@ -54,7 +54,7 @@ const GraphRenderer = ModelType("GraphRenderer";
 
 const GuideRenderer = ModelType("GuideRenderer";
     abstract = true,
-    inherits = [Renderer],
+    bases = [Renderer],
     props = [
         :level => DefaultT("guide"),
     ]

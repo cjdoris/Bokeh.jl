@@ -36,7 +36,7 @@ Enable Bokeh to display plots in a browser.
 - `enabled`: Can be set to false to disable this functionality.
 - `path`: The HTML file where the plot is saved. If not given, a temporary location is used.
 """
-function display_in_browser(; cmd::Union{Cmd,Nothing}=nothing, enabled::Bool=nothing, path::Union{String,Nothing}=nothing)
+function display_in_browser(; cmd::Union{Cmd,Nothing}=nothing, enabled::Bool=true, path::Union{String,Nothing}=nothing)
     # try to update an existing display
     found = false
     for d in Base.Multimedia.displays

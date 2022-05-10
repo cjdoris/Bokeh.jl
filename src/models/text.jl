@@ -7,19 +7,19 @@ const BaseText = ModelType("BaseText";
 
 const MathText = ModelType("MathText";
     abstract = true,
-    inherits = [BaseText],
+    bases = [BaseText],
 )
 
 const Ascii = ModelType("Ascii";
-    inherits = [MathText],
+    bases = [MathText],
 )
 
 const MathML = ModelType("MathML";
-    inherits = [MathText],
+    bases = [MathText],
 )
 
 const TeX = ModelType("TeX";
-    inherits = [MathText],
+    bases = [MathText],
     props = [
         :macros => DictT(StringT(), EitherT(StringT(), TupleT(StringT(), IntT()))),
         :inline => BoolT(default=false),
@@ -27,5 +27,5 @@ const TeX = ModelType("TeX";
 )
 
 const PlainText = ModelType("PlainText";
-    inherits = [BaseText],
+    bases = [BaseText],
 )

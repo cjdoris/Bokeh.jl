@@ -8,7 +8,7 @@ const ToolbarBase = ModelType("ToolbarBase";
 )
 
 const Toolbar = ModelType("Toolbar";
-    inherits = [ToolbarBase],
+    bases = [ToolbarBase],
     props = [
         :active_drag => EitherT(NullT(), AutoT(), InstanceT(Drag), default="auto"),
         :active_inspect => EitherT(NullT(), AutoT(), InstanceT(InspectTool), SeqT(InstanceT(InspectTool)), default="auto"),
@@ -19,14 +19,14 @@ const Toolbar = ModelType("Toolbar";
 )
 
 const ProxyToolbar = ModelType("ProxyToolbar";
-    inherits = [ToolbarBase],
+    bases = [ToolbarBase],
     props = [
         :toolbars => ListT(InstanceT(Toolbar)),
     ]
 )
 
 const ToolbarBox = ModelType("ToolbarBox";
-    inherits = [LayoutDOM],
+    bases = [LayoutDOM],
     props = [
         :toolbar_location => LocationT(default="right"),
     ],

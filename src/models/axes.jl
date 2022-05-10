@@ -1,6 +1,6 @@
 const Axis = ModelType("Axis";
     abstract = true,
-    inherits = [GuideRenderer],
+    bases = [GuideRenderer],
     props = [
         :bounds => EitherT(AutoT(), TupleT(FloatT(), FloatT())), # TODO datetime
         :ticker => TickerT(),
@@ -31,11 +31,11 @@ const Axis = ModelType("Axis";
 
 const ContinuousAxis = ModelType("ContinuousAxis";
     abstract = true,
-    inherits = [Axis],
+    bases = [Axis],
 )
 
 const LinearAxis = ModelType("LinearAxis";
-    inherits = [ContinuousAxis],
+    bases = [ContinuousAxis],
     props = [
         :ticker => DefaultT(()->BasicTicker()),
         :formatter => DefaultT(()->BasicTickFormatter()),
@@ -43,7 +43,7 @@ const LinearAxis = ModelType("LinearAxis";
 )
 
 const LogAxis = ModelType("LogAxis";
-    inherits = [ContinuousAxis],
+    bases = [ContinuousAxis],
     props = [
         :ticker => DefaultT(()->LogTicker()),
         :formatter => DefaultT(()->LogTickFormatter()),
@@ -51,7 +51,7 @@ const LogAxis = ModelType("LogAxis";
 )
 
 const CategoricalAxis = ModelType("CategoricalAxis";
-    inherits = [Axis],
+    bases = [Axis],
     props = [
         :ticker => DefaultT(()->CategoricalTicker()),
         :formatter => DefaultT(()->CategoricalTickFormatter()),
@@ -71,7 +71,7 @@ const CategoricalAxis = ModelType("CategoricalAxis";
 )
 
 const DatetimeAxis = ModelType("DatetimeAxis";
-    inherits = [LinearAxis],
+    bases = [LinearAxis],
     props = [
         :ticker => DefaultT(()->DatetimeTicker()),
         :formatter => DefaultT(()->DatetimeTickFormatter()),
@@ -81,7 +81,7 @@ const DatetimeAxis = ModelType("DatetimeAxis";
 const MercatorAxis = ModelType("MercatorAxis";
     # TODO: the python constructor has a "dimension" argument which sets the dimension on
     # the ticker and formatter
-    inherits = [LinearAxis],
+    bases = [LinearAxis],
     props = [
         :ticker => DefaultT(()->MercatorTicker()),
         :formatter => DefaultT(()->MercatorTickFormatter()),

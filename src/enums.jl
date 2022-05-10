@@ -12,6 +12,19 @@ const DIRECTION_ENUM = Set(["clock", "anticlock"])
 
 const FONT_STYLE_ENUM = Set(["normal", "italic", "bold", "bold italic"])
 
+const HATCH_PATTERN_ENUM = Set([
+    "blank", "dot", "ring", "horizontal_line", "vertical_line", "cross", "horizontal_dash",
+    "vertical_dash", "spiral", "right_diagonal_line", "left_diagonal_line",
+    "diagonal_cross", "right_diagonal_dash", "left_diagonal_dash", "horizontal_wave",
+    "vertical_wave", "criss_cross",
+])
+
+const HATCH_PATTERN_ABBREVIATION_ENUM = Set([
+    " ", ".", "o", "-", "|", "+", "\"", ":", "@", "/", "\\","x", ",", "`", "v", ">", "*",
+])
+
+const HATCH_PATTERN_ALL_ENUM = union(HATCH_PATTERN_ENUM, HATCH_PATTERN_ABBREVIATION_ENUM)
+
 const LATLON_ENUM = Set(["lat", "lon"])
 
 const LEGEND_CLICK_POLICY_ENUM = Set(["none", "hide", "mute"])

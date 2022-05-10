@@ -3,16 +3,16 @@ const LabelingPolicy = ModelType("LabelingPolicy";
 )
 
 const AllLabels = ModelType("LabelingPolicy";
-    inherits = [LabelingPolicy],
+    bases = [LabelingPolicy],
 )
 
 const NoOverlap = ModelType("NoOverlap";
-    inherits = [LabelingPolicy],
+    bases = [LabelingPolicy],
     props = [
         :min_distance => IntT(default=5),
     ]
 )
 
 const CustomLabelingPolicy = ModelType("CustomLabelingPolicy";
-    inherits = [LabelingPolicy],
+    bases = [LabelingPolicy],
 )

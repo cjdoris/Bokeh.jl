@@ -4,103 +4,103 @@ const Tool = ModelType("Tool";
 
 const ActionTool = ModelType("ActionTool";
     abstract = true,
-    inherits = [Tool],
+    bases = [Tool],
 )
 
 const GestureTool = ModelType("GestureTool";
     abstract = true,
-    inherits = [Tool],
+    bases = [Tool],
 )
 
 const Drag = ModelType("Drag";
     abstract = true,
-    inherits = [GestureTool],
+    bases = [GestureTool],
 )
 
 const Scroll = ModelType("Scroll";
     abstract = true,
-    inherits = [GestureTool],
+    bases = [GestureTool],
 )
 
 const Tap = ModelType("Tap";
     abstract = true,
-    inherits = [GestureTool],
+    bases = [GestureTool],
 )
 
 const SelectTool = ModelType("SelectTool";
     abstract = true,
-    inherits = [GestureTool],
+    bases = [GestureTool],
 )
 
 const InspectTool = ModelType("InspectTool";
     abstract = true,
-    inherits = [GestureTool],
+    bases = [GestureTool],
 )
 
 const PanTool = ModelType("PanTool";
-    inherits = [Drag],
+    bases = [Drag],
 )
 
 const RangeTool = ModelType("RangeTool";
-    inherits = [Drag],
+    bases = [Drag],
 )
 
 const WheelPanTool = ModelType("WheelPanTool";
-    inherits = [Scroll],
+    bases = [Scroll],
 )
 
 const WheelZoomTool = ModelType("WheelZoomTool";
-    inherits = [Scroll],
+    bases = [Scroll],
 )
 
 const CustomAction = ModelType("CustomAction";
-    inherits = [ActionTool],
+    bases = [ActionTool],
 )
 
 const SaveTool = ModelType("SaveTool";
-    inherits = [ActionTool],
+    bases = [ActionTool],
 )
 
 const ResetTool = ModelType("ResetTool";
-    inherits = [ActionTool],
+    bases = [ActionTool],
 )
 
 const TapTool = ModelType("TapTool";
-    inherits = [Tap, SelectTool],
+    bases = [Tap, SelectTool],
 )
 
 const CrosshairTool = ModelType("CrosshairTool";
-    inherits = [InspectTool],
+    bases = [InspectTool],
 )
 
 const BoxZoomTool = ModelType("BoxZoomTool";
-    inherits = [Drag],
+    bases = [Drag],
 )
 
 const ZoomInTool = ModelType("ZoomInTool";
-    inherits = [ActionTool],
+    bases = [ActionTool],
 )
 
 const ZoomOutTool = ModelType("ZoomOutTool";
-    inherits = [ActionTool],
+    bases = [ActionTool],
 )
 
 const BoxSelectTool = ModelType("BoxSelectTool";
-    inherits = [Drag, SelectTool],
+    bases = [Drag, SelectTool],
 )
 
 const LassoSelectTool = ModelType("LassoSelectTool";
-    inherits = [Drag, SelectTool],
+    bases = [Drag, SelectTool],
 )
 
 const PolySelectTool = ModelType("PolySelectTool";
-    inherits = [Tap, SelectTool],
+    bases = [Tap, SelectTool],
 )
 
 const CustomJSHover = ModelType("CustomJSHover")
 
 const HoverTool = ModelType("HoverTool";
-    inherits = [InspectTool],
+    bases = [InspectTool],
     props = [
         :names => ListT(StringT()),
         :renderers => EitherT(AutoT(), ListT(InstanceT(DataRenderer)), default="auto"),
@@ -121,47 +121,47 @@ const HoverTool = ModelType("HoverTool";
 )
 
 const HelpTool = ModelType("HelpTool";
-    inherits = [ActionTool]
+    bases = [ActionTool]
 )
 
 const UndoTool = ModelType("UndoTool";
-    inherits = [ActionTool]
+    bases = [ActionTool]
 )
 
 const RedoTool = ModelType("RedoTool";
-    inherits = [ActionTool]
+    bases = [ActionTool]
 )
 
 const EditTool = ModelType("EditTool";
     abstract = true,
-    inherits = [GestureTool]
+    bases = [GestureTool]
 )
 
 const PolyTool = ModelType("PolyTool";
     abstract = true,
-    inherits = [EditTool]
+    bases = [EditTool]
 )
 
 const BoxEditTool = ModelType("BoxEditTool";
-    inherits = [EditTool, Drag, Tap]
+    bases = [EditTool, Drag, Tap]
 )
 
 const PointDrawTool = ModelType("PointDrawTool";
-    inherits = [EditTool, Drag, Tap]
+    bases = [EditTool, Drag, Tap]
 )
 
 const PolyDrawTool = ModelType("PolyDrawTool";
-    inherits = [PolyTool, Drag, Tap],
+    bases = [PolyTool, Drag, Tap],
 )
 
 const FreehandDrawTool = ModelType("FreehandDrawTool";
-    inherits = [EditTool, Drag, Tap],
+    bases = [EditTool, Drag, Tap],
 )
 
 const PolyEditTool = ModelType("PolyEditTool";
-    inherits = [PolyTool, Drag, Tap],
+    bases = [PolyTool, Drag, Tap],
 )
 
 const LineEditTool = ModelType("LineEditTool";
-    inherits = [EditTool, Drag, Tap],
+    bases = [EditTool, Drag, Tap],
 )

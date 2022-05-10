@@ -1,5 +1,5 @@
 const Grid = ModelType("Grid";
-    inherits = [GuideRenderer],
+    bases = [GuideRenderer],
     props = [
         :dimension => IntT() |> DefaultT(0),
         :axis => InstanceT(Axis) |> NullableT,

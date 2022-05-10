@@ -54,7 +54,7 @@ end
 mutable struct ModelType
     name::String
     subname::Union{Nothing,String}
-    inherits::Vector{ModelType}
+    bases::Vector{ModelType}
     propdescs::Dict{Symbol,PropDesc}
     supers::IdSet{ModelType}
     abstract::Bool

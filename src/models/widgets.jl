@@ -2,7 +2,7 @@
 
 const Widget = ModelType("Widget";
     abstract = true,
-    inherits = [LayoutDOM]
+    bases = [LayoutDOM]
 )
 
 
@@ -10,7 +10,7 @@ const Widget = ModelType("Widget";
 
 const Markup = ModelType("Markup";
     abstract = true,
-    inherits = [Widget],
+    bases = [Widget],
     props = [
         :text => StringT(default=""),
         :style => DictT(StringT(), AnyT()),
@@ -19,16 +19,16 @@ const Markup = ModelType("Markup";
 )
 
 const Paragraph = ModelType("Paragraph";
-    inherits = [Markup]
+    bases = [Markup]
 )
 
 const Div = ModelType("Div";
-    inherits = [Markup],
+    bases = [Markup],
     props = [
         :render_as_text => BoolT(default=false),
     ]
 )
 
 const PreText = ModelType("PreText";
-    inherits = [Markup]
+    bases = [Markup]
 )

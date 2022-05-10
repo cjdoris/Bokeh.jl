@@ -1,20 +1,20 @@
 const Scale = ModelType("Scale";
     abstract = true,
-    inherits = [Transform],
+    bases = [Transform],
 )
 
 const ContinuousScale = ModelType("ContinuousScale";
-    inherits = [Scale],
+    bases = [Scale],
 )
 
 const LinearScale = ModelType("LinearScale";
-    inherits = [ContinuousScale],
+    bases = [ContinuousScale],
 )
 
 const LogScale = ModelType("LogScale";
-    inherits = [ContinuousScale],
+    bases = [ContinuousScale],
 )
 
 const CategoricalScale = ModelType("CategoricalScale";
-    inherits = [Scale],
+    bases = [Scale],
 )

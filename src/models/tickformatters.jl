@@ -3,7 +3,7 @@ const TickFormatter = ModelType("TickFormatter";
 )
 
 const BasicTickFormatter = ModelType("BasicTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         :precision => EitherT(AutoT(), IntT()),
         :use_scientific => BoolT(default=true),
@@ -13,14 +13,14 @@ const BasicTickFormatter = ModelType("BasicTickFormatter";
 )
 
 const MercatorTickFormatter = ModelType("MercatorTickFormatter";
-    inherits = [BasicTickFormatter],
+    bases = [BasicTickFormatter],
     props = [
         :dimension => NullableT(LatLonT()),
     ]
 )
 
 const NumericalTickFormatter = ModelType("NumericalTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         :format => StringT(default="0,0"),
         :language => NumeralLanguageT(default="en"),
@@ -29,14 +29,14 @@ const NumericalTickFormatter = ModelType("NumericalTickFormatter";
 )
 
 const PrintfTickFormatter = ModelType("PrintfTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         :format => StringT(default="%s"),
     ]
 )
 
 const LogTickFormatter = ModelType("LogTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         :ticker => NullableT(InstanceT(Ticker)),
         :min_exponent => IntT(default=0),
@@ -44,18 +44,18 @@ const LogTickFormatter = ModelType("LogTickFormatter";
 )
 
 const CategoricalTickFormatter = ModelType("CategoricalTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
 )
 
 const FuncTickFormatter = ModelType("FuncTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         # TODO
     ]
 )
 
 const DatetimeTickFormatter = ModelType("DatetimeTickFormatter";
-    inherits = [TickFormatter],
+    bases = [TickFormatter],
     props = [
         :microseconds => ListOrSingleT(StringT(), default=()->["%fus"]),
         :milliseconds => ListOrSingleT(StringT(), default=()->["%3Nms", "%S.%3Ns"]),

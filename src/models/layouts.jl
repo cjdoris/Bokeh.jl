@@ -22,20 +22,20 @@ const LayoutDOM = ModelType("LayoutDOM";
 
 const HTMLBox = ModelType("HTMLBox";
     abstract = true,
-    inherits = [LayoutDOM],
+    bases = [LayoutDOM],
 )
 
 const Spacer = ModelType("Spacer";
-    inherits = [LayoutDOM]
+    bases = [LayoutDOM]
 )
 
 const GridBox = ModelType("GridBox";
-    inherits = [LayoutDOM],
+    bases = [LayoutDOM],
 )
 
 const Box = ModelType("Box";
     abstract = true,
-    inherits = [LayoutDOM],
+    bases = [LayoutDOM],
     props = [
         :children => ListT(InstanceT(LayoutDOM)),
         :spacing => IntT(default=0),
@@ -43,14 +43,14 @@ const Box = ModelType("Box";
 )
 
 const Row = ModelType("Row";
-    inherits = [Box],
+    bases = [Box],
     props = [
         :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), ColSizingT()), default="auto"),
     ]
 )
 
 const Column = ModelType("Column";
-    inherits = [Box],
+    bases = [Box],
     props = [
         :cols => EitherT(QuickTrackSizingT(), DictT(IntOrStringT(), RowSizingT()), default="auto"),
     ]

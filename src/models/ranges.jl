@@ -3,7 +3,7 @@ const Range = ModelType("Range";
 )
 
 const Range1d = ModelType("Range1d";
-    inherits = [Range],
+    bases = [Range],
     props = [
         :start => FloatT() |> DefaultT(0.0),
         :end => FloatT() |> DefaultT(1.0),
@@ -14,11 +14,11 @@ const Range1d = ModelType("Range1d";
 
 const DataRange = ModelType("DataRange";
     abstract = true,
-    inherits = [Range],
+    bases = [Range],
 )
 
 const DataRange1d = ModelType("DataRange1d";
-    inherits = [Range1d, DataRange],
+    bases = [Range1d, DataRange],
     props = [
         :range_padding => FloatT(default=0.1),
         :start => EitherT(NullT(), FloatT()),
@@ -27,7 +27,7 @@ const DataRange1d = ModelType("DataRange1d";
 )
 
 const FactorRange = ModelType("FactorRange";
-    inherits = [Range],
+    bases = [Range],
     props = [
         :factors => FactorSeqT(),
     ],

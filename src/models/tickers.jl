@@ -4,7 +4,7 @@ const Ticker = ModelType("Ticker";
 
 const ContinuousTicker = ModelType("ContinuousTicker";
     abstract = true,
-    inherits = [Ticker],
+    bases = [Ticker],
     props = [
         :num_minor_ticks => IntT(default=5),
         :desired_num_ticks => IntT(default=6),
@@ -12,7 +12,7 @@ const ContinuousTicker = ModelType("ContinuousTicker";
 )
 
 const FixedTicker = ModelType("FixedTicker";
-    inherits = [ContinuousTicker],
+    bases = [ContinuousTicker],
     props = [
         :ticks => SeqT(FloatT()),
         :minor_ticks => SeqT(FloatT()),
@@ -20,7 +20,7 @@ const FixedTicker = ModelType("FixedTicker";
 )
 
 const AdaptiveTicker = ModelType("AdaptiveTicker";
-    inherits = [ContinuousTicker],
+    bases = [ContinuousTicker],
     props = [
         :base => FloatT(default=10.0),
         :mantissas => SeqT(FloatT(), default=()->[1.0, 2.0, 5.0]),
@@ -30,21 +30,21 @@ const AdaptiveTicker = ModelType("AdaptiveTicker";
 )
 
 const CompositeTicker = ModelType("CompositeTicker";
-    inherits = [ContinuousTicker],
+    bases = [ContinuousTicker],
     props = [
         :tickers => SeqT(InstanceT(Ticker)),
     ]
 )
 
 const SingleIntervalTicker = ModelType("SingleIntervalTicker";
-    inherits = [ContinuousTicker],
+    bases = [ContinuousTicker],
     props = [
         :interval => FloatT(),
     ]
 )
 
 const DaysTicker = ModelType("DaysTicker";
-    inherits = [SingleIntervalTicker],
+    bases = [SingleIntervalTicker],
     props = [
         :days => SeqT(IntT()),
         :num_minor_ticks => DefaultT(0),
@@ -52,36 +52,36 @@ const DaysTicker = ModelType("DaysTicker";
 )
 
 const MonthsTicker = ModelType("MonthsTicker";
-    inherits = [SingleIntervalTicker],
+    bases = [SingleIntervalTicker],
     props = [
         :months => SeqT(IntT()),
     ]
 )
 
 const YearsTicker = ModelType("YearsTicker";
-    inherits = [SingleIntervalTicker],
+    bases = [SingleIntervalTicker],
 )
 
 const BasicTicker = ModelType("BasicTicker";
-    inherits = [AdaptiveTicker],
+    bases = [AdaptiveTicker],
 )
 
 const LogTicker = ModelType("LogTicker";
-    inherits = [AdaptiveTicker],
+    bases = [AdaptiveTicker],
     props = [
         :mantissas => DefaultT(()->[1.0, 5.0]),
     ]
 )
 
 const MercatorTicker = ModelType("MercatorTicker";
-    inherits = [BasicTicker],
+    bases = [BasicTicker],
     props = [
         :dimension => NullableT(LatLonT()),
     ]
 )
 
 const DatetimeTicker = ModelType("DatetimeTicker";
-    inherits = [CompositeTicker],
+    bases = [CompositeTicker],
     props = [
         :num_minor_ticks => DefaultT(0),
         :tickers => DefaultT(() -> [
@@ -120,7 +120,7 @@ const DatetimeTicker = ModelType("DatetimeTicker";
 )
 
 const BinnedTicker = ModelType("BinnedTicker";
-    inherits = [Ticker],
+    bases = [Ticker],
     props = [
         # :mapper => InstanceT(ScanningColorMapper), TODO
         :num_major_ticks => EitherT(IntT(), AutoT(), default=8),

@@ -4,11 +4,11 @@ const DataSource = ModelType("DataSource";
 
 const ColumnarDataSource = ModelType("ColumnarDataSource";
     abstract = true,
-    inherits = [DataSource],
+    bases = [DataSource],
 )
 
 const ColumnDataSource = ModelType("ColumnDataSource";
-    inherits = [ColumnarDataSource],
+    bases = [ColumnarDataSource],
     props = [
         :data => ColumnDataT(),
         :column_names => GetSetT(x->collect(String,keys(x.data))),

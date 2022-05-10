@@ -1,11 +1,11 @@
 const Mapper = ModelType("Mapper";
     abstract = true,
-    inherits = [Transform],
+    bases = [Transform],
 )
 
 const ColorMapper = ModelType("ColorMapper";
     abstract = true,
-    inherits = [Mapper],
+    bases = [Mapper],
     props = [
         :palette => PaletteT(),
         :nan_color => ColorT() |> DefaultT("gray"),
@@ -14,7 +14,7 @@ const ColorMapper = ModelType("ColorMapper";
 
 const CategoricalMapper = ModelType("CategoricalMapper";
     abstract = true,
-    inherits = [Mapper],
+    bases = [Mapper],
     props = [
         :factors => FactorSeqT(),
         :start => IntT() |> DefaultT(0),
@@ -23,11 +23,11 @@ const CategoricalMapper = ModelType("CategoricalMapper";
 )
 
 const CategoricalColorMapper = ModelType("CategoricalColorMapper";
-    inherits = [ColorMapper, CategoricalMapper],
+    bases = [ColorMapper, CategoricalMapper],
 )
 
 const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
-    inherits = [CategoricalMapper],
+    bases = [CategoricalMapper],
     props = [
         :markers => ListT(MarkerT()),
         :default_value => MarkerT() |> DefaultT("circle"),
@@ -35,18 +35,18 @@ const CategoricalMarkerMapper = ModelType("CategoricalMarkerMapper";
 )
 
 const CategoricalPatternMapper = ModelType("CategoricalPatternMapper";
-    inherits = [CategoricalMapper],
+    bases = [CategoricalMapper],
 )
 
 const ContinuousColorMapper = ModelType("ContinuousColorMapper";
     abstract = true,
-    inherits = [ColorMapper],
+    bases = [ColorMapper],
 )
 
 const LinearColorMapper = ModelType("LinearColorMapper";
-    inherits = [ContinuousColorMapper],
+    bases = [ContinuousColorMapper],
 )
 
 const LogColorMapper = ModelType("LogColorMapper";
-    inherits = [ContinuousColorMapper],
+    bases = [ContinuousColorMapper],
 )

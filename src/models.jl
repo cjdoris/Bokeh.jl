@@ -1,20 +1,20 @@
 ### MODELTYPE
 
 function ModelType(name, subname=nothing;
-    inherits=[BaseModel],
+    bases=[],
     props=[],
     abstract=false,
 )
     propdescs = Dict{Symbol,PropDesc}()
     supers = IdSet{ModelType}()
-    for t in inherits
+    for t in bases
         abstract && !t.abstract && error("$name marked abstract but inherits from $(t.name) which is not abstract")
         mergepropdescs!(propdescs, t.propdescs)
         push!(supers, t)
         union!(supers, t.supers)
     end
     mergepropdescs!(propdescs, props)
-    return ModelType(name, subname, inherits, propdescs, supers, abstract)
+    return ModelType(name, subname, bases, propdescs, supers, abstract)
 end
 
 function mergepropdescs!(ds, x; name=nothing)
@@ -52,7 +52,6 @@ function Base.show(io::IO, t::ModelType)
     show(io, t.name)
     print(io, "; ...)")
 end
-
 
 ### MODEL
 
@@ -263,35 +262,22 @@ function serialize_noref(s::Serializer, m::Model)
     return ans
 end
 
+plot_get_renderers(plot::Model; type, sides, filter=nothing) = PropVector(Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))])
+plot_get_renderers(; kw...) = (plot::Model) -> plot_get_renderers(plot; kw...)
 
-### BASE
+function plot_get_renderer(plot::Model; plural, kw...)
+    ms = plot_get_renderers(plot; kw...)
+    if length(ms) == 0
+        return Undefined()
+    elseif length(ms) == 1
+        return ms[1]
+    else
+        error("multiple $plural defined, consider using .$plural instead")
+    end
+end
+plot_get_renderer(; kw...) = (plot::Model) -> plot_get_renderer(plot; kw...)
 
-const BaseModel = ModelType("Model",
-    abstract = true,
-    inherits = [],
-    props = [
-        :name => NullableT(StringT()),
-        :tags => ListT(AnyT()),
-        :syncable => BoolT() |> DefaultT(true),
-    ],
-)
+generate_model_types()
 
-include("models/text.jl")
-include("models/sources.jl")
-include("models/tickers.jl")
-include("models/tickformatters.jl")
-include("models/layouts.jl")
-include("models/transforms.jl")
-include("models/mappers.jl")
-include("models/glyphs.jl")
-include("models/renderers.jl")
-include("models/labeling.jl")
-include("models/axes.jl")
-include("models/ranges.jl")
-include("models/scales.jl")
-include("models/grids.jl")
-include("models/annotations.jl")
-include("models/tools.jl")
-include("models/toolbars.jl")
-include("models/plots.jl")
-include("models/widgets.jl")
+const Figure = ModelType("Plot", "Figure", bases=[Plot])
+export Figure

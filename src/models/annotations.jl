@@ -1,6 +1,6 @@
 const Annotation = ModelType("Renderer";
     abstract = true,
-    inherits = [Renderer],
+    bases = [Renderer],
     props = [
         :level => DefaultT("annotation"),
     ]
@@ -8,11 +8,11 @@ const Annotation = ModelType("Renderer";
 
 const TextAnnotation = ModelType("TextAnnotation";
     abstract = true,
-    inherits = [Annotation],
+    bases = [Annotation],
 )
 
 const Title = ModelType("Title";
-    inherits = [TextAnnotation],
+    bases = [TextAnnotation],
     props = [
         :text => StringT(default=""),
     ]
@@ -28,7 +28,7 @@ const LegendItem = ModelType("LegendItem";
 )
 
 const Legend = ModelType("Legend",
-    inherits = [Annotation],
+    bases = [Annotation],
     props = [
         :location => EitherT(LegendLocationT(), TupleT(FloatT(), FloatT()), default="top_right"),
         :orientation => OrientationT(default="vertical"),

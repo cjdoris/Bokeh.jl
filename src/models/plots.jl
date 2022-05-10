@@ -14,7 +14,7 @@ end
 plot_get_renderer(; kw...) = (plot::Model) -> plot_get_renderer(plot; kw...)
 
 const Plot = ModelType("Plot";
-    inherits = [LayoutDOM],
+    bases = [LayoutDOM],
     props = [
         :x_range => InstanceT(Range, default=()->DataRange1d()),
         :y_range => InstanceT(Range, default=()->DataRange1d()),
@@ -86,5 +86,5 @@ const Plot = ModelType("Plot";
 )
 
 const Figure = ModelType("Plot", "Figure";
-    inherits = [Plot],
+    bases = [Plot],
 )

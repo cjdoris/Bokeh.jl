@@ -268,9 +268,25 @@ ByteT(; kw...) = IntT(; validate=(x; detail) -> (0 ≤ x ≤ 255 ? x : Invalid(d
 
 NonNegativeIntT(; kw...) = IntT(; validate=(x; detail) -> (0 ≤ x ? x : Invalid(detail ? "must be at least 0" : "")), kw...)
 
+PositiveIntT(; kw...) = IntT(; validate=(x; detail) -> (1 ≤ x ? x : Invalid(detail ? "must be at least 1" : "")), kw...)
+
 PercentT(; kw...) = FloatT(; validate=(x; detail) -> (0 ≤ x ≤ 1 ? x : Invalid(detail ? "must be between 0 and 1" : "")), kw...)
 
 SizeT(; kw...) = FloatT(; validate=(x; detail) -> (0 ≤ x ? x : Invalid(detail ? "must be at least 0" : "")), kw...)
+
+DateT(; kw...) = InstanceT(Dates.Date; kw...)
+
+DatetimeT(; kw...) = InstanceT(Dates.DateTime; kw...)
+
+TimeDeltaT(; kw...) = InstanceT(Dates.Period; kw...)
+
+
+### STRINGS
+
+Base64StringT(; kw...) = StringT(; validate=(x; detail)->Base64.base64encode(x), kw...)
+
+# TODO: validate
+JSONT(; kw...) = StringT(; kw...)
 
 
 ### CONTAINERS
@@ -360,8 +376,6 @@ end
 
 ### VISUAL
 
-MarkerT(; kw...) = EnumT(MARKER_ENUM; kw...)
-
 NamedColorT(; kw...) = EnumT(NAMED_COLOR_ENUM; kw...)
 
 CSSColorT(; kw...) = RegexT(r"(^#[0-9a-fA-F]{3}$)|(^#[0-9a-fA-F]{4}$)|(^#[0-9a-fA-F]{6}$)|(^#[0-9a-fA-F]{8}$)|(^rgba\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*([01]\.?\d*?)\))|(^rgb\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*?\))"; kw...)
@@ -393,6 +407,16 @@ ColorT(; kw...) = EitherT(
     kw...
 )
 
+function serialize_colorhex(s::Serializer, x::String)
+    if startswith(x, "#")
+        return x
+    else
+        error("not implemented: converting colors to hex")
+    end
+end
+
+ColorHexT(; kw...) = ColorT(serialize=serialize_colorhex)
+
 AlphaT(; kw...) = PercentT(; default=1.0, kw...)
 
 NamedPaletteT(; kw...) = EnumT(NAMED_PALETTE_ENUM; kw...)
@@ -407,6 +431,32 @@ PaletteT(; kw...) = EitherT(
 )
 
 FontSizeT(; kw...) = RegexT(r"^[0-9]+(.[0-9]+)?(%|em|ex|ch|ic|rem|vw|vh|vi|vb|vmin|vmax|cm|mm|q|in|pc|pt|px)$"i; kw...)
+
+const DASH_PATTERNS = Dict(
+    "solid" => Int[],
+    "dashed" => [6],
+    "dotted" => [2, 4],
+    "dotdash" => [2, 4, 6, 4],
+    "dashdot" => [6, 4, 2, 4],
+)
+
+DashPatternT(; kw...) = EitherT(
+    EnumT(
+        Set(keys(DASH_PATTERNS));
+        validate = (x; detail) -> DASH_PATTERNS[x],
+        result_type = Vector{Int},
+    ),
+    RegexT(
+        r"^(\d+(\s+\d+)*)?$";
+        validate = (x; detail) -> Int[parse(Int, x) for x in split(x)],
+        result_type = Vector{Int},
+    ),
+    SeqT(IntT());
+    kw...
+)
+
+# TODO: accept more image types
+ImageT(; kw...) = RegexT(r"^data:image/"; kw...)
 
 
 ### FACTORS
@@ -427,27 +477,9 @@ FactorSeqT(; kw...) = EitherT(SeqT(L1FactorT()), SeqT(L2FactorT()), SeqT(L3Facto
 
 NumberSpecT(; kw...) = DataSpecT(FloatT(); kw...)
 
-MarkerSpecT(; kw...) = DataSpecT(MarkerT(); kw...)
-
-ColorSpecT(; kw...) = DataSpecT(NullableT(ColorT()); kw...)
-
-SizeSpecT(; kw...) = DataSpecT(SizeT(); kw...)
-
-IntSpecT(; kw...) = DataSpecT(IntT(); kw...)
-
-AlphaSpecT(; kw...) = DataSpecT(AlphaT(); kw...)
-
-NullStringSpecT(; kw...) = DataSpecT(NullableT(StringT()); kw...)
-
-FontStyleSpecT(; kw...) = DataSpecT(FontStyleT(); kw...)
-
-TextBaselineSpecT(; kw...) = DataSpecT(TextBaselineT(); kw...)
-
-FontSizeSpecT(; kw...) = DataSpecT(FontSizeT(); kw...)
-
 StringSpecT(; kw...) = DataSpecT(StringT(); kw...)
 
-TextAlignSpecT(; kw...) = DataSpecT(TextAlignT(); kw...)
+NullStringSpecT(; kw...) = DataSpecT(NullableT(StringT()); kw...)
 
 AngleSpecT(; kw...) = DataSpecT(FloatT(); kw...) # TODO: units
 
@@ -458,47 +490,9 @@ NullDistanceSpecT(; kw...) = DataSpecT(NullableT(SizeT()); kw...) # TODO: units
 
 ### OTHER ENUMS
 
-AlignT(; kw...) = EnumT(ALIGN_ENUM; kw...)
-
-AnchorT(; kw...) = EnumT(ANCHOR_ENUM; kw...)
-
 AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
 
-DirectionT(; kw...) = EnumT(DIRECTION_ENUM; kw...)
-
-FontStyleT(; kw...) = EnumT(FONT_STYLE_ENUM; kw...)
-
-LatLonT(; kw...) = EnumT(LATLON_ENUM; kw...)
-
-LegendClickPolicyT(; kw...) = EnumT(LEGEND_CLICK_POLICY_ENUM; kw...)
-
-LegendLocationT(; kw...) = EnumT(LEGEND_LOCATION_ENUM; kw...)
-
-LocationT(; kw...) = EnumT(LOCATION_ENUM; kw...)
-
-NumeralLanguageT(; kw...) = EnumT(NUMERAL_LANGUAGE_ENUM; kw...)
-
-OrientationT(; kw...) = EnumT(ORIENTATION_ENUM; kw...)
-
-OutputBackendT(; kw...) = EnumT(OUTPUT_BACKEND_ENUM; kw...)
-
-RenderLevelT(; kw...) = EnumT(RENDER_LEVEL_ENUM; kw...)
-
-ResetPolicyT(; kw...) = EnumT(RESET_POLICY_ENUM; kw...)
-
-RoundingFunctionT(; kw...) = EnumT(ROUNDING_FUNCTION_ENUM; kw...)
-
-SizingModeT(; kw...) = EnumT(SIZING_MODE_ENUM; kw...)
-
-SizingPolicyT(; kw...) = EnumT(SIZING_POLICY_ENUM; kw...)
-
-StepModeT(; kw...) = EnumT(STEP_MODE_ENUM; kw...)
-
-TextBaselineT(; kw...) = EnumT(TEXT_BASELINE_ENUM; kw...)
-
-TextAlignT(; kw...) = EnumT(TEXT_ALIGN_ENUM; kw...)
-
-TickLabelOrientationT(; kw...) = EnumT(TICK_LABEL_ORIENTATION_ENUM; kw...)
+HatchPatternT(; kw...) = EnumT(HATCH_PATTERN_ALL_ENUM; kw...)
 
 
 ### MISC
@@ -525,33 +519,13 @@ MarginT(; kw...) = EitherT(
     kw...
 )
 
-IntOrStringT(; kw...) = EitherT(IntT(), StringT(); kw...)
-
-QuickTrackSizingT(; kw...) = EitherT(IntT(), EnumT(QUICK_TRACK_SIZING_ENUM); kw...)
-
-TrackAlignT(; kw...) = EitherT(AutoT(), AlignT())
-
-RowSizingT(; kw...) = EitherT(
-    QuickTrackSizingT(),
-    # TODO: struct types
-)
-
-ColSizingT(; kw...) = EitherT(
-    QuickTrackSizingT(),
-    # TODO: struct types
-)
-
-MathStringT() = StringT()
-
-TextLikeT(; kw...) = EitherT(
-    InstanceT(BaseText),
-    MathStringT(),
-)
+MathStringT(; kw...) = StringT(; kw...)
 
 TickerT(; kw...) = EitherT(
     InstanceT(Ticker),
     SeqT(FloatT();
         validate = (x; detail) -> FixedTicker(ticks=x),
         result_type = Model,
-    )
+    );
+    kw...
 )
