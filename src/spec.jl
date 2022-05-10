@@ -1,5 +1,5 @@
-function load_spec()
-    open(JSON3.read, joinpath(dirname(@__DIR__), "spec.json"))
+function load_spec(name)
+    open(JSON3.read, joinpath(dirname(@__DIR__), "spec", "$name.json"))
 end
 
 function parse_prop_type_expr(ex, ts)
@@ -96,7 +96,7 @@ function parse_prop_type_expr(ex, ts)
                 else
                     iname2 = "Model"
                 end
-                @warn "cannot find type $iname, assuming $iname2"
+                @debug "cannot find type $iname, assuming $iname2"
                 t = ts[iname2]
             end
             return InstanceT(t)
@@ -145,7 +145,7 @@ function parse_prop_type_expr(ex, ts)
             return NumberSpecT()
         end
     end
-    @warn "cannot parse prop type $ex"
+    @debug "cannot parse prop type $ex"
     return AnyT()
 end
 
@@ -221,7 +221,7 @@ function maybe_parse_prop_default(x, t)
         # TODO
         # There isn't enough information to recreate the default value.
         # Change gen_spec.py to output the right info.
-        @warn "assuming default $x for $(t.model_type) is Undefined"
+        @debug "assuming default $x for $(t.model_type) is Undefined"
         return Undefined()
     end
     return missing
@@ -233,7 +233,7 @@ function parse_prop_default(x, t)
     else
         ans = maybe_parse_prop_default(x, t)
         if ans === missing
-            @warn "cannot parse prop default $(repr(x)) for $(repr(t))"
+            @debug "cannot parse prop default $(repr(x)) for $(repr(t))"
             return Undefined()
         else
             return ans
@@ -242,7 +242,7 @@ function parse_prop_default(x, t)
 end
 
 function generate_model_types()
-    spec = load_spec()::JSON3.Array
+    spec = load_spec("model_types")::JSON3.Array
 
     # generate blank types
     mtypes = Dict{String,ModelType}()
@@ -266,7 +266,7 @@ function generate_model_types()
                 else
                     name = bname
                 end
-                @warn "implicit base type $name"
+                @debug "implicit base type $name"
                 ModelType(name, abstract=true)
             end
             push!(mtype.bases, btype)

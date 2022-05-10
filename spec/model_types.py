@@ -59,5 +59,5 @@ for name, m in sorted(Model.model_class_reverse_map.items()):
 
     data.append(item)
 
-with open('spec.json', 'wt') as fp:
+with open('spec/model_types.json', 'wt') as fp:
     json.dump(data, fp, indent=2)
