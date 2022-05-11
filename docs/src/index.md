@@ -12,7 +12,7 @@ n = 2_000
 z = rand(1:3, n)
 x = randn(n) .+ [-2, 0, 2][z]
 y = randn(n) .+ [-1, 3, -1][z]
-color = ["#cb3c33", "#389826", "#9558b2"][z]
+color = Bokeh.PALETTES["Julia3"][z]
 p = figure(title="Julia Logo")
 scatter!(p; x, y, color, alpha=0.4, size=10)
 p

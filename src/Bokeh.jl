@@ -20,15 +20,13 @@ export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_
     log_cmap
 export row, column
 
-include("settings.jl")
 include("typedefs.jl")
+include("settings.jl")
+include("spec.jl")
 include("core.jl")
 include("serialize.jl")
-include("palettes.jl")
-include("enums.jl")
 include("types.jl")
 include("descs.jl")
-include("spec.jl")
 include("models.jl")
 include("plotting.jl")
 include("templates.jl")

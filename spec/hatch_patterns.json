@@ -1,0 +1,19 @@
+{
+  " ": "blank",
+  ".": "dot",
+  "o": "ring",
+  "-": "horizontal_line",
+  "|": "vertical_line",
+  "+": "cross",
+  "\"": "horizontal_dash",
+  ":": "vertical_dash",
+  "@": "spiral",
+  "/": "right_diagonal_line",
+  "\\": "left_diagonal_line",
+  "x": "diagonal_cross",
+  ",": "right_diagonal_dash",
+  "`": "left_diagonal_dash",
+  "v": "horizontal_wave",
+  ">": "vertical_wave",
+  "*": "criss_cross"
+}

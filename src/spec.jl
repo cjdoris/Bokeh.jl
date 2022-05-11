@@ -373,3 +373,47 @@ function generate_model_types()
 
     return mtypes
 end
+
+function generate_colors()
+    data = load_spec("colors")
+    colors = Dict(String(k)=>String(v) for (k,v) in data)
+    color_enum = Set(keys(colors))
+    @eval const NAMED_COLORS = $colors
+    @eval const NAMED_COLOR_ENUM = $color_enum
+end
+generate_colors()
+
+function generate_palettes()
+    data = load_spec("palettes")
+    Julia4 = ["#4063D8", "#CB3C33", "#389826", "#9558B2", ] # blue, red, green, purple
+    Julia3 = Julia4[2:4] # red, green, purple (∴)
+    Julia2 = Julia3[2:3] # green, purple
+    palettes = Dict(String(k)=>collect(String,v) for (k,v) in data["all"])
+    palettes["Julia4"] = Julia4
+    palettes["Julia3"] = Julia3
+    palettes["Julia2"] = Julia2
+    palette_enum = Set(keys(palettes))
+    palette_groups = Dict(String(k)=>Dict(parse(Int,String(k))=>collect(String,v) for (k,v) in v) for (k,v) in data["grouped"])
+    palette_groups["Julia"] = Dict(2=>Julia2, 3=>Julia3, 4=>Julia4)
+    @eval const PALETTES = $palettes
+    @eval const PALETTE_ENUM = $palette_enum
+    @eval const PALETTE_GROUPS = $palette_groups
+end
+generate_palettes()
+
+function generate_hatch_patterns()
+    data = load_spec("hatch_patterns")
+    patterns = Dict(String(k)=>String(v) for (k,v) in data)
+    pattern_enum = union(Set(keys(patterns)), Set(values(patterns)))
+    @eval const HATCH_PATTERN_ENUM = $pattern_enum
+end
+generate_hatch_patterns()
+
+function generate_dash_patterns()
+    data = load_spec("dash_patterns")
+    patterns = Dict(String(k)=>collect(Int,v) for (k,v) in data)
+    pattern_enum = Set(keys(patterns))
+    @eval const DASH_PATTERN_ENUM = $pattern_enum
+    @eval const DASH_PATTERNS = $patterns
+end
+generate_dash_patterns()

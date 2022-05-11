@@ -379,10 +379,6 @@ end
 
 ### VISUAL
 
-NamedColorT(; kw...) = EnumT(NAMED_COLOR_ENUM; kw...)
-
-CSSColorT(; kw...) = RegexT(r"(^#[0-9a-fA-F]{3}$)|(^#[0-9a-fA-F]{4}$)|(^#[0-9a-fA-F]{6}$)|(^#[0-9a-fA-F]{8}$)|(^rgba\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*([01]\.?\d*?)\))|(^rgb\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*?\))"; kw...)
-
 function validate_color(x; detail)
     if !(x isa String)
         if x isa Colors.Colorant
@@ -395,13 +391,17 @@ function validate_color(x; detail)
             error()
         end
         x = "#$(Colors.hex(c))"
+    else
+        x = get(NAMED_COLORS, x, x)
     end
     return lowercase(x)
 end
 
+const CSS_COLOR_REGEX = r"(^#[0-9a-fA-F]{3}$)|(^#[0-9a-fA-F]{4}$)|(^#[0-9a-fA-F]{6}$)|(^#[0-9a-fA-F]{8}$)|(^rgba\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*([01]\.?\d*?)\))|(^rgb\(((25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*,\s*?){2}(25[0-5]|2[0-4]\d|1\d{1,2}|\d\d?)\s*?\))"
+
 ColorT(; kw...) = EitherT(
-    NamedColorT(),
-    CSSColorT(),
+    EnumT(NAMED_COLOR_ENUM),
+    RegexT(CSS_COLOR_REGEX),
     TupleT(ByteT(), ByteT(), ByteT()),
     TupleT(ByteT(), ByteT(), ByteT(), PercentT()),
     InstanceT(Colors.Colorant);
@@ -411,10 +411,11 @@ ColorT(; kw...) = EitherT(
 )
 
 function serialize_colorhex(s::Serializer, x::String)
+    x = get(NAMED_COLORS, x, x)
     if startswith(x, "#")
         return x
     else
-        error("not implemented: converting colors to hex")
+        error("not implemented: converting rgb literals to hex (specify colors by name, hex string or RGB(A) tuple instead)")
     end
 end
 
@@ -422,10 +423,9 @@ ColorHexT(; kw...) = ColorT(serialize=serialize_colorhex)
 
 AlphaT(; kw...) = PercentT(; default=1.0, kw...)
 
-NamedPaletteT(; kw...) = EnumT(NAMED_PALETTE_ENUM; kw...)
-
 PaletteT(; kw...) = EitherT(
-    NamedPaletteT(
+    EnumT(
+        PALETTE_ENUM;
         validate = (x; detail) -> PALETTES[x],
         result_type = Vector{String},
     ),
@@ -433,19 +433,13 @@ PaletteT(; kw...) = EitherT(
     kw...
 )
 
-FontSizeT(; kw...) = RegexT(r"^[0-9]+(.[0-9]+)?(%|em|ex|ch|ic|rem|vw|vh|vi|vb|vmin|vmax|cm|mm|q|in|pc|pt|px)$"i; kw...)
+const FONT_SIZE_REGEX = r"^[0-9]+(.[0-9]+)?(%|em|ex|ch|ic|rem|vw|vh|vi|vb|vmin|vmax|cm|mm|q|in|pc|pt|px)$"i
 
-const DASH_PATTERNS = Dict(
-    "solid" => Int[],
-    "dashed" => [6],
-    "dotted" => [2, 4],
-    "dotdash" => [2, 4, 6, 4],
-    "dashdot" => [6, 4, 2, 4],
-)
+FontSizeT(; kw...) = RegexT(FONT_SIZE_REGEX; kw...)
 
 DashPatternT(; kw...) = EitherT(
     EnumT(
-        Set(keys(DASH_PATTERNS));
+        DASH_PATTERN_ENUM;
         validate = (x; detail) -> DASH_PATTERNS[x],
         result_type = Vector{Int},
     ),
@@ -493,9 +487,11 @@ NullDistanceSpecT(; kw...) = DataSpecT(NullableT(SizeT()); kw...) # TODO: units
 
 ### OTHER ENUMS
 
+const AUTO_ENUM = Set(["auto"])
+
 AutoT(; kw...) = EnumT(AUTO_ENUM; kw...)
 
-HatchPatternT(; kw...) = EnumT(HATCH_PATTERN_ALL_ENUM; kw...)
+HatchPatternT(; kw...) = EnumT(HATCH_PATTERN_ENUM; kw...)
 
 
 ### MISC
