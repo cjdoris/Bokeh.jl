@@ -2,8 +2,16 @@ PropDesc(kind::PropKind;
     type=nothing,
     getter=nothing,
     setter=nothing,
-) = PropDesc(kind, type, getter, setter)
+    docstring="",
+) = PropDesc(kind, type, getter, setter, docstring)
 
-PropDesc(type::PropType) = PropDesc(TYPE_K; type)
+PropDesc(base::PropDesc;
+    type=base.type,
+    getter=base.getter,
+    setter=base.setter,
+    docstring=base.docstring,
+) = PropDesc(base.kind, type, getter, setter, docstring)
 
-GetSetT(getter=nothing, setter=nothing) = PropDesc(GETSET_K; getter, setter)
+PropDesc(type::PropType; docstring="") = PropDesc(TYPE_K; type, docstring)
+
+GetSetT(getter=nothing, setter=nothing; docstring="") = PropDesc(GETSET_K; getter, setter, docstring)

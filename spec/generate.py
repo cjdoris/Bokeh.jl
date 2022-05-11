@@ -13,6 +13,7 @@ import bokeh
 assert bokeh.__version__ == '2.4.2'
 
 import json
+import inspect
 
 from bokeh.core.property.bases import UndefinedType
 from bokeh.core.property.descriptors import AliasPropertyDescriptor
@@ -45,7 +46,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         'name'  : name,
         'fullname': m.__module__ + '.' + m.__name__,
         'bases' : [] if m is Model else [base.__module__ + '.' + base.__name__ for base in m.__bases__],
-        'desc'  : m.__doc__,
+        'desc'  : inspect.cleandoc(m.__doc__ or ""),
     }
     props = []
     for prop_name in m.properties():
@@ -58,7 +59,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         detail = {
             'name'    : prop_name,
             'type'    : str(prop),
-            'desc'    : prop.__doc__,
+            'desc'    : inspect.cleandoc(prop.__doc__ or ""),
         }
 
         default = descriptor.instance_default(m())

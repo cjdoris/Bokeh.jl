@@ -323,10 +323,12 @@ function generate_model_types()
         mname = mspec.name
         @assert !haskey(mtypes, mfullname)
         @assert !haskey(mtypes2, mname)
+        # docstring
+        docstring = mspec.desc::String
         # bases
         bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
         # make the type
-        mt = ModelType(mname; bases)
+        mt = ModelType(mname; bases, docstring)
         # save it
         mtypes[mfullname] = mt
         mtypes2[mname] = mt
@@ -404,7 +406,8 @@ function generate_model_types()
                 end
                 ptype = DefaultT(ptype, pdflt)
             end
-            push!(props, pname => ptype)
+            docstring = pspec.desc::String
+            push!(props, pname => PropDesc(ptype; docstring))
         end
         append!(props, extras)
         init_props!(mtype, props)

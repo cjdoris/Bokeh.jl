@@ -4,8 +4,9 @@ function ModelType(name, subname=nothing;
     bases=[],
     props=[],
     abstract=false,
+    docstring="",
 )
-    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract)
+    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract, docstring)
     init_bases!(mt, bases)
     init_props!(mt, props)
     return mt
@@ -14,6 +15,9 @@ end
 function init_bases!(t::ModelType, bases)
     for b in bases
         t.abstract && !b.abstract && error("$(t.name) marked abstract but inherits from $(b.name) which is not abstract")
+        if isempty(t.docstring)
+            t.docstring = b.docstring
+        end
         push!(t.bases, b)
         push!(t.supers, b)
         union!(t.supers, b.supers)
@@ -30,10 +34,15 @@ function init_props!(t::ModelType, props)
 end
 
 function mergepropdescs!(ds, x; name=nothing)
+    if x isa PropType
+        x = PropDesc(x)
+    end
     if x isa PropDesc
+        if isempty(x.docstring) && haskey(ds, name) && !isempty(ds[name].docstring)
+            # keep an existing docstring
+            x = PropDesc(x, docstring=ds[name].docstring)
+        end
         ds[name] = x
-    elseif x isa PropType
-        ds[name] = PropDesc(x)
     elseif x isa Pair
         name = name===nothing ? x.first : Symbol(name, "_", x.first)
         mergepropdescs!(ds, x.second; name)
@@ -63,6 +72,23 @@ function Base.show(io::IO, t::ModelType)
     print(io, "(")
     show(io, t.name)
     print(io, "; ...)")
+end
+
+function Base.Docs.getdoc(t::ModelType, sig)
+    @nospecialize
+    lines = String["Bokeh type: $(t.name)"]
+    isempty(t.docstring) || push!(lines, "", "$(strip(t.docstring))")
+    push!(lines, "", "Properties:")
+    for k in sort(collect(keys(t.propdescs)))
+        p = t.propdescs[k]
+        push!(lines, "")
+        if isempty(p.docstring)
+            push!(lines, "    $k: (no docstring)")
+        else
+            push!(lines, "    $k:\n        $(indent(p.docstring, 8))")
+        end
+    end
+    return Base.Docs.Text(join(lines, "\n"))
 end
 
 ### MODEL
