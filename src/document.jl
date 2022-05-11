@@ -90,7 +90,7 @@ function doc_standalone_html(doc; kw...)
 end
 
 function Base.show(io::IO, ::MIME"text/html", doc::Document)
-    write(io, doc_autoload_inline_html(doc; bundle=BUNDLE_BOKEH_CDN))
+    write(io, doc_autoload_inline_html(doc; bundle=bundle()))
     return
 end
 

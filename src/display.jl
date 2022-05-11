@@ -4,7 +4,7 @@ function Base.display(d::BokehDisplay, m::MIME"text/html", x::Document)
     if setting(:use_browser)
         path = joinpath(setting(:tempdir), "plot.html")
         open(path, "w") do io
-            write(io, doc_standalone_html(x; bundle=BUNDLE_BOKEH_CDN))
+            write(io, doc_standalone_html(x; bundle=bundle()))
         end
         run(`$(setting(:browser_cmd)) $(path)`)
         return
