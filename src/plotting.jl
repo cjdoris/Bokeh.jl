@@ -1,8 +1,23 @@
 ### TRANSFORMS
 
-factor_mark(field, markers, factors; kw...) = Field(field, transform=CategoricalMarkerMapper(; markers, factors, kw...))
+function transform(field, transform)
+    ismodelinstance(transform, Transform) || error("transform must be a Transform")
+    return Field(field; transform)
+end
 
-factor_cmap(field, palette, factors; kw...) = Field(field, transform=CategoricalColorMapper(; palette, factors, kw...))
+dodge(field, value; kw...) = transform(field, Dodge(; value, kw...))
+
+factor_mark(field, markers, factors; kw...) = transform(field, CategoricalMarkerMapper(; markers, factors, kw...))
+
+factor_cmap(field, palette, factors; kw...) = transform(field, CategoricalColorMapper(; palette, factors, kw...))
+
+factor_hatch(field, patterns, factors; kw...) = transform(field, CategoricalPatternMapper(; patterns, factors, kw...))
+
+jitter(field, width; kw...) = transform(field, Jitter(; width, kw...))
+
+linear_cmap(field, palette; kw...) = transform(field, LinearColorMapper(; palette, kw...))
+
+log_cmap(field, palette; kw...) = transform(field, LogColorMapper(; palette, kw...))
 
 
 ### FIGURE

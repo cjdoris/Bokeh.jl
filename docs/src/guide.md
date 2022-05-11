@@ -14,7 +14,7 @@ You will need to use Pluto, Jupyter, or any other environment capable of display
 Alternatively, you can display straight to the browser from the REPL by calling
 ```julia
 using Bokeh
-Bokeh.display_in_browser()
+Bokeh.settings!(use_browser=true)
 ```
 
 Creating a plot generally consists of three steps:
@@ -32,5 +32,5 @@ p
 The final line causes the REPL or notebook you are using to display the plot `p`. You may
 explicitly call `display(p)` instead, e.g. if you are plotting in a script or a loop.
 
-If you are using `Bokeh.display_in_browser()` in the REPL, you may like to put `;` at the
-end of each command to supress displaying it.
+If you are using `use_browser=true` in the REPL, you may like to put `;` at the end of each
+command to supress displaying it.

@@ -15,6 +15,28 @@ end
 Base.:(==)(x::Field, y::Field) = x.name == y.name
 Base.:(==)(x::Value, y::Value) = x.value == y.value
 
+function Base.show(io::IO, x::Field)
+    show(io, typeof(x))
+    print(io, "(")
+    show(io, x.name)
+    if x.transform !== nothing
+        print(io, ", transform=")
+        show(io, x.transform)
+    end
+    print(io, ")")
+end
+
+function Base.show(io::IO, x::Value)
+    show(io, typeof(x))
+    print(io, "(")
+    show(io, x.value)
+    if x.transform !== nothing
+        print(io, ", transform=")
+        show(io, x.transform)
+    end
+    print(io, ")")
+end
+
 
 ### PROPVECTOR
 

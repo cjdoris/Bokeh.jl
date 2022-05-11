@@ -57,12 +57,15 @@ function validate(t::PropType, x; detail::Bool=true)
         level += 1
     elseif prim == INT_T
         x isa Integer || return Invalid(detail ? "expecting an integer" : "", level)
+        x = convert(Int, x)
         level += 1
     elseif prim == FLOAT_T
         x isa Real || return Invalid(detail ? "expecting a number" : "", level)
+        x = convert(Float64, x)
         level += 1
     elseif prim == STRING_T
         x isa AbstractString || return Invalid(detail ? "expecting a string" : "", level)
+        x = convert(String, x)
         level += 1
         enumvals = t.enumvals
         if enumvals !== nothing
