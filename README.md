@@ -1,6 +1,7 @@
 # Bokeh.jl
 
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://cjdoris.github.io/Bokeh.jl/stable)
 [![Dev Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://cjdoris.github.io/Bokeh.jl/dev)
 [![Test Status](https://github.com/cjdoris/Bokeh.jl/workflows/Tests/badge.svg)](https://github.com/cjdoris/Bokeh.jl/actions?query=workflow%3ATests)
 [![Docs Status](https://github.com/cjdoris/Bokeh.jl/workflows/Docs/badge.svg)](https://github.com/cjdoris/Bokeh.jl/actions?query=workflow%3ADocs)
