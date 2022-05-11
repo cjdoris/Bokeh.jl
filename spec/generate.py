@@ -30,6 +30,11 @@ def save(data, name):
     with open(f'spec/{name}.json', 'wt') as fp:
         json.dump(data, fp, indent=2)
 
+def mkdesc(doc):
+    doc = inspect.cleandoc(doc)
+    # doc = pandoc.read(doc, format="rst")
+    # doc = pandoc.write(doc, format="markdown")
+    return doc
 
 ### MODELS
 
@@ -46,7 +51,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         'name'  : name,
         'fullname': m.__module__ + '.' + m.__name__,
         'bases' : [] if m is Model else [base.__module__ + '.' + base.__name__ for base in m.__bases__],
-        'desc'  : inspect.cleandoc(m.__doc__ or ""),
+        'desc'  : mkdesc(m.__doc__ or ""),
     }
     props = []
     for prop_name in m.properties():
@@ -59,7 +64,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         detail = {
             'name'    : prop_name,
             'type'    : str(prop),
-            'desc'    : inspect.cleandoc(prop.__doc__ or ""),
+            'desc'    : mkdesc(prop.__doc__ or ""),
         }
 
         default = descriptor.instance_default(m())
