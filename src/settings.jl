@@ -71,6 +71,13 @@ function settings!(;
     end
 end
 
+"""
+    setting(name::Symbol)
+
+Retrieve the setting with the given name.
+
+See [`setting!`](@ref) for the possible settings.
+"""
 function setting(k::Symbol)
     ans = getproperty(SETTINGS, k)
     ans === nothing || return ans
