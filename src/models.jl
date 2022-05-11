@@ -5,16 +5,28 @@ function ModelType(name, subname=nothing;
     props=[],
     abstract=false,
 )
-    propdescs = Dict{Symbol,PropDesc}()
-    supers = IdSet{ModelType}()
-    for t in bases
-        abstract && !t.abstract && error("$name marked abstract but inherits from $(t.name) which is not abstract")
-        mergepropdescs!(propdescs, t.propdescs)
-        push!(supers, t)
-        union!(supers, t.supers)
+    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract)
+    init_bases!(mt, bases)
+    init_props!(mt, props)
+    return mt
+end
+
+function init_bases!(t::ModelType, bases)
+    for b in bases
+        t.abstract && !b.abstract && error("$(t.name) marked abstract but inherits from $(b.name) which is not abstract")
+        push!(t.bases, b)
+        push!(t.supers, b)
+        union!(t.supers, b.supers)
     end
-    mergepropdescs!(propdescs, props)
-    return ModelType(name, subname, bases, propdescs, supers, abstract)
+    return t
+end
+
+function init_props!(t::ModelType, props)
+    for b in t.bases
+        mergepropdescs!(t.propdescs, b.propdescs)
+    end
+    mergepropdescs!(t.propdescs, props)
+    return t
 end
 
 function mergepropdescs!(ds, x; name=nothing)

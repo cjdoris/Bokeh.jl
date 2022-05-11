@@ -33,14 +33,18 @@ def save(data, name):
 ### MODELS
 
 def _proto(obj, defaults=False):
-    return json.dumps(obj.to_json(defaults), sort_keys=True, indent=None)
+    t = type(obj)
+    x = obj.to_json(defaults)
+    del x['id']  # id is not informative, by excluding it we can find more inherited props
+    x['__type__'] = t.__module__ + '.' + t.__name__
+    return json.dumps(x, sort_keys=True, indent=None)
 
 data = []
-for name, m in sorted(Model.model_class_reverse_map.items()):
+for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.items())):
     item = {
         'name'  : name,
         'fullname': m.__module__ + '.' + m.__name__,
-        'bases' : [base.__module__ + '.' + base.__name__ for base in m.__bases__],
+        'bases' : [] if m is Model else [base.__module__ + '.' + base.__name__ for base in m.__bases__],
         'desc'  : m.__doc__,
     }
     props = []

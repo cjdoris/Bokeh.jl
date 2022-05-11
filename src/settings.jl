@@ -76,7 +76,7 @@ end
 
 Retrieve the setting with the given name.
 
-See [`setting!`](@ref) for the possible settings.
+See [`settings!`](@ref) for the possible settings.
 """
 function setting(k::Symbol)
     ans = getproperty(SETTINGS, k)

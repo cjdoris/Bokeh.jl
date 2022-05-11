@@ -62,6 +62,13 @@ function parse_prop_type_expr(ex, ts)
         end
     end
     if ex isa Expr && ex.head == :call
+        if ex == :(Instance(Ticker))
+            return TickerT()
+        elseif ex == :(Seq(Color))
+            return PaletteT()
+        elseif ex == :(Instance(Title))
+            return TitleT()
+        end
         name = ex.args[1]
         args = []
         kw = Dict{Symbol,Any}()
@@ -94,9 +101,9 @@ function parse_prop_type_expr(ex, ts)
                 elseif iname in ("DOMNode", "Action", "Template")
                     iname2 = "bokeh.models.dom.$iname"
                 else
-                    iname2 = "Model"
+                    @assert false
                 end
-                @debug "cannot find type $iname, assuming $iname2"
+                @debug "assuming $iname is $iname2"
                 t = ts[iname2]
             end
             return InstanceT(t)
@@ -145,12 +152,15 @@ function parse_prop_type_expr(ex, ts)
             return NumberSpecT()
         end
     end
+    @assert false
     @debug "cannot parse prop type $ex"
     return AnyT()
 end
 
-function maybe_parse_prop_default(x, t)
-    if (t.prim == NULL_T || t.prim == ANY_T) && x isa Nothing
+function parse_prop_default(x, t, mts)
+    if x isa AbstractString && x == "<Undefined>"
+        return Undefined()
+    elseif (t.prim == NULL_T || t.prim == ANY_T) && x isa Nothing
         return x
     elseif (t.prim == BOOL_T || t.prim == ANY_T) && x isa Bool
         return x
@@ -165,16 +175,20 @@ function maybe_parse_prop_default(x, t)
             return () -> Dict()
         end
     elseif (t.prim == LIST_T || t.prim == ANY_T) && x isa AbstractVector
-        ds = map(x->maybe_parse_prop_default(x, t.params[1]), x)
+        ds = map(x->parse_prop_default(x, t.params[1], mts), x)
         if !any(ismissing, ds)
             if !any(d->d isa Function, ds)
                 let ds=ds
                     return ()->copy(ds)
                 end
+            elseif all(d->d isa Function, ds)
+                let ds=ds
+                    return ()->[d() for d in ds]
+                end
             end
         end
     elseif t.prim == TUPLE_T && x isa AbstractVector && length(x) == length(t.params)
-        ds = map(maybe_parse_prop_default, x, t.params)
+        ds = map((x,t)->parse_prop_default(x,t,mts), x, t.params)
         if !any(ismissing, ds)
             if !any(d->d isa Function, ds)
                 let d=Tuple(ds)
@@ -183,12 +197,15 @@ function maybe_parse_prop_default(x, t)
             end
         end
     elseif t.prim == DATASPEC_T
-        d0 = maybe_parse_prop_default(x, t.params[1])
+        if x isa AbstractString && t.strings_are_fields
+            return Field(x)
+        end
+        d0 = parse_prop_default(x, t.params[1], mts)
         if d0 === missing
             if x isa AbstractString
                 return Field(x)
             elseif x isa AbstractDict && length(x) == 1 && haskey(x, "value")
-                d0 = maybe_parse_prop_default(x["value"], t.params[1])
+                d0 = parse_prop_default(x["value"], t.params[1], mts)
                 if d0 !== missing
                     if d0 isa Function
                         let d0=d0
@@ -214,161 +231,183 @@ function maybe_parse_prop_default(x, t)
         end
     elseif t.prim == EITHER_T
         for t in t.params
-            d = maybe_parse_prop_default(x, t)
+            d = parse_prop_default(x, t, mts)
             d === missing || return d
         end
     elseif t.prim == MODELINSTANCE_T
-        # TODO
-        # There isn't enough information to recreate the default value.
-        # Change gen_spec.py to output the right info.
-        @debug "assuming default $x for $(t.model_type) is Undefined"
-        return Undefined()
+        d = parse_prop_default_modelinstance(x, mts)
+        return d === nothing ? missing : d
     end
     return missing
 end
 
-function parse_prop_default(x, t)
-    if x isa AbstractString && x == "<Undefined>"
-        return Undefined()
-    else
-        ans = maybe_parse_prop_default(x, t)
-        if ans === missing
-            @debug "cannot parse prop default $(repr(x)) for $(repr(t))"
-            return Undefined()
+function parse_prop_default_modelinstance(x, mts)
+    # parse the JSON
+    j = try; JSON3.read(x); catch; return; end
+    j isa JSON3.Object || return
+    # skip anything with nested models
+    occursin("\"id\":", x) && return
+    occursin("\"value\":", x) && return
+    # split into type and kwargs
+    kw = Kwarg[]
+    tn = nothing
+    for (k, v) in j
+        if k == :__type__
+            tn = v::String
         else
-            return ans
+            push!(kw, Kwarg(k, v))
         end
     end
+    # get the model type
+    t = get(mts, tn, nothing)
+    t === nothing && return
+    # return the constructor
+    let t=t, kw=kw
+        return ()->Model(t, kw)
+    end
+end
+
+function flatten_dag(children)
+    children = Dict(k=>Set(vs) for (k,vs) in children)
+    T = keytype(children)
+    parents = Dict(k=>Set{T}() for k in keys(children))
+    for (k, vs) in children
+        for v in vs
+            push!(parents[v], k)
+        end
+    end
+    todo = Set(k for (k, vs) in children if isempty(vs))
+    order = T[]
+    while !isempty(todo)
+        k = pop!(todo)
+        push!(order, k)
+        for v in parents[k]
+            pop!(children[v], k)
+            if isempty(children[v])
+                push!(todo, v)
+            end
+        end
+        pop!(parents, k)
+    end
+    isempty(parents) || error("not a DAG, these have a cycle: $(join(keys(parents), ", "))")
+    return order
 end
 
 function generate_model_types()
     spec = load_spec("model_types")::JSON3.Array
 
     # generate blank types
-    mtypes = Dict{String,ModelType}()
     mspecs = Dict{String,JSON3.Object}()
     for mspec in spec
-        @assert !haskey(mtypes, mspec.fullname)
         @assert !haskey(mspecs, mspec.fullname)
-        mtypes[mspec.fullname] = ModelType(mspec.name)
         mspecs[mspec.fullname] = mspec
     end
 
-    # add bases
-    for mspec in spec
-        mtype = mtypes[mspec.fullname]
-        for bname in mspec.bases
-            btype = get!(mtypes, bname) do
-                if bname == "bokeh.model.model.Model"
-                    name = "Model"
-                elseif bname == "bokeh.models.widgets.buttons.ButtonLike"
-                    name = "ButtonLike"
-                else
-                    name = bname
-                end
-                @debug "implicit base type $name"
-                ModelType(name, abstract=true)
-            end
-            push!(mtype.bases, btype)
+    # check bases
+    missing_bases = Set(bname for mspec in spec for bname in mspec.bases if !haskey(mspecs, bname))
+    for bname in missing_bases
+        @debug "missing base type $bname (should not be a model)"
+    end
+
+    # put the models in dependency order
+    order = flatten_dag(Dict(k=>[b for b in v.bases if haskey(mspecs, b)] for (k,v) in mspecs))
+    @assert order[1] == "bokeh.model.model.Model"
+
+    # generate types without properties
+    mtypes = Dict{String,ModelType}()
+    mtypes2 = Dict{String,ModelType}()
+    for mfullname in order
+        # check the name
+        mspec = mspecs[mfullname]
+        @assert mspec.fullname == mfullname
+        mname = mspec.name
+        @assert !haskey(mtypes, mfullname)
+        @assert !haskey(mtypes2, mname)
+        # bases
+        bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
+        # make the type
+        mt = ModelType(mname; bases)
+        # save it
+        mtypes[mfullname] = mt
+        mtypes2[mname] = mt
+        # export it
+        if '.' ∉ mname
+            xname = mname == "Model" ? :BaseModel : Symbol(mname)
+            @eval const $xname = $mt
+            @eval export $xname
         end
     end
 
-    # define consts
-    for mt in values(mtypes)
-        if '.' ∉ mt.name
-            name = Symbol(mt.name)
-            if name == :Model
-                name = :BaseModel
-            end
-            @eval const $name = $mt
-            if !mt.abstract
-                @eval export $name
-            end
-        end
-    end
-
-    # overwrite these properties
+    # properties/defaults which can't be determined automatically from the spec
     extra_props = Dict(
-        (:ColorMapper => :palette) => PaletteT(),
-        (:Axis => :ticker) => TickerT(),
-        (:LinearAxis => :ticker) => TickerT(default=()->BasicTicker()),
-        (:LogAxis => :ticker) => TickerT(default=()->LogTicker()),
-        (:CategoricalAxis => :ticker) => TickerT(default=()->CategoricalTicker()),
-        (:DatetimeAxis => :ticker) => TickerT(default=()->DatetimeTicker()),
-        (:MercatorAxis => :ticker) => TickerT(default=()->MercatorTicker()),
-        (:LayoutDOM => :margin) => NullableT(MarginT(), default=(0,0,0,0)),
-        (:Plot => :title) => TitleT(),
-        (:Plot => :toolbar) => InstanceT(Toolbar, default=()->Toolbar()),
-        (:Plot => :x_axis) => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:above], plural=:x_axes)),
-        (:Plot => :y_axis) => GetSetT(plot_get_renderer(type=Axis, sides=[:left,:right], plural=:y_axes)),
-        (:Plot => :axis) => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:left,:above,:right], plural=:axes)),
-        (:Plot => :x_axes) => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:above])),
-        (:Plot => :y_axes) => GetSetT(plot_get_renderers(type=Axis, sides=[:left,:right])),
-        (:Plot => :axes) => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:left,:above,:right])),
-        (:Plot => :x_grid) => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==0, plural=:x_grids)),
-        (:Plot => :y_grid) => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==1, plural=:y_grids)),
-        (:Plot => :grid) => GetSetT(plot_get_renderer(type=Grid, sides=[:center], plural=:grids)),
-        (:Plot => :x_grids) => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==0)),
-        (:Plot => :y_grids) => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==1)),
-        (:Plot => :grids) => GetSetT(plot_get_renderers(type=Grid, sides=[:center])),
-        (:Plot => :legend) => GetSetT(plot_get_renderer(type=Legend, sides=[:below,:left,:above,:right,:center], plural=:legends)),
-        (:Plot => :legends) => GetSetT(plot_get_renderers(type=Legend, sides=[:below,:left,:above,:right,:center])),
-        (:Plot => :tools) => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
-        (:Plot => :ranges) => GetSetT(m->PropVector([m.x_range::Model, m.y_range::Model])),
-        (:Plot => :scales) => GetSetT(m->PropVector([m.x_scale::Model, m.y_scale::Model])),
+        :LayoutDOM => [
+            :margin => NullableT(MarginT(), default=(0,0,0,0)),
+        ],
+        :Whisker => [
+            :upper_head => DefaultT(()->TeeHead(size=10)),
+            :lower_head => DefaultT(()->TeeHead(size=10)),
+        ],
+        :GraphRenderer => [
+            :node_renderer => DefaultT(()->GlyphRenderer(glyph=Circle(), data_source=ColumnDataSource(data=Dict("index"=>[])))),
+            :edge_renderer => DefaultT(()->GlyphRenderer(glyph=MultiLine(), data_source=ColumnDataSource(data=Dict("start"=>[], "end"=>[])))),
+        ],
+        :ColumnDataSource => [
+            :column_names => GetSetT(x->collect(String,keys(x.data))),
+        ],
+        :Plot => [
+            # sugar
+            :x_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:above], plural=:x_axes)),
+            :y_axis => GetSetT(plot_get_renderer(type=Axis, sides=[:left,:right], plural=:y_axes)),
+            :axis => GetSetT(plot_get_renderer(type=Axis, sides=[:below,:left,:above,:right], plural=:axes)),
+            :x_axes => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:above])),
+            :y_axes => GetSetT(plot_get_renderers(type=Axis, sides=[:left,:right])),
+            :axes => GetSetT(plot_get_renderers(type=Axis, sides=[:below,:left,:above,:right])),
+            :x_grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==0, plural=:x_grids)),
+            :y_grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], filter=m->m.dimension==1, plural=:y_grids)),
+            :grid => GetSetT(plot_get_renderer(type=Grid, sides=[:center], plural=:grids)),
+            :x_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==0)),
+            :y_grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center], filter=m->m.dimension==1)),
+            :grids => GetSetT(plot_get_renderers(type=Grid, sides=[:center])),
+            :legend => GetSetT(plot_get_renderer(type=Legend, sides=[:below,:left,:above,:right,:center], plural=:legends)),
+            :legends => GetSetT(plot_get_renderers(type=Legend, sides=[:below,:left,:above,:right,:center])),
+            :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
+            :ranges => GetSetT(m->PropVector([m.x_range::Model, m.y_range::Model])),
+            :scales => GetSetT(m->PropVector([m.x_scale::Model, m.y_scale::Model])),
+        ],
     )
 
-    # get types by name
-    mtypes2 = Dict{String,ModelType}()
-    for mtype in values(mtypes)
-        @assert !haskey(mtypes2, mtype.name)
-        mtypes2[mtype.name] = mtype
-    end
-
-    # add props
-    for mspec in spec
-        mtype = mtypes[mspec.fullname]
+    # add properties
+    for mfullname in order
+        mspec = mspecs[mfullname]
+        mtype = mtypes[mfullname]
+        extras = get(Vector, extra_props, Symbol(mtype.name))
+        skippable = Set(k for (k,v) in extras if v isa PropType || v isa PropDesc)
+        dskippable = Set(k for (k,v) in extras if v isa DefaultT)
+        props = []
+        # get props from spec
         for pspec in mspec.props
             # skip properties inherited from a base
             if any(pspec == bspec for bname in mspec.bases if haskey(mspecs, bname) for bspec in mspecs[bname].props)
                 continue
             end
             pname = Symbol(pspec.name::String)
-            # skip properties we are going to overwrite anyway
-            if haskey(extra_props, Symbol(mtype.name) => pname)
+            if pname in skippable
                 continue
             end
             pexpr = Meta.parse(replace(pspec.type::String, '''=>'"'))
             ptype = parse_prop_type_expr(pexpr, mtypes2)
-            pdflt = parse_prop_default(pspec.default, ptype)
-            ptype = DefaultT(ptype, pdflt)
-            mtype.propdescs[pname] = PropDesc(ptype)
-        end
-    end
-
-    # override some props
-    for ((mname, pname), prop) in extra_props
-        mtypes2[string(mname)].propdescs[pname] = prop isa PropDesc ? prop : PropDesc(prop)
-    end
-
-    # inherit supers and props
-    function inherit!(m::ModelType)
-        if isempty(m.supers)
-            for b in m.bases
-                inherit!(b)
-                union!(m.supers, b.supers)
+            if pname ∉ dskippable
+                pdflt = parse_prop_default(pspec.default, ptype, mtypes)
+                if pdflt === missing
+                    @debug "$(mtype.name): $pname: can't parse default=$(pspec.default), assuming Undefined()"
+                    pdflt = Undefined()
+                end
+                ptype = DefaultT(ptype, pdflt)
             end
-            push!(m.supers, m)
-            props = Dict{Symbol,PropDesc}()
-            for b in reverse(m.bases)
-                merge!(props, b.propdescs)
-            end
-            merge!(props, m.propdescs)
-            merge!(m.propdescs, props)
+            push!(props, pname => ptype)
         end
-    end
-    for mtype in values(mtypes)
-        inherit!(mtype)
+        append!(props, extras)
+        init_props!(mtype, props)
     end
 
     return mtypes

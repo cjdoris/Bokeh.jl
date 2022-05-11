@@ -7,7 +7,8 @@ PropType(prim::PrimType;
     result_type=nothing,
     model_type=nothing,
     serialize=nothing,
-) = PropType(prim, default, validate, params, enumvals, regex, result_type, model_type, serialize)
+    strings_are_fields=false,
+) = PropType(prim, default, validate, params, enumvals, regex, result_type, model_type, serialize, strings_are_fields)
 
 PropType(
     base::PropType;
@@ -19,7 +20,8 @@ PropType(
     result_type=base.result_type,
     model_type=base.model_type,
     serialize=base.serialize,
-) = PropType(base.prim, default, validate, params, enumvals, regex, result_type, model_type, serialize)
+    strings_are_fields=base.strings_are_fields,
+) = PropType(base.prim, default, validate, params, enumvals, regex, result_type, model_type, serialize, strings_are_fields)
 
 function Base.show(io::IO, t::PropType)
     show(io, typeof(t))
@@ -28,8 +30,12 @@ function Base.show(io::IO, t::PropType)
     print(io, "; ...)")
 end
 
+struct DefaultT{T} <: Function
+    value::T
+end
+
 DefaultT(t::PropType, x) = PropType(t; default=x)
-DefaultT(x) = t -> DefaultT(t, x)
+(d::DefaultT)(t) = DefaultT(t, d.value)
 
 NullableT(t::PropType; default=nothing, kw...) = EitherT(NullT(), t; default, kw...)
 
@@ -104,9 +110,13 @@ function validate(t::PropType, x; detail::Bool=true)
         elseif x isa Field
             level += 1
         elseif x isa AbstractString
-            level += 1
-            x2 = validate(t.params[1], x; detail=false)
-            x = x2 isa Invalid ? Field(x) : Value(x2)
+            if t.strings_are_fields
+                x = Field(x)
+            else
+                level += 1
+                x2 = validate(t.params[1], x; detail=false)
+                x = x2 isa Invalid ? Field(x) : Value(x2)
+            end
         else
             x2 = validate(t.params[1], x; detail)
             x2 isa Invalid && return Invalid(detail ? "$(x2.msg)" : "", x2.level + level + 1)
@@ -121,9 +131,8 @@ function validate(t::PropType, x; detail::Bool=true)
         x isa result_type || return Invalid(detail ? "expecting a $result_type" : "", level)
         level += 1
     elseif prim == MODELINSTANCE_T
-        x isa Model || return Invalid(detail ? "expecting a Model" : "", level)
         model_type = t.model_type::ModelType
-        ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name) Model" : "", level)
+        x isa Model && ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name)" : "", level)
         level += 1
     else
         @assert prim == ANY_T
@@ -474,9 +483,9 @@ FactorSeqT(; kw...) = EitherT(SeqT(L1FactorT()), SeqT(L2FactorT()), SeqT(L3Facto
 
 NumberSpecT(; kw...) = DataSpecT(FloatT(); kw...)
 
-StringSpecT(; kw...) = DataSpecT(StringT(); kw...)
+StringSpecT(; kw...) = DataSpecT(StringT(); strings_are_fields=true, kw...)
 
-NullStringSpecT(; kw...) = DataSpecT(NullableT(StringT()); kw...)
+NullStringSpecT(; kw...) = DataSpecT(NullableT(StringT()); strings_are_fields=true, kw...)
 
 AngleSpecT(; kw...) = DataSpecT(FloatT(); kw...) # TODO: units
 
