@@ -13,9 +13,6 @@ const BOKEH_VERSION = v"2.4.2"
 export Field, Value, Document
 export figure
 export add_layout!, add_glyph!, add_tools!
-export annular_wedge!, annulus!, arc!, bezier!, circle!, ellipse!, harea!, hbar!, hextile!,
-    image!, image_rgba!, image_url!, line!, lines!, polygons!, oval!, patch!, patches!,
-    quad!, quadratic!, ray!, rect!, scatter!, segment!, step!, text!, varea!, vbar!, wedge!
 export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap,
     log_cmap
 export row, column

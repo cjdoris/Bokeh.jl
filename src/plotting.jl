@@ -368,35 +368,64 @@ function add_glyph!(plot::Model, type::ModelType; kw...)
     return add_glyph_kw!(plot, type, collect(Kwarg, kw))
 end
 
-annular_wedge!(plot::Model; kw...) = add_glyph_kw!(plot, AnnularWedge, collect(Kwarg, kw))
-annulus!(plot::Model; kw...) = add_glyph_kw!(plot, Annulus, collect(Kwarg, kw))
-arc!(plot::Model; kw...) = add_glyph_kw!(plot, Arc, collect(Kwarg, kw))
-bezier!(plot::Model; kw...) = add_glyph_kw!(plot, Bezier, collect(Kwarg, kw))
-circle!(plot::Model; kw...) = add_glyph_kw!(plot, Circle, collect(Kwarg, kw))
-ellipse!(plot::Model; kw...) = add_glyph_kw!(plot, Ellipse, collect(Kwarg, kw))
-harea!(plot::Model; kw...) = add_glyph_kw!(plot, HArea, collect(Kwarg, kw))
-hbar!(plot::Model; kw...) = add_glyph_kw!(plot, HBar, collect(Kwarg, kw))
-hextile!(plot::Model; kw...) = add_glyph_kw!(plot, HexTile, collect(Kwarg, kw))
-image!(plot::Model; kw...) = add_glyph_kw!(plot, Image, collect(Kwarg, kw))
-image_rgba!(plot::Model; kw...) = add_glyph_kw!(plot, ImageRGBA, collect(Kwarg, kw))
-image_url!(plot::Model; kw...) = add_glyph_kw!(plot, ImageURL, collect(Kwarg, kw))
-line!(plot::Model; kw...) = add_glyph_kw!(plot, Line, collect(Kwarg, kw))
-multi_line!(plot::Model; kw...) = add_glyph_kw!(plot, MultiLine, collect(Kwarg, kw))
-multi_polygons!(plot::Model; kw...) = add_glyph_kw!(plot, MultiPolygons, collect(Kwarg, kw))
-oval!(plot::Model; kw...) = add_glyph_kw!(plot, Oval, collect(Kwarg, kw))
-patch!(plot::Model; kw...) = add_glyph_kw!(plot, Patch, collect(Kwarg, kw))
-patches!(plot::Model; kw...) = add_glyph_kw!(plot, Patches, collect(Kwarg, kw))
-quad!(plot::Model; kw...) = add_glyph_kw!(plot, Quad, collect(Kwarg, kw))
-quadratic!(plot::Model; kw...) = add_glyph_kw!(plot, Quadratic, collect(Kwarg, kw))
-ray!(plot::Model; kw...) = add_glyph_kw!(plot, Ray, collect(Kwarg, kw))
-rect!(plot::Model; kw...) = add_glyph_kw!(plot, Rect, collect(Kwarg, kw))
-scatter!(plot::Model; kw...) = add_glyph_kw!(plot, Scatter, collect(Kwarg, kw))
-segment!(plot::Model; kw...) = add_glyph_kw!(plot, Segment, collect(Kwarg, kw))
-step!(plot::Model; kw...) = add_glyph_kw!(plot, Step, collect(Kwarg, kw))
-text!(plot::Model; kw...) = add_glyph_kw!(plot, Text, collect(Kwarg, kw))
-varea!(plot::Model; kw...) = add_glyph_kw!(plot, VArea, collect(Kwarg, kw))
-vbar!(plot::Model; kw...) = add_glyph_kw!(plot, VBar, collect(Kwarg, kw))
-wedge!(plot::Model; kw...) = add_glyph_kw!(plot, Wedge, collect(Kwarg, kw))
+for (f, t) in [
+    (:annular_wedge!, AnnularWedge),
+    (:annulus!, Annulus),
+    (:arc!, Arc),
+    (:bezier!, Bezier),
+    (:circle!, Circle),
+    (:ellipse!, Ellipse),
+    (:harea!, HArea),
+    (:hbar!, HBar),
+    (:hextile!, HexTile),
+    (:image!, Image),
+    (:image_rgba!, ImageRGBA),
+    (:image_url!, ImageURL),
+    (:line!, Line),
+    (:multi_line!, MultiLine),
+    (:multi_polygons!, MultiPolygons),
+    (:oval!, Oval),
+    (:patch!, Patch),
+    (:patches!, Patches),
+    (:quad!, Quad),
+    (:quadratic!, Quadratic),
+    (:ray!, Ray),
+    (:rect!, Rect),
+    (:scatter!, Scatter),
+    (:segment!, Segment),
+    (:step!, Step),
+    (:text!, Text),
+    (:varea!, VArea),
+    (:vbar!, VBar),
+    (:wedge!, Wedge),
+]
+    @eval function $f(plot::Model; kw...)
+        @nospecialize
+        return add_glyph_kw!(plot, $t, collect(Kwarg, kw))
+    end
+    @eval export $f
+    @eval @doc $("""
+        $f(plot; kw...)
+
+    Adds a [`$(t.name)`](@ref) to the given `plot`.
+
+    If you do not specify any `source` data, then a data source is created from all the
+    data arguments which are vectors.
+
+    # Keyword arguments
+    - Anything accepted by [`$(t.name)`](@ref).
+    - Anything accepted by [`GlyphRenderer`](@ref).
+    - `source`: Shorthand for `data_source`. May be a [`ColumnDataSource`](@ref), `Dict` or
+      Tables.jl-compatible table.
+    - `color`: Shorthand for all `*_color` properties.
+    - `alpha`: Shorthand for all `*_alpha` properties.
+    - `palette`: Sets a color mapper with this palette.
+    - `legend_label`: Adds an item to the legend with the given label.
+    - `legend_field`: Adds items to the legend from the given field.
+    - `legend_group`: Adds items to the legend grouping on the given field.
+    - `filters`: A vector of filters to select a subset of the data.
+    """) $f
+end
 
 function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")

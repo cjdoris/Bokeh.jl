@@ -1,4 +1,4 @@
-# Lorenz Attractor (`lines!`)
+# Lorenz Attractor (`mulit_line!`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html](https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html).
 
@@ -48,7 +48,7 @@ p = figure(
     background_fill_color = "#fafafa",
 )
 
-lines!(p,
+multi_line!(p,
     xs = vec_split(Float32.(x′), 7),
     ys = vec_split(Float32.(z), 7),
     line_color = colors,
