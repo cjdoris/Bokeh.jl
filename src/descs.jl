@@ -2,7 +2,7 @@ PropDesc(kind::PropKind;
     type=nothing,
     getter=nothing,
     setter=nothing,
-    doc=[],
+    doc=Markdown.MD([]),
 ) = PropDesc(kind, type, getter, setter, doc)
 
 PropDesc(base::PropDesc;
@@ -12,6 +12,6 @@ PropDesc(base::PropDesc;
     doc=base.doc,
 ) = PropDesc(base.kind, type, getter, setter, doc)
 
-PropDesc(type::PropType; doc=[]) = PropDesc(TYPE_K; type, doc)
+PropDesc(type::PropType; doc=Markdown.MD([])) = PropDesc(TYPE_K; type, doc)
 
-GetSetT(getter=nothing, setter=nothing; doc=[]) = PropDesc(GETSET_K; getter, setter, doc)
+GetSetT(getter=nothing, setter=nothing; doc=Markdown.MD([])) = PropDesc(GETSET_K; getter, setter, doc)

@@ -26,14 +26,6 @@ Update the global settings for Bokeh.
 - `browser_cmd`:
   The command used to open the browser.
   Default: `xdg-open`, `open` or `cmd /c start` depending on your operating system.
-- `js_urls`:
-  The URLs of JavaScript resources to use.
-- `js_raw`:
-  The JavaScript source code to use in offline mode.
-- `css_urls`:
-  The URLs of CSS resources to use.
-- `css_raw`:
-  The CSS source code to use in offline mode.
 """
 function settings!(;
     offline=nothing,

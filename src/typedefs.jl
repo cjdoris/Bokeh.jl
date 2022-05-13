@@ -47,7 +47,7 @@ mutable struct PropDesc
     type::Union{Nothing,PropType}
     getter::Union{Nothing,Function}
     setter::Union{Nothing,Function}
-    doc::Vector{Any}
+    doc::Markdown.MD
 end
 
 
@@ -60,7 +60,7 @@ mutable struct ModelType
     propdescs::Dict{Symbol,PropDesc}
     supers::IdSet{ModelType}
     abstract::Bool
-    doc::Vector{Any}
+    doc::Markdown.MD
 end
 
 const Arg = Any

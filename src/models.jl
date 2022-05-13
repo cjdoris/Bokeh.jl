@@ -4,7 +4,7 @@ function ModelType(name, subname=nothing;
     bases=[],
     props=[],
     abstract=false,
-    doc=[],
+    doc=Markdown.MD([]),
 )
     mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract, doc)
     init_bases!(mt, bases)
@@ -74,42 +74,17 @@ function Base.show(io::IO, t::ModelType)
     print(io, "; ...)")
 end
 
-function Base.Docs.getdoc(t::ModelType, sig)
-    @nospecialize
-    paras = []
-    push!(paras, Markdown.Paragraph([
-        Markdown.Code(string(t.name)),
-        " is a Bokeh model."
-    ]))
-    append!(paras, t.doc)
-    push!(paras, Markdown.Header("Properties", 2))
-    props = [[Markdown.Paragraph([Markdown.Code(string(k))])] for k in sort(collect(keys(t.propdescs)))]
-    push!(paras, Markdown.List(props, -1, false))
-    return Markdown.MD(paras)
-end
+Base.Docs.getdoc(t::ModelType, sig=Union{}) = t.doc
+Base.Docs.getdoc(x::ModelInstance, sig=Union{}) = modeltype(x).doc
 
-Base.Docs.Binding(t::ModelType, k::Symbol) = ModelPropBinding(t, k)
-Base.Docs.Binding(t::ModelInstance, k::Symbol) = Base.Docs.Binding(modeltype(t), k)
+Base.Docs.Binding(t::ModelType, k::Symbol) = t.propdescs[k]
+Base.Docs.Binding(x::ModelInstance, k::Symbol) = Base.Docs.Binding(modeltype(x), k)
 
-function Base.Docs.doc(b::ModelPropBinding, sig::Type)
-    @nospecialize
-    paras = []
-    d = get(b.type.propdescs, b.name, nothing)
-    if d === nothing
-        push!(paras, Markdown.Paragraph([
-            Markdown.Code(string(b.type.name)),
-            " does not have property ",
-            Markdown.Code(string(b.name)),
-        ]))
-    else
-        push!(paras, Markdown.Paragraph([
-            Markdown.Code(string(b.type.name) * "." * string(b.name)),
-            " is a Bokeh property. "
-        ]))
-        append!(paras, d.doc)
-    end
-    return Markdown.MD(paras)
-end
+Base.Docs.doc(d::PropDesc, sig::Type=Union{}) = d.doc
+Base.Docs.doc(t::ModelType, sig::Type=Union{}) = t.doc
+Base.Docs.doc(x::ModelInstance, sig::Type=Union{}) = modeltype(x).doc
+Base.Docs.doc(t::ModelType, k::Symbol) = t.propdescs[k].doc
+Base.Docs.doc(x::ModelInstance, k::Symbol) = Base.Docs.doc(modeltype(x), k)
 
 
 ### MODEL
@@ -339,4 +314,5 @@ plot_get_renderer(; kw...) = (plot::ModelInstance) -> plot_get_renderer(plot; kw
 generate_model_types()
 
 const Figure = ModelType("Plot", "Figure", bases=[Plot])
+@doc Figure.doc Figure
 export Figure

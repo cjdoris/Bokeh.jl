@@ -296,7 +296,7 @@ end
 function parse_doc(text, rich)
     ans = []
     if rich === nothing
-        push!(ans, Markdown.Paragraph("<Could not parse docstring.>"))
+        push!(ans, Markdown.Paragraph(["<Could not parse docstring.>"]))
     else
         @assert rich.type == "document"
         for x in rich.children
@@ -359,7 +359,7 @@ function parse_doc_top(ans, x)
             parse_doc_top(ans, x)
         end
     elseif t == "title"
-        push!(ans, Markdown.Header(join(x.children), 2))
+        push!(ans, Markdown.Header([join(x.children)], 2))
     elseif t == "block_quote"
         items = []
         for x in x.children
@@ -449,7 +449,7 @@ function parse_doc_inline(ans, x)
             end
         elseif t == "reference"
             text = join(x.children)
-            push!(ans, Markdown.Link(text, text))
+            push!(ans, Markdown.Link([text], text))
         elseif t in ("substitution_reference", "title_reference")
             text = join(x.children)
             push!(ans, text)
@@ -492,8 +492,11 @@ function generate_model_types()
         mname = mspec.name
         @assert !haskey(mtypes, mfullname)
         @assert !haskey(mtypes2, mname)
-        # docstring
-        doc = parse_doc(mspec.desc::String, mspec.richdesc)
+        # doc
+        doc = []
+        push!(doc, Markdown.Paragraph([Markdown.Code(string(mname)), " is a Bokeh model."]))
+        append!(doc, parse_doc(mspec.desc::String, mspec.richdesc))
+        doc = Markdown.MD(doc)
         # bases
         bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
         # make the type
@@ -551,6 +554,7 @@ function generate_model_types()
     for mfullname in order
         mspec = mspecs[mfullname]
         mtype = mtypes[mfullname]
+        mname = mtype.name
         extras = get(Vector, extra_props, Symbol(mtype.name))
         skippable = Set(k for (k,v) in extras if v isa PropType || v isa PropDesc)
         dskippable = Set(k for (k,v) in extras if v isa DefaultT)
@@ -575,11 +579,27 @@ function generate_model_types()
                 end
                 ptype = DefaultT(ptype, pdflt)
             end
-            doc = parse_doc(pspec.desc::String, pspec.richdesc)
+            doc = []
+            push!(doc, Markdown.Paragraph([Markdown.Code("$(mtype.name).$(pname)"), " is a Bokeh property."]))
+            append!(doc, parse_doc(pspec.desc::String, pspec.richdesc))
+            doc = Markdown.MD(doc)
             push!(props, pname => PropDesc(ptype; doc))
         end
         append!(props, extras)
         init_props!(mtype, props)
+        # add properties to the docs and bind the docstring
+        doc = mtype.doc.content
+        push!(doc,
+            Markdown.Header("Properties", 2),
+            Markdown.List([
+                [Markdown.Paragraph([Markdown.Code(string(k))])]
+                for k in sort(collect(keys(mtype.propdescs)))
+            ], -1, false),
+        )
+        if '.' ∉ mname
+            xname = Symbol(mname)
+            @eval @doc $(mtype.doc) $xname
+        end
     end
 
     return mtypes

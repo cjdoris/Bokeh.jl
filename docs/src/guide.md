@@ -34,3 +34,50 @@ explicitly call `display(p)` instead, e.g. if you are plotting in a script or a 
 
 If you are using `use_browser=true` in the REPL, you may like to put `;` at the end of each
 command to supress displaying it.
+
+## Getting help
+
+Aside from this documentation, you can access extensive documentation from your Julia
+session.
+
+If you are at the REPL, you can use the help mode to find out about Bokeh functions,
+models and properties. For example, to learn more about the `scatter!` function used above,
+press `?` then do
+```text
+help?> scatter!
+search: scatter! Scatter AbstractPattern BasicTickFormatter ScientificFormatter
+
+  scatter!(plot; kw...)
+
+
+  Adds a Scatter to the given plot.
+
+[...]
+```
+
+This mentions [`Scatter`](@ref) which is the model type representing scatter glyphs. We can
+find out more using
+```text
+help?> Scatter
+search: Scatter scatter! AbstractPattern BasicTickFormatter ScientificFormatter
+
+  Scatter is a Bokeh model.
+
+  Render scatter markers selected from a predefined list of designs.
+
+[...]
+```
+
+This mentions the property `marker`, which we can find out about with
+```text
+help?> Scatter.marker
+  Scatter.marker is a Bokeh property.
+
+  Which marker to render. This can be the name of any built in marker, e.g. "circle", or a reference to a data column containing such names.
+```
+
+If you are not at the REPL, the `Docs.doc` function can be used to access model documentation:
+```julia
+Docs.doc(Scatter)
+Docs.doc(Scatter, :size)
+```

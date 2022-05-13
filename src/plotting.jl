@@ -1,22 +1,68 @@
 ### TRANSFORMS
 
+"""
+    transform(field, transform)
+
+A the field of the given name transformed with the given [`Transform`](@ref).
+"""
 function transform(field, transform)
     ismodelinstance(transform, Transform) || error("transform must be a Transform")
     return Field(field; transform)
 end
 
+"""
+    dodge(field, value; kw...)
+
+Transform the given field with a [`Dodge`](@ref).
+"""
 dodge(field, value; kw...) = transform(field, Dodge(; value, kw...))
 
+"""
+    factor_mark(field, markers, factors; ...)
+
+Transform the given field with a [`CategoricalMarkerMapper`](@ref) that selects the given
+markers for the corresponding factors.
+"""
 factor_mark(field, markers, factors; kw...) = transform(field, CategoricalMarkerMapper(; markers, factors, kw...))
 
+"""
+    factor_cmap(field, palette, factors; ...)
+
+Transform the given field with a [`CategoricalColorMapper`](@ref) that selects the given
+colors for the corresponding factors.
+"""
 factor_cmap(field, palette, factors; kw...) = transform(field, CategoricalColorMapper(; palette, factors, kw...))
 
+"""
+    factor_hatch(field, patterns, factors; ...)
+
+Transform the given field with a [`CategoricalPatternMapper`](@ref) that selects the given
+hatch patterns for the corresponding factors.
+"""
 factor_hatch(field, patterns, factors; kw...) = transform(field, CategoricalPatternMapper(; patterns, factors, kw...))
 
+"""
+    jitter(field, width; ...)
+
+Transform the given field with a [`Jitter`](@ref) that applies random pertubations of the
+given width.
+"""
 jitter(field, width; kw...) = transform(field, Jitter(; width, kw...))
 
+"""
+    linear_cmap(field, palette; ...)
+
+Transform the given field with a [`LinearColorMapper`](@ref) that selects colors linearly
+from the given palette.
+"""
 linear_cmap(field, palette; kw...) = transform(field, LinearColorMapper(; palette, kw...))
 
+"""
+    log_cmap(field, palette; ...)
+
+Transform the given field with a [`LogColorMapper`](@ref) that selects colors
+logarithmically from the given palette.
+"""
 log_cmap(field, palette; kw...) = transform(field, LogColorMapper(; palette, kw...))
 
 
@@ -99,6 +145,20 @@ function process_axis_and_grid(plot, axis_type, axis_location, minor_ticks, axis
     end
 end
 
+"""
+    figure(; ...)
+
+Create a new [`Figure`](@ref) and return it.
+
+Acceptable keyword arguments are:
+- Anything taken by [`Figure`](@ref).
+- `x_range`/`y_range`: Sets the x/y-range. May be a vector of factors or a 2-tuple representing an interval.
+- `x_axis_type`/`y_axis_type`: The type of axis. One of `"linear"`, `"log"`, `"datetime"`, `"mercator"`, `"auto"` or `nothing` (for no axis).
+- `x_axis_location`/`y_axis_location`: Where to put the axis. One of `"left"`, `"right"`, `"above"` or `"below"`.
+- `x_axis_label`/`y_axis_label`: The label to show on the axis.
+- `tools`: Optional list of tools to create a toolbar from.
+- `tooltips`: If given, add a [`HoverTool`](@ref) with these tooltips.
+"""
 function figure(;
     x_range=nothing,
     y_range=nothing,
@@ -159,36 +219,75 @@ function add_layout!(plot::ModelInstance, renderer::ModelInstance; location="cen
     return renderer
 end
 
-for t in [LinearAxis, LogAxis, CategoricalAxis, DatetimeAxis, MercatorAxis]
-    f = Symbol(lowercase(t.name), "!")
+for (t, f) in [
+    (LinearAxis, :linear_axis!),
+    (LogAxis, :log_axis!),
+    (CategoricalAxis, :categorical_axis!),
+    (DatetimeAxis, :datetime_axis!),
+    (MercatorAxis, :mercator_axis!),
+]
     @eval function $f(plot::ModelInstance; location, kw...)
         axis = $t(; kw...)
         add_layout!(plot, axis; location)
         return axis
     end
+    @eval @doc $("""
+        $f(plot; location, ...)
+
+    Add a [`$(t.name)`](@ref) to the given plot and return it.
+
+    The `location` must be one of `"left"`, `"right"`, `"above"` or `"below"`.
+    """) $f
     @eval export $f
 end
 
-for t in [Grid]
-    f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::ModelInstance, axis::ModelInstance, dimension::Integer; kw...)
+for (t, f) in [
+    (Grid, :grid!)
+]
+    @eval function $f(plot::ModelInstance; axis::ModelInstance, dimension::Integer, kw...)
         grid = $t(; axis, dimension, kw...)
         add_layout!(plot, grid)
         return grid
     end
+    @eval @doc $("""
+        $f(plot; axis, dimension, ...)
+
+    Add a [`$(t.name)`](@ref) to the given plot and return it.
+
+    You must specify the `axis` and `dimension` (0 for x, 1 for y) it relates to.
+    """) $f
     @eval export $f
 end
 
-for t in [PanTool, RangeTool, WheelPanTool, WheelZoomTool, SaveTool, ResetTool, TapTool,
-    CrosshairTool, BoxZoomTool, ZoomInTool, ZoomOutTool, BoxSelectTool, LassoSelectTool,
-    PolySelectTool, HelpTool,
+for (t, f) in [
+    (PanTool, :pan_tool!),
+    (RangeTool, :range_tool!),
+    (WheelPanTool, :wheelpan_tool!),
+    (WheelZoomTool, :wheelzoom_tool!),
+    (SaveTool, :save_tool!),
+    (ResetTool, :reset_tool!),
+    (TapTool, :tap_tool!),
+    (CrosshairTool, :crosshair_tool!),
+    (BoxZoomTool, :boxzoom_tool!),
+    (ZoomInTool, :zoomin_tool!),
+    (ZoomOutTool, :zoomout_tool!),
+    (BoxSelectTool, :boxselect_tool!),
+    (LassoSelectTool, :lassoselect_tool!),
+    (PolySelectTool, :polyselect_tool!),
+    (HelpTool, :help_tool!),
 ]
-    f = Symbol(lowercase(t.name), "!")
     @eval function $f(plot::ModelInstance; active::Bool=false, kw...)
         tool = $t(; kw...)
         add_tools!(plot, tool; active)
         return tool
     end
+    @eval @doc $("""
+        $f(plot; active=false, ...)
+
+    Add a [`$(t.name)`](@ref) to the given plot and return it.
+
+    If `active=true` then the tool becomes the active one of its kind.
+    """) $f
     @eval export $f
 end
 
@@ -477,6 +576,12 @@ function _rowcol_handle_child_sizing(children, sizing_mode)
     end
 end
 
+"""
+    row(items; ...)
+    row(items...; ...)
+
+Create a new [`Row`](@ref) with the given items.
+"""
 function row(children; sizing_mode=nothing, kw...)
     children = collect(ModelInstance, children)
     _rowcol_handle_child_sizing(children, sizing_mode)
@@ -484,6 +589,12 @@ function row(children; sizing_mode=nothing, kw...)
 end
 row(children::ModelInstance...; kw...) = row(children; kw...)
 
+"""
+    column(items; ...)
+    column(items...; ...)
+
+Create a new [`Column`](@ref) with the given items.
+"""
 function column(children; sizing_mode=nothing, kw...)
     children = collect(ModelInstance, children)
     _rowcol_handle_child_sizing(children, sizing_mode)
