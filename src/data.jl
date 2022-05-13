@@ -12,7 +12,7 @@ function _load_json(name)
     return open(JSON3.read, _data_path("$name.json"))
 end
 
-function _load_table(name, m=identity)
+function _load_table(name)
     xcols = _load_json(name)::JSON3.Array
     cols = Tables.OrderedDict{Symbol,Vector}()
     for xcol in xcols
@@ -43,7 +43,7 @@ function _load_table(name, m=identity)
         end
         cols[name] = data
     end
-    return m(cols)
+    return cols
 end
 
 for name in [
@@ -53,9 +53,10 @@ for name in [
     "us_marriages_divorces", "penguins", "les_mis_nodes", "les_mis_links", "olympics2014",
     "us_holidays", "us_states",
 ]
-    @eval $(Symbol(name))(m=identity) = _load_table($name, m)
+    fname = Symbol(name)
+    @eval $(fname)(m=identity) = m(_load_table($name))
 end
 
-les_mis(m=identity) = (nodes=les_mis_nodes(m), links=les_mis_links(m))
+les_mis(m=identity) = (nodes=m(les_mis_nodes()), links=m(les_mis_links()))
 
 end
