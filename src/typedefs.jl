@@ -80,6 +80,11 @@ struct ModelInstance
     end
 end
 
+struct ModelPropBinding
+    type::ModelType
+    name::Symbol
+end
+
 
 ### CORE
 

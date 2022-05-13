@@ -76,20 +76,67 @@ end
 
 function Base.Docs.getdoc(t::ModelType, sig)
     @nospecialize
-    lines = String["Bokeh type: $(t.name)"]
-    isempty(t.docstring) || push!(lines, "", "$(strip(t.docstring))")
-    push!(lines, "", "Properties:")
-    for k in sort(collect(keys(t.propdescs)))
-        p = t.propdescs[k]
-        push!(lines, "")
-        if isempty(p.docstring)
-            push!(lines, "    $k: (no docstring)")
+    paras = []
+    push!(paras, Markdown.Paragraph([
+        Markdown.Code(string(t.name)),
+        " is a Bokeh model."
+    ]))
+    append!(paras, _text_to_md(t.docstring))
+    push!(paras, Markdown.Header("Properties", 2))
+    props = [[Markdown.Paragraph([Markdown.Code(string(k))])] for k in sort(collect(keys(t.propdescs)))]
+    push!(paras, Markdown.List(props, -1, false))
+    return Markdown.MD(paras)
+end
+
+Base.Docs.Binding(t::ModelType, k::Symbol) = ModelPropBinding(t, k)
+Base.Docs.Binding(t::ModelInstance, k::Symbol) = Base.Docs.Binding(modeltype(t), k)
+
+function Base.Docs.doc(b::ModelPropBinding, sig::Type)
+    @nospecialize
+    paras = []
+    d = get(b.type.propdescs, b.name, nothing)
+    if d === nothing
+        push!(paras, Markdown.Paragraph([
+            Markdown.Code(string(b.type.name)),
+            " does not have property ",
+            Markdown.Code(string(b.name)),
+        ]))
+    else
+        push!(paras, Markdown.Paragraph([
+            Markdown.Code(string(b.type.name) * "." * string(b.name)),
+            " is a Bokeh property. "
+        ]))
+        append!(paras, _text_to_md(d.docstring))
+    end
+    return Markdown.MD(paras)
+end
+
+function _text_to_md(text)
+    paras = []
+    lines = []
+    for line in eachline(IOBuffer(text))
+        if all(isspace, line)
+            if !isempty(lines)
+                push!(paras, Markdown.Paragraph(copy(lines)))
+                empty!(lines)
+            end
         else
-            push!(lines, "    $k:\n        $(indent(p.docstring, 8))")
+            # Paragraph normalizes space, and in particular strips leading space.
+            # This replaces them with the blank character '\U200E'
+            line = replace(line, r"\s" => "\U200E")
+            if !isempty(lines)
+                push!(lines, Markdown.LineBreak())
+            end
+            push!(lines, line)
         end
     end
-    return Base.Docs.Text(join(lines, "\n"))
+    if !isempty(lines)
+        push!(paras, Markdown.Paragraph(copy(lines)))
+        empty!(lines)
+    end
+    return paras
 end
+
 
 ### MODEL
 

@@ -5,6 +5,7 @@ import Base64
 import Colors
 import Dates
 import JSON3
+import Markdown
 import Tables
 import UUIDs
 
