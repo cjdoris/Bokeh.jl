@@ -3,15 +3,13 @@
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html](https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html).
 
 ```@example
-using Bokeh, Downloads, CSV
+using Bokeh, Tables
 
-data_url = "https://cdn.jsdelivr.net/gh/bokeh/bokeh@2.4.2/bokeh/sampledata/_data/penguins.csv"
-
-data = Downloads.download(data_url, IOBuffer()) |> seekstart |> CSV.File
+data = Bokeh.Data.penguins(columntable)
 
 source = ColumnDataSource(data=data)
 
-species = unique(data["species"])
+species = unique(data.species)
 
 markers = ["hex", "circle_x", "triangle"]
 

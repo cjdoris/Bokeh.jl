@@ -17,6 +17,7 @@ export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_
     log_cmap
 export row, column
 
+include("data.jl")
 include("typedefs.jl")
 include("settings.jl")
 include("spec.jl")

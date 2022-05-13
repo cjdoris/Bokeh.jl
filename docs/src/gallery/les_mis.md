@@ -3,11 +3,9 @@
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).
 
 ```@example
-using Bokeh, Downloads, JSON3
+using Bokeh, Tables
 
-data_url = "https://cdn.jsdelivr.net/gh/bokeh/bokeh@2.4.2/bokeh/sampledata/_data/les_mis.json"
-
-data = Downloads.download(data_url, IOBuffer()) |> seekstart |> JSON3.read
+data = Bokeh.Data.les_mis(rowtable)
 
 names = [node.name for node in sort(data.nodes, by=x->x.group)]
 

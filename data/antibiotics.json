@@ -1,0 +1,112 @@
+[
+  {
+    "name": "bacteria",
+    "type": "string",
+    "data": [
+      "Mycobacterium tuberculosis",
+      "Salmonella schottmuelleri",
+      "Proteus vulgaris",
+      "Klebsiella pneumoniae",
+      "Brucella abortus",
+      "Pseudomonas aeruginosa",
+      "Escherichia coli",
+      "Salmonella (Eberthella) typhosa",
+      "Aerobacter aerogenes",
+      "Brucella antracis",
+      "Streptococcus fecalis",
+      "Staphylococcus aureus",
+      "Staphylococcus albus",
+      "Streptococcus hemolyticus",
+      "Streptococcus viridans",
+      "Diplococcus pneumoniae"
+    ]
+  },
+  {
+    "name": "penicillin",
+    "type": "number",
+    "data": [
+      800.0,
+      10.0,
+      3.0,
+      850.0,
+      1.0,
+      850.0,
+      100.0,
+      1.0,
+      870.0,
+      0.001,
+      1.0,
+      0.03,
+      0.007,
+      0.001,
+      0.005,
+      0.005
+    ]
+  },
+  {
+    "name": "streptomycin",
+    "type": "number",
+    "data": [
+      5.0,
+      0.8,
+      0.1,
+      1.2,
+      2.0,
+      2.0,
+      0.4,
+      0.4,
+      1.0,
+      0.01,
+      1.0,
+      0.03,
+      0.1,
+      14.0,
+      10.0,
+      11.0
+    ]
+  },
+  {
+    "name": "neomycin",
+    "type": "number",
+    "data": [
+      2.0,
+      0.09,
+      0.1,
+      1.0,
+      0.02,
+      0.4,
+      0.1,
+      0.008,
+      1.6,
+      0.007,
+      0.1,
+      0.001,
+      0.001,
+      10.0,
+      40.0,
+      10.0
+    ]
+  },
+  {
+    "name": "gram",
+    "type": "string",
+    "data": [
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "negative",
+      "positive",
+      "positive",
+      "positive",
+      "positive",
+      "positive",
+      "positive",
+      "positive"
+    ]
+  }
+]
