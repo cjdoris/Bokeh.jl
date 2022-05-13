@@ -30,7 +30,9 @@ function get_range(range)
     elseif range isa Union{Tuple,AbstractVector}
         if all(x isa AbstractString for x in range)
             return FactorRange(factors=collect(String, range))
-        elseif length(x) == 2
+        elseif all(x isa Tuple{Vararg{AbstractString}} for x in range)
+            return FactorRange(factors=collect(Tuple{Vararg{String}}, range))
+        elseif length(range) == 2
             x0, x1 = x
             if x0 === nothing
                 x0 = Undefined()
