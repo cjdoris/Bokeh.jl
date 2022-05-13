@@ -31,7 +31,7 @@ import bokeh.core.property.visual
 
 def save(data, name):
     with open(f'spec/{name}.json', 'wt') as fp:
-        json.dump(data, fp, indent=2)
+        json.dump(data, fp)
 
 def mkdesc(doc):
     doc = inspect.cleandoc(doc)
