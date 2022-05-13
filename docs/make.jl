@@ -16,6 +16,7 @@ makedocs(
             "gallery/image_rgba.md",
             "gallery/latex.md",
             "gallery/les_mis.md",
+            "gallery/mpg.md",
         ],
     ]
 )
