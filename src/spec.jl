@@ -293,6 +293,175 @@ function flatten_dag(children)
     return order
 end
 
+function parse_doc(text, rich)
+    ans = []
+    if rich === nothing
+        push!(ans, Markdown.Paragraph("<Could not parse docstring.>"))
+    else
+        @assert rich.type == "document"
+        for x in rich.children
+            parse_doc_top(ans, x)
+        end
+        # remove any dangling headers
+        ans = [ans[i] for i in 1:length(ans) if !(ans[i] isa Markdown.Header && (i == length(ans) || ans[i+1] isa Markdown.Header))]
+        return ans
+    end
+end
+
+function parse_doc_top(ans, x)
+    t = x.type
+    if t == "paragraph"
+        items = []
+        for x in x.children
+            parse_doc_inline(items, x)
+        end
+        isempty(items) || push!(ans, Markdown.Paragraph(items))
+    elseif t == "note"
+        items = []
+        for x in x.children
+            parse_doc_top(items, x)
+        end
+        isempty(items) || push!(ans, Markdown.Admonition("note", "Note", items))
+    elseif t == "warning"
+        items = []
+        for x in x.children
+            parse_doc_top(items, x)
+        end
+        isempty(items) || push!(ans, Markdown.Admonition("warning", "Warning", items))
+    elseif t == "comment"
+        text = join(x.children)
+        isempty(text) || push!(ans, Markdown.Admonition("note", "Note", [Markdown.Paragraph(text)]))
+    elseif t == "bullet_list"
+        items = []
+        for x in x.children
+            @assert x.type == "list_item"
+            items2 = []
+            for x in x.children
+                parse_doc_top(items2, x)
+            end
+            push!(items, items2)
+        end
+        isempty(items) || push!(ans, Markdown.List(items, -1, true))
+    elseif t == "literal_block"
+        items = []
+        for x in x.children
+            if x isa AbstractString
+                push!(items, convert(String, x))
+            elseif x.type == "inline"
+                push!(items, join(x.children))
+            else
+                error("code block item: $(x.type)")
+            end
+        end
+        isempty(items) || push!(ans, Markdown.Code("python", join(items)))
+    elseif t == "section"
+        for x in x.children
+            parse_doc_top(ans, x)
+        end
+    elseif t == "title"
+        push!(ans, Markdown.Header(join(x.children), 2))
+    elseif t == "block_quote"
+        items = []
+        for x in x.children
+            parse_doc_top(items, x)
+        end
+        isempty(items) || push!(ans, Markdown.BlockQuote(items))
+    elseif t in ("definition_list", "field_list")
+        items = []
+        for x in x.children
+            @assert x.type in ("definition_list_item", "field")
+            @assert length(x.children) == 2
+            xt, xd = x.children
+            @assert xt.type in ("term", "field_name")
+            @assert xd.type in ("definition", "field_body")
+            titems = []
+            for x in xt.children
+                parse_doc_inline(titems, x)
+            end
+            ditems = []
+            for x in xd.children
+                parse_doc_top(ditems, x)
+            end
+            if isempty(ditems) || !isa(ditems[1], Markdown.Paragraph)
+                pushfirst!(ditems, Markdown.Paragraph())
+            end
+            ditems[1] = Markdown.Paragraph([titems; ": "; ditems[1].content])
+            push!(items, ditems)
+        end
+        isempty(items) || push!(ans, Markdown.List(items, -1, true))
+    elseif t == "table"
+        rows = []
+        @assert length(x.children) == 1
+        xg = x.children[1]
+        @assert xg.type == "tgroup"
+        for x in xg.children
+            if x.type == "colspec"
+                # skip
+            elseif x.type in ("thead", "tbody")
+                for x in x.children
+                    @assert x.type == "row"
+                    row = []
+                    for x in x.children
+                        @assert x.type == "entry"
+                        entry = []
+                        for x in x.children
+                            @assert x.type == "paragraph"
+                            for x in x.children
+                                parse_doc_inline(entry, x)
+                            end
+                        end
+                        push!(row, entry)
+                    end
+                    push!(rows, row)
+                end
+            else
+                @assert false
+            end
+        end
+        isempty(rows) || push!(ans, Markdown.Table(rows, [:l for _ in 1:length(rows[1])]))
+    elseif t == "system_message"
+        # skip
+    else
+        items = []
+        parse_doc_inline(items, x)
+        isempty(items) || push!(ans, Markdown.Paragraph(items))
+    end
+end
+
+function parse_doc_inline(ans, x)
+    if x isa AbstractString
+        push!(ans, convert(String, x))
+    else
+        t = x.type
+        if t == "literal"
+            push!(ans, Markdown.Code(join(x.children)))
+        elseif t == "strong"
+            push!(ans, Markdown.Bold(join(x.children)))
+        elseif t == "emphasis"
+            push!(ans, Markdown.Italic(join(x.children)))
+        elseif t == "problematic"
+            text = join(x.children)
+            if (m = match(r"^:([-a-z]+):`(.*)`$", text)) !== nothing
+                push!(ans, Markdown.Code(text))
+            else
+                @assert false
+                push!(ans, Markdown.Code("<Could not parse $text>"))
+            end
+        elseif t == "reference"
+            text = join(x.children)
+            push!(ans, Markdown.Link(text, text))
+        elseif t in ("substitution_reference", "title_reference")
+            text = join(x.children)
+            push!(ans, text)
+        elseif t in ("target", "substitution_definition")
+            # skip
+        else
+            @assert false
+            push!(ans, "<Could not parse $t>")
+        end
+    end
+end
+
 function generate_model_types()
     spec = load_spec("model_types")::JSON3.Array
 
@@ -324,11 +493,11 @@ function generate_model_types()
         @assert !haskey(mtypes, mfullname)
         @assert !haskey(mtypes2, mname)
         # docstring
-        docstring = mspec.desc::String
+        doc = parse_doc(mspec.desc::String, mspec.richdesc)
         # bases
         bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
         # make the type
-        mt = ModelType(mname; bases, docstring)
+        mt = ModelType(mname; bases, doc)
         # save it
         mtypes[mfullname] = mt
         mtypes2[mname] = mt
@@ -406,8 +575,8 @@ function generate_model_types()
                 end
                 ptype = DefaultT(ptype, pdflt)
             end
-            docstring = pspec.desc::String
-            push!(props, pname => PropDesc(ptype; docstring))
+            doc = parse_doc(pspec.desc::String, pspec.richdesc)
+            push!(props, pname => PropDesc(ptype; doc))
         end
         append!(props, extras)
         init_props!(mtype, props)

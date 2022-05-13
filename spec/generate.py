@@ -15,6 +15,9 @@ assert bokeh.__version__ == '2.4.2'
 import json
 import inspect
 
+import docutils.parsers.rst
+import docutils.utils
+
 from bokeh.core.property.bases import UndefinedType
 from bokeh.core.property.descriptors import AliasPropertyDescriptor
 from bokeh.model import Model
@@ -36,6 +39,28 @@ def mkdesc(doc):
     # doc = pandoc.write(doc, format="markdown")
     return doc
 
+RST_SETTINGS = docutils.frontend.OptionParser(components=(docutils.parsers.rst.Parser,)).get_default_values()
+RST_PARSER = docutils.parsers.rst.Parser()
+
+def mkrichdesc(text, name):
+    text = inspect.cleandoc(text)
+    doc = docutils.utils.new_document(name, RST_SETTINGS)
+    try:
+        RST_PARSER.parse(text, doc)
+    except Exception:
+        return
+    return _walkdoc(doc)
+
+def _walkdoc(doc):
+    if isinstance(doc, str):
+        return str(doc)
+    else:
+        return {
+            'type': doc.tagname,
+            'children': [_walkdoc(x) for x in doc.children]
+        }
+
+
 ### MODELS
 
 def _proto(obj, defaults=False):
@@ -52,6 +77,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         'fullname': m.__module__ + '.' + m.__name__,
         'bases' : [] if m is Model else [base.__module__ + '.' + base.__name__ for base in m.__bases__],
         'desc'  : mkdesc(m.__doc__ or ""),
+        'richdesc': mkrichdesc(m.__doc__ or "", name),
     }
     props = []
     for prop_name in m.properties():
@@ -65,6 +91,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
             'name'    : prop_name,
             'type'    : str(prop),
             'desc'    : mkdesc(prop.__doc__ or ""),
+            'richdesc': mkrichdesc(prop.__doc__ or '', '{name}.{prop_name}'),
         }
 
         default = descriptor.instance_default(m())

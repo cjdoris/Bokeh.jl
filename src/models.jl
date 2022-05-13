@@ -4,9 +4,9 @@ function ModelType(name, subname=nothing;
     bases=[],
     props=[],
     abstract=false,
-    docstring="",
+    doc=[],
 )
-    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract, docstring)
+    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract, doc)
     init_bases!(mt, bases)
     init_props!(mt, props)
     return mt
@@ -15,8 +15,8 @@ end
 function init_bases!(t::ModelType, bases)
     for b in bases
         t.abstract && !b.abstract && error("$(t.name) marked abstract but inherits from $(b.name) which is not abstract")
-        if isempty(t.docstring)
-            t.docstring = b.docstring
+        if isempty(t.doc)
+            t.doc = b.doc
         end
         push!(t.bases, b)
         push!(t.supers, b)
@@ -38,9 +38,9 @@ function mergepropdescs!(ds, x; name=nothing)
         x = PropDesc(x)
     end
     if x isa PropDesc
-        if isempty(x.docstring) && haskey(ds, name) && !isempty(ds[name].docstring)
+        if isempty(x.doc) && haskey(ds, name) && !isempty(ds[name].doc)
             # keep an existing docstring
-            x = PropDesc(x, docstring=ds[name].docstring)
+            x = PropDesc(x, doc=ds[name].doc)
         end
         ds[name] = x
     elseif x isa Pair
@@ -81,7 +81,7 @@ function Base.Docs.getdoc(t::ModelType, sig)
         Markdown.Code(string(t.name)),
         " is a Bokeh model."
     ]))
-    append!(paras, _text_to_md(t.docstring))
+    append!(paras, t.doc)
     push!(paras, Markdown.Header("Properties", 2))
     props = [[Markdown.Paragraph([Markdown.Code(string(k))])] for k in sort(collect(keys(t.propdescs)))]
     push!(paras, Markdown.List(props, -1, false))
@@ -106,35 +106,9 @@ function Base.Docs.doc(b::ModelPropBinding, sig::Type)
             Markdown.Code(string(b.type.name) * "." * string(b.name)),
             " is a Bokeh property. "
         ]))
-        append!(paras, _text_to_md(d.docstring))
+        append!(paras, d.doc)
     end
     return Markdown.MD(paras)
-end
-
-function _text_to_md(text)
-    paras = []
-    lines = []
-    for line in eachline(IOBuffer(text))
-        if all(isspace, line)
-            if !isempty(lines)
-                push!(paras, Markdown.Paragraph(copy(lines)))
-                empty!(lines)
-            end
-        else
-            # Paragraph normalizes space, and in particular strips leading space.
-            # This replaces them with the blank character '\U200E'
-            line = replace(line, r"\s" => "\U200E")
-            if !isempty(lines)
-                push!(lines, Markdown.LineBreak())
-            end
-            push!(lines, line)
-        end
-    end
-    if !isempty(lines)
-        push!(paras, Markdown.Paragraph(copy(lines)))
-        empty!(lines)
-    end
-    return paras
 end
 
 
