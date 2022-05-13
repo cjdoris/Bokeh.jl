@@ -132,7 +132,7 @@ function validate(t::PropType, x; detail::Bool=true)
         level += 1
     elseif prim == MODELINSTANCE_T
         model_type = t.model_type::ModelType
-        x isa Model && ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name)" : "", level)
+        x isa ModelInstance && ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name)" : "", level)
         level += 1
     else
         @assert prim == ANY_T
@@ -227,7 +227,7 @@ function result_type(t::PropType)
         elseif t.prim == EITHER_T
             ans = Union{map(result_type, t.params)...}
         elseif t.prim == MODELINSTANCE_T
-            ans = Model
+            ans = ModelInstance
         else
             @assert t.prim == ANY_T
             ans = Any
@@ -509,7 +509,7 @@ TitleT(; kw...) = EitherT(
     InstanceT(Title),
     StringT(
         validate = (x; detail) -> Title(text=x),
-        result_type = Model,
+        result_type = ModelInstance,
     );
     kw...
 )
@@ -533,7 +533,7 @@ TickerT(; kw...) = EitherT(
     InstanceT(Ticker),
     SeqT(FloatT();
         validate = (x; detail) -> FixedTicker(ticks=x),
-        result_type = Model,
+        result_type = ModelInstance,
     );
     kw...
 )

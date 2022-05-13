@@ -263,7 +263,7 @@ function parse_prop_default_modelinstance(x, mts)
     t === nothing && return
     # return the constructor
     let t=t, kw=kw
-        return ()->Model(t, kw)
+        return ()->ModelInstance(t, kw)
     end
 end
 
@@ -334,7 +334,7 @@ function generate_model_types()
         mtypes2[mname] = mt
         # export it
         if '.' ∉ mname
-            xname = mname == "Model" ? :BaseModel : Symbol(mname)
+            xname = Symbol(mname)
             @eval const $xname = $mt
             @eval export $xname
         end
@@ -373,8 +373,8 @@ function generate_model_types()
             :legend => GetSetT(plot_get_renderer(type=Legend, sides=[:below,:left,:above,:right,:center], plural=:legends)),
             :legends => GetSetT(plot_get_renderers(type=Legend, sides=[:below,:left,:above,:right,:center])),
             :tools => GetSetT((m)->(m.toolbar.tools), (m,v)->(m.toolbar.tools=v)),
-            :ranges => GetSetT(m->PropVector([m.x_range::Model, m.y_range::Model])),
-            :scales => GetSetT(m->PropVector([m.x_scale::Model, m.y_scale::Model])),
+            :ranges => GetSetT(m->PropVector([m.x_range::ModelInstance, m.y_range::ModelInstance])),
+            :scales => GetSetT(m->PropVector([m.x_scale::ModelInstance, m.y_scale::ModelInstance])),
         ],
     )
 

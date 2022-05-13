@@ -62,7 +62,7 @@ end
 
 function (t::ModelType)(; kw...)
     @nospecialize
-    Model(t, collect(Kwarg, kw))
+    ModelInstance(t, collect(Kwarg, kw))
 end
 
 issubmodeltype(t1::ModelType, t2::ModelType) = t1 === t2 || t2 in t1.supers
@@ -93,15 +93,15 @@ end
 
 ### MODEL
 
-modelid(m::Model) = getfield(m, :id)
+modelid(m::ModelInstance) = getfield(m, :id)
 
-modeltype(m::Model) = getfield(m, :type)
+modeltype(m::ModelInstance) = getfield(m, :type)
 
-modelvalues(m::Model) = getfield(m, :values)
+modelvalues(m::ModelInstance) = getfield(m, :values)
 
-ismodelinstance(m::Model, t::ModelType) = issubmodeltype(modeltype(m), t)
+ismodelinstance(m::ModelInstance, t::ModelType) = issubmodeltype(modeltype(m), t)
 
-function Base.getproperty(m::Model, k::Symbol)
+function Base.getproperty(m::ModelInstance, k::Symbol)
     # look up the value
     vs = modelvalues(m)
     v = get(vs, k, Undefined())
@@ -137,7 +137,7 @@ function Base.getproperty(m::Model, k::Symbol)
     end
 end
 
-function Base.setproperty!(m::Model, k::Symbol, x)
+function Base.setproperty!(m::ModelInstance, k::Symbol, x)
     # look up the descriptor
     mt = modeltype(m)
     ds = mt.propdescs
@@ -169,26 +169,26 @@ function Base.setproperty!(m::Model, k::Symbol, x)
     return m
 end
 
-function Base.hasproperty(m::Model, k::Symbol)
+function Base.hasproperty(m::ModelInstance, k::Symbol)
     ts = modeltype(m).propdescs
     return haskey(ts, k)
 end
 
-function Base.propertynames(m::Model)
+function Base.propertynames(m::ModelInstance)
     ts = modeltype(m).propdescs
     return collect(keys(ts))
 end
 
-function Base.show(io::IO, m::Model)
+function Base.show(io::IO, m::ModelInstance)
     mt = modeltype(m)
     vs = modelvalues(m)
     print(io, mt.name, "(", join(["$k=$(repr(v))" for (k,v) in vs if v !== Undefined()], ", "), ")")
     return
 end
 
-Base.show(io::IO, ::MIME"text/plain", m::Model) = _show_indented(io, m)
+Base.show(io::IO, ::MIME"text/plain", m::ModelInstance) = _show_indented(io, m)
 
-function _show_indented(io::IO, m::Model, indent=0, seen=IdSet())
+function _show_indented(io::IO, m::ModelInstance, indent=0, seen=IdSet())
     if m in seen
         print(io, "...")
         return
@@ -268,13 +268,13 @@ function _show_indented(io::IO, x, indent=0, seen=IdSet())
     show(io, x)
 end
 
-function serialize(s::Serializer, m::Model)
+function serialize(s::Serializer, m::ModelInstance)
     serialize_noref(s, m)
     id = modelid(m)
     return Dict("id" => id)
 end
 
-function serialize_noref(s::Serializer, m::Model)
+function serialize_noref(s::Serializer, m::ModelInstance)
     id = modelid(m)
     if get(s.refs, id, nothing) === m
         return s.refscache[id]
@@ -300,10 +300,10 @@ function serialize_noref(s::Serializer, m::Model)
     return ans
 end
 
-plot_get_renderers(plot::Model; type, sides, filter=nothing) = PropVector(Model[m::Model for side in sides for m in getproperty(plot, side) if ismodelinstance(m::Model, type) && (filter === nothing || filter(m::Model))])
-plot_get_renderers(; kw...) = (plot::Model) -> plot_get_renderers(plot; kw...)
+plot_get_renderers(plot::ModelInstance; type, sides, filter=nothing) = PropVector(ModelInstance[m::ModelInstance for side in sides for m in getproperty(plot, side) if ismodelinstance(m::ModelInstance, type) && (filter === nothing || filter(m::ModelInstance))])
+plot_get_renderers(; kw...) = (plot::ModelInstance) -> plot_get_renderers(plot; kw...)
 
-function plot_get_renderer(plot::Model; plural, kw...)
+function plot_get_renderer(plot::ModelInstance; plural, kw...)
     ms = plot_get_renderers(plot; kw...)
     if length(ms) == 0
         return Undefined()
@@ -313,7 +313,7 @@ function plot_get_renderer(plot::Model; plural, kw...)
         error("multiple $plural defined, consider using .$plural instead")
     end
 end
-plot_get_renderer(; kw...) = (plot::Model) -> plot_get_renderer(plot; kw...)
+plot_get_renderer(; kw...) = (plot::ModelInstance) -> plot_get_renderer(plot; kw...)
 
 generate_model_types()
 

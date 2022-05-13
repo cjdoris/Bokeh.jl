@@ -1,4 +1,4 @@
-# Lorenz Attractor (`mulit_line!`)
+# Lorenz Attractor (`multi_line!`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html](https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html).
 

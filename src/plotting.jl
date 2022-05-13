@@ -25,7 +25,7 @@ log_cmap(field, palette; kw...) = transform(field, LogColorMapper(; palette, kw.
 function get_range(range)
     if range === nothing
         return DataRange1d()
-    elseif range isa Model && ismodelinstance(range, Range)
+    elseif range isa ModelInstance && ismodelinstance(range, Range)
         return range
     elseif range isa Union{Tuple,AbstractVector}
         if all(x isa AbstractString for x in range)
@@ -45,13 +45,13 @@ function get_range(range)
 end
 
 function get_scale(range, axis_type)
-    if range isa Model && (ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d))
+    if range isa ModelInstance && (ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d))
         if (axis_type===nothing || axis_type in ("linear", "datetime", "mercator", "auto"))
             return LinearScale()
         elseif axis_type == "log"
             return LogScale()
         end
-    elseif range isa Model && ismodelinstance(range, FactorRange)
+    elseif range isa ModelInstance && ismodelinstance(range, FactorRange)
         return CategoricalScale()
     end
     error("unable to determine proper scale for $range")
@@ -69,9 +69,9 @@ function get_axis(axis_type, rng, dim)
     elseif axis_type == "mercator"
         return MercatorAxis(dimension= dim==0 ? "lon" : "lat")
     elseif axis_type == "auto"
-        if rng isa Model && ismodelinstance(rng, FactorRange)
+        if rng isa ModelInstance && ismodelinstance(rng, FactorRange)
             return CategoricalAxis()
-        elseif rng isa Model && ismodelinstance(rng, Range1d)
+        elseif rng isa ModelInstance && ismodelinstance(rng, Range1d)
             # TODO: maybe a datetime axis
             return LinearAxis()
         else
@@ -138,7 +138,7 @@ end
 
 ### RENDERERS
 
-function add_layout!(plot::Model, renderer::Model; location="center")
+function add_layout!(plot::ModelInstance, renderer::ModelInstance; location="center")
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     ismodelinstance(renderer, Renderer) || error("renderer must be a Renderer")
     if location == "left"
@@ -159,7 +159,7 @@ end
 
 for t in [LinearAxis, LogAxis, CategoricalAxis, DatetimeAxis, MercatorAxis]
     f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model; location, kw...)
+    @eval function $f(plot::ModelInstance; location, kw...)
         axis = $t(; kw...)
         add_layout!(plot, axis; location)
         return axis
@@ -169,7 +169,7 @@ end
 
 for t in [Grid]
     f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model, axis::Model, dimension::Integer; kw...)
+    @eval function $f(plot::ModelInstance, axis::ModelInstance, dimension::Integer; kw...)
         grid = $t(; axis, dimension, kw...)
         add_layout!(plot, grid)
         return grid
@@ -182,7 +182,7 @@ for t in [PanTool, RangeTool, WheelPanTool, WheelZoomTool, SaveTool, ResetTool, 
     PolySelectTool, HelpTool,
 ]
     f = Symbol(lowercase(t.name), "!")
-    @eval function $f(plot::Model; active::Bool=false, kw...)
+    @eval function $f(plot::ModelInstance; active::Bool=false, kw...)
         tool = $t(; kw...)
         add_tools!(plot, tool; active)
         return tool
@@ -193,7 +193,7 @@ end
 
 ### GLYPHS
 
-function _glyph_renderer_kw(glyph::Model, kw::Vector{Kwarg})
+function _glyph_renderer_kw(glyph::ModelInstance, kw::Vector{Kwarg})
     ismodelinstance(glyph, Glyph) || error("glyph must be a Glyph")
     filters = Undefined()
     for (k, v) in (oldkw=kw; kw=Kwarg[]; oldkw)
@@ -205,21 +205,21 @@ function _glyph_renderer_kw(glyph::Model, kw::Vector{Kwarg})
             push!(kw, Kwarg(k, v))
         end
     end
-    renderer = Model(GlyphRenderer, [Kwarg(:glyph, glyph); kw])
+    renderer = ModelInstance(GlyphRenderer, [Kwarg(:glyph, glyph); kw])
     if renderer.view === Undefined()
-        renderer.view = Model(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
+        renderer.view = ModelInstance(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
     end
     return renderer
 end
 
-function add_glyph_kw!(plot::Model, glyph::Model, kw::Vector{Kwarg})
+function add_glyph_kw!(plot::ModelInstance, glyph::ModelInstance, kw::Vector{Kwarg})
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     renderer = _glyph_renderer_kw(glyph, kw)
     push!(plot.renderers, renderer)
     return renderer
 end
 
-function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
+function add_glyph_kw!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
     issubmodeltype(type, Glyph) || error("type must be a subtype of Glyph")
     # process the kwargs
@@ -231,7 +231,7 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
         if k in (:source, :data_source)
             # source -> data_source
             have_source = true
-            if v === Undefined() || v isa Model
+            if v === Undefined() || v isa ModelInstance
                 push!(rkw, Kwarg(:data_source, v))
             else
                 push!(rkw, Kwarg(:data_source, ColumnDataSource(data=v)))
@@ -282,7 +282,7 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
         push!(rkw, Kwarg(:data_source, source))
     end
     # make the glyph and renderer
-    glyph = Model(type, kw)
+    glyph = ModelInstance(type, kw)
     renderer = _glyph_renderer_kw(glyph, rkw)
     # handle the legend
     if legend_kwarg !== nothing
@@ -293,7 +293,7 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
                 legend = Legend()
                 add_layout!(plot, legend)
             elseif length(legends) == 1
-                legend = legends[1]::Model
+                legend = legends[1]::ModelInstance
             else
                 error("$k: more than one legend in use")
             end
@@ -337,7 +337,7 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
                 if source === Undefined()
                     error("$k: requires source to be set")
                 end
-                source::Model
+                source::ModelInstance
                 if !(hasproperty(source, :column_names) && v in source.column_names)
                     error("$k: source does not contain column $(repr(vstr))")
                 end
@@ -358,12 +358,12 @@ function add_glyph_kw!(plot::Model, type::ModelType, kw::Vector{Kwarg})
     return renderer
 end
 
-function add_glyph!(plot::Model, glyph::Model; kw...)
+function add_glyph!(plot::ModelInstance, glyph::ModelInstance; kw...)
     @nospecialize
     return add_glyph_kw!(plot, glyph, collect(Kwarg, kw))
 end
 
-function add_glyph!(plot::Model, type::ModelType; kw...)
+function add_glyph!(plot::ModelInstance, type::ModelType; kw...)
     @nospecialize
     return add_glyph_kw!(plot, type, collect(Kwarg, kw))
 end
@@ -399,7 +399,7 @@ for (f, t) in [
     (:vbar!, VBar),
     (:wedge!, Wedge),
 ]
-    @eval function $f(plot::Model; kw...)
+    @eval function $f(plot::ModelInstance; kw...)
         @nospecialize
         return add_glyph_kw!(plot, $t, collect(Kwarg, kw))
     end
@@ -427,9 +427,9 @@ for (f, t) in [
     """) $f
 end
 
-function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
+function add_tools!(plot::ModelInstance, tools::Vector{ModelInstance}; active::Bool=false)
     ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    toolbar = plot.toolbar::Model
+    toolbar = plot.toolbar::ModelInstance
     for tool in tools
         ismodelinstance(tool, Tool) || error("tool must be a Tool")
         push!(toolbar.tools, tool)
@@ -438,7 +438,7 @@ function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
                 toolbar.active_drag = tool
             elseif ismodelinstance(tool, InspectTool)
                 oldtool = toolbar.active_inspect
-                if oldtool isa Model
+                if oldtool isa ModelInstance
                     toolbar.active_inspect = [oldtool, tool]
                 elseif oldtool isa AbstractVector
                     push!(oldtool, tool)
@@ -458,8 +458,8 @@ function add_tools!(plot::Model, tools::Vector{Model}; active::Bool=false)
     end
     return plot
 end
-add_tools!(plot::Model, tools; kw...) = add_tools!(plot, collect(Model, tools); kw...)
-add_tools!(plot::Model, tools::Model...; kw...) = add_tools!(plot, collect(Model, tools); kw...)
+add_tools!(plot::ModelInstance, tools; kw...) = add_tools!(plot, collect(ModelInstance, tools); kw...)
+add_tools!(plot::ModelInstance, tools::ModelInstance...; kw...) = add_tools!(plot, collect(ModelInstance, tools); kw...)
 
 
 ### LAYOUT
@@ -476,15 +476,15 @@ function _rowcol_handle_child_sizing(children, sizing_mode)
 end
 
 function row(children; sizing_mode=nothing, kw...)
-    children = collect(Model, children)
+    children = collect(ModelInstance, children)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Row(; children, sizing_mode, kw...)
 end
-row(children::Model...; kw...) = row(children; kw...)
+row(children::ModelInstance...; kw...) = row(children; kw...)
 
 function column(children; sizing_mode=nothing, kw...)
-    children = collect(Model, children)
+    children = collect(ModelInstance, children)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Column(; children, sizing_mode, kw...)
 end
-column(children::Model...; kw...) = column(children; kw...)
+column(children::ModelInstance...; kw...) = column(children; kw...)

@@ -17,11 +17,11 @@ function Base.display(d::BokehDisplay, x::Document)
     return display(d, MIME("text/html"), x)
 end
 
-function Base.display(d::BokehDisplay, m::MIME"text/html", x::Model)
+function Base.display(d::BokehDisplay, m::MIME"text/html", x::ModelInstance)
     ismodelinstance(x, LayoutDOM) || throw(MethodError(display, (d, m, x)))
     return display(d, m, Document(x))
 end
 
-function Base.display(d::BokehDisplay, x::Model)
+function Base.display(d::BokehDisplay, x::ModelInstance)
     return display(d, MIME("text/html"), x)
 end

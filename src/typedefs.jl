@@ -66,11 +66,11 @@ end
 const Arg = Any
 const Kwarg = Pair{Symbol,Any}
 
-struct Model
+struct ModelInstance
     id :: String
     type :: ModelType
     values :: Dict{Symbol,Any}
-    function Model(t::ModelType, kw::Vector{Kwarg})
+    function ModelInstance(t::ModelType, kw::Vector{Kwarg})
         t.abstract && error("cannot instantiate abstract model type $(t.name)")
         ans = new(new_id(), t, Dict{Symbol,Any}())
         for (k, v) in kw
@@ -87,8 +87,8 @@ struct Undefined end
 
 struct Value
     value::Any
-    transform::Union{Nothing,Model}
-    function Value(value; transform::Union{Nothing,Model}=nothing)
+    transform::Union{Nothing,ModelInstance}
+    function Value(value; transform::Union{Nothing,ModelInstance}=nothing)
         transform===nothing || ismodelinstance(transform, Transform) || error("transform must be a Transform")
         new(value, transform)
     end
@@ -96,8 +96,8 @@ end
 
 struct Field
     name::String
-    transform::Union{Nothing,Model}
-    function Field(name; transform::Union{Nothing,Model}=nothing)
+    transform::Union{Nothing,ModelInstance}
+    function Field(name; transform::Union{Nothing,ModelInstance}=nothing)
         transform===nothing || ismodelinstance(transform, Transform) || error("transform must be a Transform")
         new(convert(String, name), transform)
     end
@@ -116,5 +116,5 @@ end
 ### DOCUMENT
 
 mutable struct Document
-    roots::Vector{Model}
+    roots::Vector{ModelInstance}
 end

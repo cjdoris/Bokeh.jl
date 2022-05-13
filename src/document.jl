@@ -1,5 +1,5 @@
 Document() = Document([])
-Document(m::Model) = Document([m])
+Document(m::ModelInstance) = Document([m])
 
 function root_ids_json(doc::Document)
     return [modelid(model) for model in doc.roots]
@@ -94,7 +94,7 @@ function Base.show(io::IO, ::MIME"text/html", doc::Document)
     return
 end
 
-function Base.show(io::IO, m::MIME"text/html", x::Model)
+function Base.show(io::IO, m::MIME"text/html", x::ModelInstance)
     ismodelinstance(x, LayoutDOM) || throw(MethodError(show, (io, m, x)))
     show(io, m, Document(x))
 end
