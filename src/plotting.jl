@@ -69,11 +69,11 @@ log_cmap(field, palette; kw...) = transform(field, LogColorMapper(; palette, kw.
 ### FIGURE
 
 function get_range(range)
-    if range === nothing
+    if range === Undefined()
         return DataRange1d()
     elseif ismodelinstance(range, Range)
         return range
-    elseif range isa Union{AbstractVector}
+    elseif range isa AbstractVector
         if all(x isa AbstractString for x in range)
             return FactorRange(factors=collect(String, range))
         elseif all(x isa Tuple{Vararg{AbstractString}} for x in range)
@@ -89,58 +89,58 @@ function get_range(range)
         end
         return Range1d(; :start=>x0, :end=>x1)
     end
-    error("unrecognized range input: $range")
+    error("invalid range: $range")
 end
 
-function get_scale(range, axis_type)
-    if ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d)
-        if (axis_type===nothing || axis_type in ("linear", "datetime", "mercator", "auto"))
-            return LinearScale()
-        elseif axis_type == "log"
-            return LogScale()
-        end
-    elseif ismodelinstance(range, FactorRange)
-        return CategoricalScale()
-    end
-    error("unable to determine proper scale for $range")
-end
-
-function get_axis(axis_type, rng, dim)
-    if axis_type === nothing
+function get_axis(axis, range)
+    if axis === nothing
         return nothing
-    elseif axis_type == "linear"
-        return LinearAxis()
-    elseif axis_type == "log"
-        return LogAxis()
-    elseif axis_type == "datetime"
-        return DatetimeAxis()
-    elseif axis_type == "mercator"
-        return MercatorAxis(dimension= dim==0 ? "lon" : "lat")
-    elseif axis_type == "auto"
-        if ismodelinstance(rng, FactorRange)
+    elseif axis === Undefined()
+        if ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d)
+            return LinearAxis()
+        elseif ismodelinstance(range, FactorRange)
             return CategoricalAxis()
-        elseif ismodelinstance(rng, Range1d)
-            # TODO: maybe a datetime axis
-            return LinearAxis()
         else
-            return LinearAxis()
+            error("cannot determine axis for range: $range")
+        end
+    elseif ismodelinstance(axis, Axis)
+        return axis
+    end
+    error("invalid axis: $axis")
+end
+
+function get_scale(scale, range, axis)
+    if scale === Undefined()
+        if ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d)
+            if axis===nothing || ismodelinstance(axis, LinearAxis) || ismodelinstance(axis, DatetimeAxis) || ismodelinstance(axis, MercatorAxis)
+                return LinearScale()
+            elseif ismodelinstance(axis, LogAxis)
+                return LogScale()
+            end
+        elseif ismodelinstance(range, FactorRange)
+            return CategoricalScale()
+        end
+        error("cannot determine scale for range: $range")
+    elseif ismodelinstance(scale, Scale)
+        return scale
+    else
+        error("invalid scale: $scale")
+    end
+end
+
+function get_grid(grid, axis, dimension)
+    if grid === nothing
+        return nothing
+    elseif ismodelinstance(grid, Grid)
+        return grid
+    elseif grid === Undefined()
+        if axis === nothing
+            return nothing
+        else
+            return Grid(; axis, dimension)
         end
     else
-        error("invalid axis type: $(repr(axis_type))")
-    end
-end
-
-function process_axis_and_grid(plot, axis_type, axis_location, minor_ticks, axis_label, rng, dim)
-    axis = get_axis(axis_type, rng, dim)
-    if axis !== nothing
-        # TODO: ticker
-        if axis_label !== nothing && axis_label != ""
-            axis.axis_label = axis_label
-        end
-        plot!(plot, Grid, dimension=dim, axis=axis)
-        if axis_location !== nothing
-            plot!(plot, axis, location=axis_location)
-        end
+        error("invalid grid: $grid")
     end
 end
 
@@ -151,45 +151,58 @@ Create a new [`Figure`](@ref) and return it.
 
 Acceptable keyword arguments are:
 - Anything taken by [`Figure`](@ref).
-- `x_range`/`y_range`: Sets the x/y-range. May be a vector of factors or a 2-tuple representing an interval.
-- `x_axis_type`/`y_axis_type`: The type of axis. One of `"linear"`, `"log"`, `"datetime"`, `"mercator"`, `"auto"` or `nothing` (for no axis).
-- `x_axis_location`/`y_axis_location`: Where to put the axis. One of `"left"`, `"right"`, `"above"` or `"below"`.
-- `x_axis_label`/`y_axis_label`: The label to show on the axis.
+- `x_range`/`y_range`: Sets the x/y-range. May be a vector of factors or a 2-tuple representing an interval. Default: `DataRange1d()`.
+- `x_axis`/`y_axis`: Sets the x/y-axis. May be `nothing` to suppress. Default: `LinearAxis()`.
+- `x_axis_location`/`y_axis_location`: Where to put the axis. One of `"left"`, `"right"`, `"above"` or `"below"`. Default: `"below"`/`"left"`.
+- `x_axis_label`/`y_axis_label`: Sets the label on the x/y-axis.
+- `x_grid`/`y_grid`: Sets the x/y-grid. May be `nothing` to suppress.
 - `tools`: Optional list of tools to create a toolbar from.
 - `tooltips`: If given, add a [`HoverTool`](@ref) with these tooltips.
 """
 function figure(;
-    x_range=nothing,
-    y_range=nothing,
-    x_axis_type="auto",
-    y_axis_type="auto",
+    x_range=Undefined(),
+    y_range=Undefined(),
+    x_axis=Undefined(),
+    y_axis=Undefined(),
     x_axis_location="below",
     y_axis_location="left",
-    x_minor_ticks="auto",
-    y_minor_ticks="auto",
-    x_axis_label="",
-    y_axis_label="",
-    tools=nothing,
-    tooltips=nothing,
+    x_axis_label=Undefined(),
+    y_axis_label=Undefined(),
+    x_scale=Undefined(),
+    y_scale=Undefined(),
+    x_grid=Undefined(),
+    y_grid=Undefined(),
+    # x_minor_ticks="auto",
+    # y_minor_ticks="auto",
+    tools=Undefined(),
+    tooltips=Undefined(),
     kw...,
 )
     fig = Figure(; kw...)
-    # ranges
-    fig.x_range = get_range(x_range)
-    fig.y_range = get_range(y_range)
-    # scales
-    fig.x_scale = get_scale(fig.x_range, x_axis_type)
-    fig.y_scale = get_scale(fig.y_range, y_axis_type)
-    # axes/grids
-    process_axis_and_grid(fig, x_axis_type, x_axis_location, x_minor_ticks, x_axis_label, fig.x_range, 0)
-    process_axis_and_grid(fig, y_axis_type, y_axis_location, y_minor_ticks, y_axis_label, fig.y_range, 1)
+
+    # range/axis/scale/grid
+    fig.x_range = x_range = get_range(x_range)
+    fig.y_range = y_range = get_range(y_range)
+    x_axis = get_axis(x_axis, x_range)
+    y_axis = get_axis(y_axis, y_range)
+    x_axis_label !== nothing && setproperty!(x_axis, :axis_label, x_axis_label)
+    y_axis_label !== nothing && setproperty!(y_axis, :axis_label, y_axis_label)
+    fig.x_scale = x_scale = get_scale(x_scale, x_range, x_axis)
+    fig.y_scale = y_scale = get_scale(y_scale, y_range, y_axis)
+    x_grid = get_grid(x_grid, x_axis, 0)
+    y_grid = get_grid(y_grid, y_axis, 1)
+    x_axis !== nothing && x_axis_location !== nothing && plot!(fig, x_axis, location=x_axis_location)
+    y_axis !== nothing && y_axis_location !== nothing && plot!(fig, y_axis, location=y_axis_location)
+    x_grid !== nothing && plot!(fig, x_grid)
+    y_grid !== nothing && plot!(fig, y_grid)
+
     # tools
-    if tools === nothing
+    if tools === Undefined()
         fig.toolbar.tools = [PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool(), HelpTool()]
     else
         fig.toolbar.tools = tools
     end
-    if tooltips !== nothing
+    if tooltips !== Undefined()
         plot!(fig, HoverTool; tooltips)
     end
 
@@ -264,8 +277,6 @@ function _plot!(plot::ModelInstance, t::ModelType, kw::Vector{Kwarg})
     checkmodelinstance(plot, Plot)
     if issubmodeltype(t, Glyph)
         _plot_glyph!(plot, t, kw)
-    elseif issubmodeltype(t, Axis)
-        _plot_axis!(plot, t, kw)
     elseif issubmodeltype(t, Tool)
         _plot_tool!(plot, t, kw)
     elseif issubmodeltype(t, Renderer)
@@ -502,51 +513,6 @@ function _glyph_renderer(kw::Vector{Kwarg})
         renderer.view = ModelInstance(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
     end
     return renderer
-end
-
-function _plot_axis!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
-    checkmodelinstance(plot, Plot)
-    checkmodeltype(type, Axis)
-    kw, oldkw = Kwarg[], kw
-    location = Undefined()
-    dimension = Undefined()
-    for (k, v) in oldkw
-        if k == :location
-            v isa String || error("location must be a string")
-            location = v
-        elseif k == :dimension
-            v isa Int || error("dimension must be an integer")
-            dimension = v
-        else
-            push!(kw, Kwarg(k, v))
-        end
-    end
-    if location === Undefined()
-        if dimension === Undefined()
-            error("either location or dimension must be given")
-        else
-            if dimension == 0
-                location = "below"
-            elseif dimension == 1
-                location = "left"
-            else
-                error("dimension must be 0 or 1")
-            end
-        end
-    else
-        if dimension === Undefined()
-            if location in ("below", "above")
-                dimension = 0
-            elseif location in ("left", "right")
-                dimension = 1
-            else
-                error("location must be \"left\", \"right\", \"below\" or \"above\"")
-            end
-        end
-    end
-    location === Undefined() || push!(kw, Kwarg(:location, location))
-    dimension === Undefined() || push!(kw, Kwarg(:dimension, dimension))
-    return _plot_renderer!(plot, type, kw)
 end
 
 function _plot_tool!(plot::ModelInstance, tool::ModelInstance; activate::Bool=false)
