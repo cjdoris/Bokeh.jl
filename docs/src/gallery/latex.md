@@ -1,4 +1,4 @@
-# Gaussian Distribution (`TeX`, `Div`, `column`, `quad!`, `line!`)
+# Gaussian Distribution (`TeX`, `Div`, `column`, `Quad`, `Line`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html).
 

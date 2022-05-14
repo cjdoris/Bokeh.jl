@@ -1,4 +1,4 @@
-# Heatmap (`image!`)
+# Heatmap (`Image`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image.html](https://docs.bokeh.org/en/latest/docs/gallery/image.html).
 

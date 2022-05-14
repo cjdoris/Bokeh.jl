@@ -1,4 +1,4 @@
-#  Les Misérables Co-occurrences (`rect!`, `tools`)
+#  Les Misérables Co-occurrences (`Rect`, `tools`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).
 

@@ -1,4 +1,4 @@
-# Bar Charts (`vbar!`, `factor_cmap`)
+# Bar Charts (`VBar`, `factor_cmap`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html).
 

@@ -1,4 +1,4 @@
-# Mandelbrot Set (`image!`)
+# Mandelbrot Set (`Image`)
 
 A classic visualisation of the Mandelbrot set.
 

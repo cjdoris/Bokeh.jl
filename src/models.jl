@@ -74,17 +74,45 @@ function Base.show(io::IO, t::ModelType)
     print(io, "; ...)")
 end
 
-Base.Docs.getdoc(t::ModelType, sig=Union{}) = t.doc
-Base.Docs.getdoc(x::ModelInstance, sig=Union{}) = modeltype(x).doc
+function Base.Docs.doc(t::ModelType, sig::Type=Union{})
+    hdr = Markdown.Paragraph([
+        "Bokeh model type ",
+        Markdown.Code("$(t.name)"),
+        ".",
+    ])
+    return Markdown.MD([hdr; t.doc.content])
+end
 
-Base.Docs.Binding(t::ModelType, k::Symbol) = t.propdescs[k]
+function Base.Docs.doc(b::ModelPropBinding, sig::Type=Union{})
+    t = b.type
+    k = b.name
+    d = get(t.propdescs, k, nothing)
+    if d === nothing
+        hdr = Markdown.Paragraph([
+            "Invalid Bokeh model property ",
+            Markdown.Code("$(t.name).$(k)"),
+            ".",
+        ])
+        return Markdown.MD([hdr])
+    else
+        hdr = Markdown.Paragraph([
+            "Bokeh model property ",
+            Markdown.Code("$(t.name).$(k)"),
+            ".",
+        ])
+        return Markdown.MD([hdr; d.doc])
+    end
+end
+
+Base.Docs.doc(x::ModelInstance, sig::Type=Union{}) = Base.Docs.getdoc(modeltype(x), sig)
+Base.Docs.doc(t::ModelType, k::Symbol) = Base.Docs.doc(ModelPropBinding(t, k))
+Base.Docs.doc(x::ModelInstance, k::Symbol) = Base.Docs.doc(modeltype(x), k)
+
+Base.Docs.Binding(t::ModelType, k::Symbol) = ModelPropBinding(t, k)
 Base.Docs.Binding(x::ModelInstance, k::Symbol) = Base.Docs.Binding(modeltype(x), k)
 
-Base.Docs.doc(d::PropDesc, sig::Type=Union{}) = d.doc
-Base.Docs.doc(t::ModelType, sig::Type=Union{}) = t.doc
-Base.Docs.doc(x::ModelInstance, sig::Type=Union{}) = modeltype(x).doc
-Base.Docs.doc(t::ModelType, k::Symbol) = t.propdescs[k].doc
-Base.Docs.doc(x::ModelInstance, k::Symbol) = Base.Docs.doc(modeltype(x), k)
+Base.Docs.getdoc(t::ModelType, sig=Union{}) = Base.Docs.doc(t, sig)
+Base.Docs.getdoc(x::ModelInstance, sig=Union{}) = Base.Docs.doc(x, sig)
 
 
 ### MODEL

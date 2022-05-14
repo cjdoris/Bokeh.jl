@@ -493,10 +493,7 @@ function generate_model_types()
         @assert !haskey(mtypes, mfullname)
         @assert !haskey(mtypes2, mname)
         # doc
-        doc = []
-        push!(doc, Markdown.Paragraph([Markdown.Code(string(mname)), " is a Bokeh model."]))
-        append!(doc, parse_doc(mspec.desc::String, mspec.richdesc))
-        doc = Markdown.MD(doc)
+        doc = Markdown.MD(parse_doc(mspec.desc::String, mspec.richdesc))
         # bases
         bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
         # make the type
@@ -579,10 +576,7 @@ function generate_model_types()
                 end
                 ptype = DefaultT(ptype, pdflt)
             end
-            doc = []
-            push!(doc, Markdown.Paragraph([Markdown.Code("$(mtype.name).$(pname)"), " is a Bokeh property."]))
-            append!(doc, parse_doc(pspec.desc::String, pspec.richdesc))
-            doc = Markdown.MD(doc)
+            doc = Markdown.MD(parse_doc(pspec.desc::String, pspec.richdesc))
             push!(props, pname => PropDesc(ptype; doc))
         end
         append!(props, extras)

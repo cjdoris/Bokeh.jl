@@ -1,4 +1,4 @@
-# Colours (`image_rgba!`)
+# Colours (`ImageRGBA`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html](https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html).
 

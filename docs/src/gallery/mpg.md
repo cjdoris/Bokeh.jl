@@ -1,4 +1,4 @@
-# Auto MPG (`vbar!`, `factor_cmap`, `tooltips`, nested factors)
+# Auto MPG (`VBar`, `factor_cmap`, `tooltips`, nested factors)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar\_pandas\_groupby\_nested.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_pandas_groupby_nested.html).
 

@@ -1,4 +1,4 @@
-# Penguins (`scatter!`, `factor_mark`, `factor_cmap`)
+# Penguins (`Scatter`, `factor_mark`, `factor_cmap`)
 
 Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html](https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html).
 
