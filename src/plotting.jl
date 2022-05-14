@@ -459,12 +459,12 @@ function _plot_glyph!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
             push!(kw, Kwarg(k, v))
         elseif k == :color
             # color -> fill_color, etc
-            for k2 in (:fill_color, :line_color, :hatch_color)
+            for k2 in (:fill_color, :line_color, :hatch_color, :text_color)
                 haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
             end
         elseif k == :alpha
             # alpha -> fill_alpha, etc
-            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
+            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha, :text_alpha)
                 haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
             end
         elseif k == :palette && haskey(type.propdescs, :color_mapper)
