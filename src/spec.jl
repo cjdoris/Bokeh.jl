@@ -449,7 +449,9 @@ function parse_doc_inline(ans, x)
             end
         elseif t == "reference"
             text = join(x.children)
-            push!(ans, Markdown.Link([text], text))
+            push!(ans, text)
+            # TODO: resolve references properly
+            # push!(ans, Markdown.Link([text], text))
         elseif t in ("substitution_reference", "title_reference")
             text = join(x.children)
             push!(ans, text)
