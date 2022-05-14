@@ -18,8 +18,8 @@ Bokeh.settings!(use_browser=true)
 ```
 
 Creating a plot generally consists of three steps:
-1. Create an empty figure.
-2. Add glyphs to the figure.
+1. Create an empty figure using [`figure`](@ref).
+2. Add glyphs to the figure using [`plot!`](@ref).
 3. Display the figure.
 
 ```@example
@@ -41,27 +41,13 @@ Aside from this documentation, you can access extensive documentation from your 
 session.
 
 If you are at the REPL, you can use the help mode to find out about Bokeh functions,
-models and properties. For example, to learn more about the `scatter!` function used above,
-press `?` then do
-```text
-help?> scatter!
-search: scatter! Scatter AbstractPattern BasicTickFormatter ScientificFormatter
-
-  scatter!(plot; kw...)
-
-
-  Adds a Scatter to the given plot.
-
-[...]
-```
-
-This mentions [`Scatter`](@ref) which is the model type representing scatter glyphs. We can
-find out more using
+models and properties. For example, to learn more about the [`Scatter`](@ref) model used
+above, press `?` then do
 ```text
 help?> Scatter
-search: Scatter scatter! AbstractPattern BasicTickFormatter ScientificFormatter
+search: Scatter AbstractPattern BasicTickFormatter ScientificFormatter
 
-  Scatter is a Bokeh model.
+  Bokeh model type Scatter.
 
   Render scatter markers selected from a predefined list of designs.
 
@@ -71,12 +57,14 @@ search: Scatter scatter! AbstractPattern BasicTickFormatter ScientificFormatter
 This mentions the property `marker`, which we can find out about with
 ```text
 help?> Scatter.marker
-  Scatter.marker is a Bokeh property.
+  Bokeh model property Scatter.marker.
 
-  Which marker to render. This can be the name of any built in marker, e.g. "circle", or a reference to a data column containing such names.
+  Which marker to render. This can be the name of any built in marker, e.g. "circle", or a
+  reference to a data column containing such names.
 ```
 
-If you are not at the REPL, the `Docs.doc` function can be used to access model documentation:
+If you are not at the REPL, the `Docs.doc` function can be used to access model
+documentation:
 ```julia
 Docs.doc(Scatter)
 Docs.doc(Scatter, :size)

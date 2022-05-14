@@ -483,6 +483,7 @@ function generate_model_types()
     # put the models in dependency order
     order = flatten_dag(Dict(k=>[b for b in v.bases if haskey(mspecs, b)] for (k,v) in mspecs))
     @assert order[1] == "bokeh.model.model.Model"
+    @assert length(order) == length(mspecs)
 
     # generate types without properties
     mtypes = Dict{String,ModelType}()
@@ -584,14 +585,13 @@ function generate_model_types()
         append!(props, extras)
         init_props!(mtype, props)
         # add properties to the docs and bind the docstring
-        doc = mtype.doc.content
-        push!(doc,
-            Markdown.Header("Properties", 2),
-            Markdown.List([
-                [Markdown.Paragraph([Markdown.Code(string(k))])]
-                for k in sort(collect(keys(mtype.propdescs)))
-            ], -1, false),
-        )
+        para = []
+        push!(para, Markdown.Bold("Properties: "))
+        for k in sort(collect(keys(mtype.propdescs)))
+            push!(para, Markdown.Code(string(k)), ", ")
+        end
+        para[end] = "."
+        push!(mtype.doc.content, Markdown.Paragraph(para))
         if '.' ∉ mname
             xname = Symbol(mname)
             @eval @doc $(mtype.doc) $xname

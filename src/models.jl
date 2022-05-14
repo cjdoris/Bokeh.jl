@@ -15,8 +15,8 @@ end
 function init_bases!(t::ModelType, bases)
     for b in bases
         t.abstract && !b.abstract && error("$(t.name) marked abstract but inherits from $(b.name) which is not abstract")
-        if isempty(t.doc)
-            t.doc = b.doc
+        if isempty(t.doc.content)
+            t.doc = copy(b.doc)
         end
         push!(t.bases, b)
         push!(t.supers, b)
