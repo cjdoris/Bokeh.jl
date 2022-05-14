@@ -48,7 +48,7 @@ p = figure(
     background_fill_color = "#fafafa",
 )
 
-multi_line!(p,
+plot!(p, MultiLine,
     xs = vec_split(Float32.(x′), 7),
     ys = vec_split(Float32.(z), 7),
     line_color = colors,

@@ -95,7 +95,8 @@ modeltype(m::ModelInstance) = getfield(m, :type)
 
 modelvalues(m::ModelInstance) = getfield(m, :values)
 
-ismodelinstance(m::ModelInstance, t::ModelType) = issubmodeltype(modeltype(m), t)
+ismodelinstance(m) = m isa ModelInstance
+ismodelinstance(m, t::ModelType) = ismodelinstance(m) && issubmodeltype(modeltype(m), t)
 
 function Base.getproperty(m::ModelInstance, k::Symbol)
     # look up the value

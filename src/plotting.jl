@@ -71,35 +71,35 @@ log_cmap(field, palette; kw...) = transform(field, LogColorMapper(; palette, kw.
 function get_range(range)
     if range === nothing
         return DataRange1d()
-    elseif range isa ModelInstance && ismodelinstance(range, Range)
+    elseif ismodelinstance(range, Range)
         return range
-    elseif range isa Union{Tuple,AbstractVector}
+    elseif range isa Union{AbstractVector}
         if all(x isa AbstractString for x in range)
             return FactorRange(factors=collect(String, range))
         elseif all(x isa Tuple{Vararg{AbstractString}} for x in range)
             return FactorRange(factors=collect(Tuple{Vararg{String}}, range))
-        elseif length(range) == 2
-            x0, x1 = x
-            if x0 === nothing
-                x0 = Undefined()
-            end
-            if x1 === nothing
-                x1 = Undefined()
-            end
-            return Range1d(; :start=>x0, :end=>x1)
         end
+    elseif range isa Tuple{Any,Any}
+        x0, x1 = range
+        if x0 === nothing
+            x0 = Undefined()
+        end
+        if x1 === nothing
+            x1 = Undefined()
+        end
+        return Range1d(; :start=>x0, :end=>x1)
     end
     error("unrecognized range input: $range")
 end
 
 function get_scale(range, axis_type)
-    if range isa ModelInstance && (ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d))
+    if ismodelinstance(range, DataRange1d) || ismodelinstance(range, Range1d)
         if (axis_type===nothing || axis_type in ("linear", "datetime", "mercator", "auto"))
             return LinearScale()
         elseif axis_type == "log"
             return LogScale()
         end
-    elseif range isa ModelInstance && ismodelinstance(range, FactorRange)
+    elseif ismodelinstance(range, FactorRange)
         return CategoricalScale()
     end
     error("unable to determine proper scale for $range")
@@ -117,9 +117,9 @@ function get_axis(axis_type, rng, dim)
     elseif axis_type == "mercator"
         return MercatorAxis(dimension= dim==0 ? "lon" : "lat")
     elseif axis_type == "auto"
-        if rng isa ModelInstance && ismodelinstance(rng, FactorRange)
+        if ismodelinstance(rng, FactorRange)
             return CategoricalAxis()
-        elseif rng isa ModelInstance && ismodelinstance(rng, Range1d)
+        elseif ismodelinstance(rng, Range1d)
             # TODO: maybe a datetime axis
             return LinearAxis()
         else
@@ -137,10 +137,9 @@ function process_axis_and_grid(plot, axis_type, axis_location, minor_ticks, axis
         if axis_label !== nothing && axis_label != ""
             axis.axis_label = axis_label
         end
-        grid = Grid(dimension=dim, axis=axis)
-        add_layout!(plot, grid)
+        plot!(plot, Grid, dimension=dim, axis=axis)
         if axis_location !== nothing
-            add_layout!(plot, axis; location=axis_location)
+            plot!(plot, axis, location=axis_location)
         end
     end
 end
@@ -186,178 +185,166 @@ function figure(;
     process_axis_and_grid(fig, y_axis_type, y_axis_location, y_minor_ticks, y_axis_label, fig.y_range, 1)
     # tools
     if tools === nothing
-        add_tools!(fig, PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool(), HelpTool())
+        fig.toolbar.tools = [PanTool(), BoxZoomTool(), WheelZoomTool(), SaveTool(), ResetTool(), HelpTool()]
     else
-        add_tools!(fig, tools)
+        fig.toolbar.tools = tools
     end
     if tooltips !== nothing
-        add_tools!(fig, HoverTool(tooltips=tooltips))
+        plot!(fig, HoverTool; tooltips)
     end
 
     return fig
 end
 
+"""
+    plot!(plot, item; ...)
+    plot!(plot, type; ...)
 
-### RENDERERS
+Adds a new item to the plot, or an item of the given type.
 
-function add_layout!(plot::ModelInstance, renderer::ModelInstance; location="center")
-    ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    ismodelinstance(renderer, Renderer) || error("renderer must be a Renderer")
-    if location == "left"
-        push!(plot.left, renderer)
-    elseif location == "right"
-        push!(plot.right, renderer)
-    elseif location == "below"
-        push!(plot.below, renderer)
-    elseif location == "above"
-        push!(plot.above, renderer)
-    elseif location == "center"
-        push!(plot.center, renderer)
+When passing a type, the allowed keyword arguments include anything accepted by the type.
+Some additional arguments are allowed depending on what `item` or `type` is.
+
+The constructed item is returned. In the case of glyphs, the corresponding
+[`GlyphRenderer`](@ref) is returned instead.
+
+## Glyphs
+
+Additional keyword arguments:
+- Anything accepted by [`GlyphRenderer`](@ref).
+- `source`: Alias for `data_source`. May be a [`DataSource`](@ref), `Dict` of columns, or a
+  `Tables.jl`-style table.
+- `color`: Alias for all the `*_color` properties.
+- `alpha`: Alias for all the `*_alpha` properties.
+- `palette`: If the glyph has a `color_mapper` property, it is set to a
+  [`LinearColorMapper`](@ref) with this palette.
+- `legend_label`
+- `legend_field`
+- `legend_group`
+- `filters`: List of filters to apply to the source data.
+
+## Renderers
+
+This includes axes, grids, legends and other annotations.
+
+Additional keyword arguments:
+- `location`: One of `"center"` (default), `"left"`, `"right"`, `"below"` or `"above"`.
+- `dimension`: For axes, you must specify either the `location` or `dimension` and the other
+  one is inferred.
+
+## Tools
+
+Additional keyword arguments:
+- `activate`: If true, then set the tool as the active one of its kind on the toolbar.
+"""
+function plot!(plot::ModelInstance, t::ModelType; kw...)
+    return _plot!(plot, t, collect(Kwarg, kw))
+end
+function plot!(plot::ModelInstance, x::ModelInstance; kw...)
+    return _plot!(plot, x, collect(Kwarg, kw))
+end
+
+checkmodelinstance(x, t::ModelType) = ismodelinstance(x, t) || error("expecting a $(t.name)")
+checkmodeltype(x::ModelType, t::ModelType) = issubmodeltype(x, t) || error("expecting a subtype of $(t.name)")
+
+function _plot!(plot::ModelInstance, x::ModelInstance, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    if ismodelinstance(x, Glyph)
+        _plot_glyph!(plot, x, kw)
+    elseif ismodelinstance(x, Tool)
+        _plot_tool!(plot, x, kw)
+    elseif ismodelinstance(x, Renderer)
+        _plot_renderer!(plot, x, kw)
     else
-        error("invalid location")
+        error("don't know how to add a $(modeltype(x).name) to a plot")
     end
-    return renderer
 end
 
-for (t, f) in [
-    (LinearAxis, :linear_axis!),
-    (LogAxis, :log_axis!),
-    (CategoricalAxis, :categorical_axis!),
-    (DatetimeAxis, :datetime_axis!),
-    (MercatorAxis, :mercator_axis!),
-]
-    @eval function $f(plot::ModelInstance; location, kw...)
-        axis = $t(; kw...)
-        add_layout!(plot, axis; location)
-        return axis
+function _plot!(plot::ModelInstance, t::ModelType, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    if issubmodeltype(t, Glyph)
+        _plot_glyph!(plot, t, kw)
+    elseif issubmodeltype(t, Axis)
+        _plot_axis!(plot, t, kw)
+    elseif issubmodeltype(t, Tool)
+        _plot_tool!(plot, t, kw)
+    elseif issubmodeltype(t, Renderer)
+        _plot_renderer!(plot, t, kw)
+    else
+        error("don't know how to add a $(t.name) to a plot")
     end
-    @eval @doc $("""
-        $f(plot; location, ...)
-
-    Add a [`$(t.name)`](@ref) to the given plot and return it.
-
-    The `location` must be one of `"left"`, `"right"`, `"above"` or `"below"`.
-    """) $f
-    @eval export $f
 end
 
-for (t, f) in [
-    (Grid, :grid!)
-]
-    @eval function $f(plot::ModelInstance; axis::ModelInstance, dimension::Integer, kw...)
-        grid = $t(; axis, dimension, kw...)
-        add_layout!(plot, grid)
-        return grid
+function _plot_renderer!(plot::ModelInstance, item::ModelInstance; location::String="center")
+    checkmodelinstance(plot, Plot)
+    checkmodelinstance(item, Renderer)
+    if location == "center"
+        push!(plot.center, item)
+    elseif location == "left"
+        push!(plot.left, item)
+    elseif location == "right"
+        push!(plot.right, item)
+    elseif location == "below"
+        push!(plot.below, item)
+    elseif location == "above"
+        push!(plot.above, item)
+    elseif location == "renderers"
+        push!(plot.renderers, item)
+    else
+        error("invalid location: $location")
     end
-    @eval @doc $("""
-        $f(plot; axis, dimension, ...)
-
-    Add a [`$(t.name)`](@ref) to the given plot and return it.
-
-    You must specify the `axis` and `dimension` (0 for x, 1 for y) it relates to.
-    """) $f
-    @eval export $f
+    return item
 end
 
-for (t, f) in [
-    (PanTool, :pan_tool!),
-    (RangeTool, :range_tool!),
-    (WheelPanTool, :wheelpan_tool!),
-    (WheelZoomTool, :wheelzoom_tool!),
-    (SaveTool, :save_tool!),
-    (ResetTool, :reset_tool!),
-    (TapTool, :tap_tool!),
-    (CrosshairTool, :crosshair_tool!),
-    (BoxZoomTool, :boxzoom_tool!),
-    (ZoomInTool, :zoomin_tool!),
-    (ZoomOutTool, :zoomout_tool!),
-    (BoxSelectTool, :boxselect_tool!),
-    (LassoSelectTool, :lassoselect_tool!),
-    (PolySelectTool, :polyselect_tool!),
-    (HelpTool, :help_tool!),
-]
-    @eval function $f(plot::ModelInstance; active::Bool=false, kw...)
-        tool = $t(; kw...)
-        add_tools!(plot, tool; active)
-        return tool
+function _plot_renderer!(plot::ModelInstance, item::ModelInstance, kw::Vector{Kwarg})
+    location = "center"
+    for (k,v) in kw
+        if k == :location
+            v isa String || error("location must be a string")
+            location = v
+        else
+            error("invalid argument: $k")
+        end
     end
-    @eval @doc $("""
-        $f(plot; active=false, ...)
-
-    Add a [`$(t.name)`](@ref) to the given plot and return it.
-
-    If `active=true` then the tool becomes the active one of its kind.
-    """) $f
-    @eval export $f
+    _plot_renderer!(plot, item; location)
 end
 
-
-### GLYPHS
-
-function _glyph_renderer_kw(glyph::ModelInstance, kw::Vector{Kwarg})
-    ismodelinstance(glyph, Glyph) || error("glyph must be a Glyph")
-    filters = Undefined()
-    for (k, v) in (oldkw=kw; kw=Kwarg[]; oldkw)
-        if k == :filters
-            filters = v
-        elseif k == :source
-            push!(kw, Kwarg(:data_source, v))
+function _plot_renderer!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    checkmodeltype(type, Renderer)
+    kw, oldkw = Kwarg[], kw
+    location = "center"
+    for (k, v) in oldkw
+        if k == :location
+            location = v
         else
             push!(kw, Kwarg(k, v))
         end
     end
-    renderer = ModelInstance(GlyphRenderer, [Kwarg(:glyph, glyph); kw])
-    if renderer.view === Undefined()
-        renderer.view = ModelInstance(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
-    end
-    return renderer
+    item = ModelInstance(type, kw)
+    _plot_renderer!(plot, item, [Kwarg(:location, location)])
+    return item
 end
 
-function add_glyph_kw!(plot::ModelInstance, glyph::ModelInstance, kw::Vector{Kwarg})
-    ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    renderer = _glyph_renderer_kw(glyph, kw)
-    push!(plot.renderers, renderer)
-    return renderer
-end
-
-function add_glyph_kw!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
-    ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    issubmodeltype(type, Glyph) || error("type must be a subtype of Glyph")
+function _plot_glyph!(plot::ModelInstance, glyph::ModelInstance, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    checkmodelinstance(glyph, Glyph)
     # process the kwargs
-    kw, oldkw = Kwarg[], kw
-    rkw = Kwarg[]
-    have_source = false
+    kw, oldkw = [Kwarg(:glyph, glyph)], kw
     legend_kwarg = nothing
     for (k, v) in oldkw
         if k in (:source, :data_source)
             # source -> data_source
-            have_source = true
             if v === Undefined() || v isa ModelInstance
-                push!(rkw, Kwarg(:data_source, v))
+                push!(kw, Kwarg(:data_source, v))
             else
-                push!(rkw, Kwarg(:data_source, ColumnDataSource(data=v)))
+                push!(kw, Kwarg(:data_source, ColumnDataSource(data=v)))
             end
         elseif haskey(GlyphRenderer.propdescs, k)
             # arguments for the renderer
-            push!(rkw, Kwarg(k, v))
-        elseif haskey(type.propdescs, k)
-            # arguments for the glyph
             push!(kw, Kwarg(k, v))
         elseif k == :filters
-            push!(rkw, Kwarg(k, v))
-        elseif k == :color
-            # color -> fill_color, etc
-            for k2 in (:fill_color, :line_color, :hatch_color)
-                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
-            end
-        elseif k == :alpha
-            # alpha -> fill_alpha, etc
-            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
-                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
-            end
-        elseif k == :palette && haskey(type.propdescs, :color_mapper)
-            # palette -> color_mapper
-            push!(kw, Kwarg(:color_mapper, LinearColorMapper(palette=v)))
+            push!(kw, Kwarg(k, v))
         elseif k in (:legend_label, :legend_field, :legend_group)
             legend_kwarg === nothing || error("$(legend_kwarg[1]) and $k are mutually exclusive")
             legend_kwarg = Kwarg(k, v)
@@ -365,34 +352,15 @@ function add_glyph_kw!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
             error("invalid argument $k")
         end
     end
-    # if we haven't seen a source argument, create one by collecting all the dataspec
-    # arguments which are vectors, replacing the argument with a Field.
-    if !have_source
-        kw, oldkw = Kwarg[], kw
-        data = Dict{String,AbstractVector}()
-        for (k, v) in oldkw
-            d = get(type.propdescs, k, nothing)
-            if d isa PropDesc && d.kind == TYPE_K && (d.type::PropType).prim == DATASPEC_T && v isa AbstractVector
-                data[string(k)] = v
-                push!(kw, Kwarg(k, Field(string(k))))
-            else
-                push!(kw, Kwarg(k, v))
-            end
-        end
-        source = ColumnDataSource(data=data)
-        push!(rkw, Kwarg(:data_source, source))
-    end
-    # make the glyph and renderer
-    glyph = ModelInstance(type, kw)
-    renderer = _glyph_renderer_kw(glyph, rkw)
+    # make the renderer
+    renderer = _glyph_renderer(kw)
     # handle the legend
     if legend_kwarg !== nothing
         let (k, v) = legend_kwarg
             # get or create the legend
             legends = plot.legends
             if isempty(legends)
-                legend = Legend()
-                add_layout!(plot, legend)
+                legend = plot!(plot, Legend)
             elseif length(legends) == 1
                 legend = legends[1]::ModelInstance
             else
@@ -459,109 +427,187 @@ function add_glyph_kw!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
     return renderer
 end
 
-function add_glyph!(plot::ModelInstance, glyph::ModelInstance; kw...)
-    @nospecialize
-    return add_glyph_kw!(plot, glyph, collect(Kwarg, kw))
-end
-
-function add_glyph!(plot::ModelInstance, type::ModelType; kw...)
-    @nospecialize
-    return add_glyph_kw!(plot, type, collect(Kwarg, kw))
-end
-
-for (f, t) in [
-    (:annular_wedge!, AnnularWedge),
-    (:annulus!, Annulus),
-    (:arc!, Arc),
-    (:bezier!, Bezier),
-    (:circle!, Circle),
-    (:ellipse!, Ellipse),
-    (:harea!, HArea),
-    (:hbar!, HBar),
-    (:hextile!, HexTile),
-    (:image!, Image),
-    (:image_rgba!, ImageRGBA),
-    (:image_url!, ImageURL),
-    (:line!, Line),
-    (:multi_line!, MultiLine),
-    (:multi_polygons!, MultiPolygons),
-    (:oval!, Oval),
-    (:patch!, Patch),
-    (:patches!, Patches),
-    (:quad!, Quad),
-    (:quadratic!, Quadratic),
-    (:ray!, Ray),
-    (:rect!, Rect),
-    (:scatter!, Scatter),
-    (:segment!, Segment),
-    (:step!, Step),
-    (:text!, Text),
-    (:varea!, VArea),
-    (:vbar!, VBar),
-    (:wedge!, Wedge),
-]
-    @eval function $f(plot::ModelInstance; kw...)
-        @nospecialize
-        return add_glyph_kw!(plot, $t, collect(Kwarg, kw))
-    end
-    @eval export $f
-    @eval @doc $("""
-        $f(plot; kw...)
-
-    Adds a [`$(t.name)`](@ref) to the given `plot`.
-
-    If you do not specify any `source` data, then a data source is created from all the
-    data arguments which are vectors.
-
-    # Keyword arguments
-    - Anything accepted by [`$(t.name)`](@ref).
-    - Anything accepted by [`GlyphRenderer`](@ref).
-    - `source`: Shorthand for `data_source`. May be a [`ColumnDataSource`](@ref), `Dict` or
-      Tables.jl-compatible table.
-    - `color`: Shorthand for all `*_color` properties.
-    - `alpha`: Shorthand for all `*_alpha` properties.
-    - `palette`: Sets a color mapper with this palette.
-    - `legend_label`: Adds an item to the legend with the given label.
-    - `legend_field`: Adds items to the legend from the given field.
-    - `legend_group`: Adds items to the legend grouping on the given field.
-    - `filters`: A vector of filters to select a subset of the data.
-    """) $f
-end
-
-function add_tools!(plot::ModelInstance, tools::Vector{ModelInstance}; active::Bool=false)
-    ismodelinstance(plot, Plot) || error("plot must be a Plot")
-    toolbar = plot.toolbar::ModelInstance
-    for tool in tools
-        ismodelinstance(tool, Tool) || error("tool must be a Tool")
-        push!(toolbar.tools, tool)
-        if active
-            if ismodelinstance(tool, Drag)
-                toolbar.active_drag = tool
-            elseif ismodelinstance(tool, InspectTool)
-                oldtool = toolbar.active_inspect
-                if oldtool isa ModelInstance
-                    toolbar.active_inspect = [oldtool, tool]
-                elseif oldtool isa AbstractVector
-                    push!(oldtool, tool)
-                else
-                    toolbar.active_inspect = tool
-                end
-            elseif ismodelinstance(tool, Scroll)
-                toolbar.active_scroll = tool
-            elseif ismodelinstance(tool, Tap)
-                toolbar.active_scroll = tool
-            elseif ismodelinstance(tool, GestureTool)
-                toolbar.active_scroll = tool
+function _plot_glyph!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    checkmodeltype(type, Glyph)
+    # process the kwargs
+    kw, oldkw = Kwarg[], kw
+    rkw = Kwarg[]
+    have_source = false
+    for (k, v) in oldkw
+        if k in (:source, :data_source)
+            # source -> data_source
+            have_source = true
+            if v === Undefined() || v isa ModelInstance
+                push!(rkw, Kwarg(:data_source, v))
             else
-                @warn "cannot automatically activate $(modeltype(tool).name) tool"
+                push!(rkw, Kwarg(:data_source, ColumnDataSource(data=v)))
+            end
+        elseif haskey(type.propdescs, k)
+            # arguments for the glyph
+            push!(kw, Kwarg(k, v))
+        elseif k == :color
+            # color -> fill_color, etc
+            for k2 in (:fill_color, :line_color, :hatch_color)
+                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+            end
+        elseif k == :alpha
+            # alpha -> fill_alpha, etc
+            for k2 in (:fill_alpha, :line_alpha, :hatch_alpha)
+                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+            end
+        elseif k == :palette && haskey(type.propdescs, :color_mapper)
+            # palette -> color_mapper
+            push!(kw, Kwarg(:color_mapper, LinearColorMapper(palette=v)))
+        else
+            push!(rkw, Kwarg(k, v))
+        end
+    end
+    # if we haven't seen a source argument, create one by collecting all the dataspec
+    # arguments which are vectors, replacing the argument with a Field.
+    if !have_source
+        kw, oldkw = Kwarg[], kw
+        data = Dict{String,AbstractVector}()
+        for (k, v) in oldkw
+            d = get(type.propdescs, k, nothing)
+            if d isa PropDesc && d.kind == TYPE_K && (d.type::PropType).prim == DATASPEC_T && v isa AbstractVector
+                data[string(k)] = v
+                push!(kw, Kwarg(k, Field(string(k))))
+            else
+                push!(kw, Kwarg(k, v))
+            end
+        end
+        source = ColumnDataSource(data=data)
+        push!(rkw, Kwarg(:data_source, source))
+    end
+    # make the glyph and renderer
+    glyph = ModelInstance(type, kw)
+    return _plot_glyph!(plot, glyph, rkw)
+end
+
+function _glyph_renderer(kw::Vector{Kwarg})
+    kw, oldkw = Kwarg[], kw
+    filters = Undefined()
+    for (k, v) in oldkw
+        if k == :filters
+            filters = v
+        elseif k == :source
+            push!(kw, Kwarg(:data_source, v))
+        else
+            push!(kw, Kwarg(k, v))
+        end
+    end
+    renderer = ModelInstance(GlyphRenderer, kw)
+    if renderer.view === Undefined()
+        renderer.view = ModelInstance(CDSView, [Kwarg(:source, renderer.data_source), Kwarg(:filters, filters)])
+    end
+    return renderer
+end
+
+function _plot_axis!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    checkmodeltype(type, Axis)
+    kw, oldkw = Kwarg[], kw
+    location = Undefined()
+    dimension = Undefined()
+    for (k, v) in oldkw
+        if k == :location
+            v isa String || error("location must be a string")
+            location = v
+        elseif k == :dimension
+            v isa Int || error("dimension must be an integer")
+            dimension = v
+        else
+            push!(kw, Kwarg(k, v))
+        end
+    end
+    if location === Undefined()
+        if dimension === Undefined()
+            error("either location or dimension must be given")
+        else
+            if dimension == 0
+                location = "below"
+            elseif dimension == 1
+                location = "left"
+            else
+                error("dimension must be 0 or 1")
+            end
+        end
+    else
+        if dimension === Undefined()
+            if location in ("below", "above")
+                dimension = 0
+            elseif location in ("left", "right")
+                dimension = 1
+            else
+                error("location must be \"left\", \"right\", \"below\" or \"above\"")
             end
         end
     end
-    return plot
+    location === Undefined() || push!(kw, Kwarg(:location, location))
+    dimension === Undefined() || push!(kw, Kwarg(:dimension, dimension))
+    return _plot_renderer!(plot, type, kw)
 end
-add_tools!(plot::ModelInstance, tools; kw...) = add_tools!(plot, collect(ModelInstance, tools); kw...)
-add_tools!(plot::ModelInstance, tools::ModelInstance...; kw...) = add_tools!(plot, collect(ModelInstance, tools); kw...)
 
+function _plot_tool!(plot::ModelInstance, tool::ModelInstance; activate::Bool=false)
+    checkmodelinstance(plot, Plot)
+    checkmodelinstance(tool, Tool)
+    toolbar = plot.toolbar::ModelInstance
+    push!(plot.toolbar.tools, tool)
+    if activate
+        if ismodelinstance(tool, Drag)
+            toolbar.active_drag = tool
+        elseif ismodelinstance(tool, InspectTool)
+            oldtool = toolbar.active_inspect
+            if oldtool isa ModelInstance
+                toolbar.active_inspect = [oldtool, tool]
+            elseif oldtool isa AbstractVector
+                push!(oldtool, tool)
+            else
+                toolbar.active_inspect = tool
+            end
+        elseif ismodelinstance(tool, Scroll)
+            toolbar.active_scroll = tool
+        elseif ismodelinstance(tool, Tap)
+            toolbar.active_tap = tool
+        elseif ismodelinstance(tool, GestureTool)
+            toolbar.active_multi = tool
+        else
+            error("cannot activate a $(type.name)")
+        end
+    end
+    return tool
+end
+
+function _plot_tool!(plot::ModelInstance, tool::ModelInstance, kw::Vector{Kwarg})
+    activate = false
+    for (k, v) in kw
+        if k == :activate
+            v isa Bool || error("activate must be a bool")
+            activate = v
+        else
+            error("invalid argument: $k")
+        end
+    end
+    return _plot_tool!(plot, tool; activate)
+end
+
+function _plot_tool!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
+    checkmodelinstance(plot, Plot)
+    checkmodeltype(type, Tool)
+    kw, oldkw = Kwarg[], kw
+    activate = false
+    for (k, v) in oldkw
+        if k == :activate
+            v isa Bool || error("activate must be a bool")
+            activate = v
+        else
+            push!(kw, Kwarg(k, v))
+        end
+    end
+    tool = ModelInstance(type, kw)
+    return _plot_tool!(plot, tool; activate)
+end
 
 ### LAYOUT
 
@@ -582,12 +628,11 @@ end
 
 Create a new [`Row`](@ref) with the given items.
 """
-function row(children; sizing_mode=nothing, kw...)
-    children = collect(ModelInstance, children)
+function row(children::Vector{ModelInstance}; sizing_mode=nothing, kw...)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Row(; children, sizing_mode, kw...)
 end
-row(children::ModelInstance...; kw...) = row(children; kw...)
+row(children::ModelInstance...; kw...) = row(collect(ModelInstance, children); kw...)
 
 """
     column(items; ...)
@@ -595,9 +640,8 @@ row(children::ModelInstance...; kw...) = row(children; kw...)
 
 Create a new [`Column`](@ref) with the given items.
 """
-function column(children; sizing_mode=nothing, kw...)
-    children = collect(ModelInstance, children)
+function column(children::Vector{ModelInstance}; sizing_mode=nothing, kw...)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Column(; children, sizing_mode, kw...)
 end
-column(children::ModelInstance...; kw...) = column(children; kw...)
+column(children::ModelInstance...; kw...) = column(collect(ModelInstance, children); kw...)

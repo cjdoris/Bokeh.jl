@@ -25,7 +25,7 @@ Creating a plot generally consists of three steps:
 ```@example
 using Bokeh
 p = figure()
-scatter!(p, x=randn(1000), y=randn(1000))
+plot!(p, Scatter, x=randn(1000), y=randn(1000))
 p
 ```
 

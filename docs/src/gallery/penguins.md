@@ -13,12 +13,12 @@ species = unique(data.species)
 
 markers = ["hex", "circle_x", "triangle"]
 
-plot = figure(
+p = figure(
     title = "Penguin Size",
     background_fill_color = "#fafafa",
 )
 
-scatter!(plot,
+plot!(p, Scatter,
     x="flipper_length_mm",
     y="body_mass_g",
     source=source,
@@ -28,5 +28,5 @@ scatter!(plot,
     color=factor_cmap("species", "Category10_3", species),
 )
 
-plot
+p
 ```

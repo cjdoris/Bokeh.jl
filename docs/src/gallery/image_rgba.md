@@ -26,7 +26,7 @@ p = figure(
 
 p.ranges.range_padding = 0
 
-image_rgba!(p, image=[img], x=0, y=0, dw=10, dh=10)
+plot!(p, ImageRGBA, image=[img], x=0, y=0, dw=10, dh=10)
 
 p
 ```

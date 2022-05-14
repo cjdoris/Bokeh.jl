@@ -18,7 +18,7 @@ p = figure(
 p.ranges.range_padding = 0
 p.grids.grid_line_width = 0
 
-image!(p, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Spectral11")
+plot!(p, Image, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Spectral11")
 
 p
 ```

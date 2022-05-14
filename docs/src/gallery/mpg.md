@@ -24,7 +24,7 @@ p = figure(
 	tooltips=[("MPG", "@mpg_mean"), ("Cyl, Mfr", "@cyl_mfr")],
 )
 
-vbar!(p,
+plot!(p, VBar,
 	x="cyl_mfr",
 	top="mpg_mean",
 	width=1,

@@ -48,7 +48,7 @@ p.axes.major_label_text_font_size = "7px"
 p.axes.major_label_standoff = 0
 p.x_axis.major_label_orientation = π/3
 
-rect!(p,
+plot!(p, Rect,
     x="xname",
     y="yname",
     width=0.9,

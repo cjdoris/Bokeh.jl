@@ -33,7 +33,7 @@ p = figure(
 )
 p.ranges.range_padding = 0
 
-image!(p,
+plot!(p, Image,
     image = [image],
     x = xmin,
     y = ymin,

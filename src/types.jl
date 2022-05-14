@@ -132,7 +132,7 @@ function validate(t::PropType, x; detail::Bool=true)
         level += 1
     elseif prim == MODELINSTANCE_T
         model_type = t.model_type::ModelType
-        x isa ModelInstance && ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name)" : "", level)
+        ismodelinstance(x, model_type) || return Invalid(detail ? "expecting a $(model_type.name)" : "", level)
         level += 1
     else
         @assert prim == ANY_T

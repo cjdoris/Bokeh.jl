@@ -14,7 +14,7 @@ x = randn(n) .+ [-2, 0, 2][z]
 y = randn(n) .+ [-1, 3, -1][z]
 color = Bokeh.PALETTES["Julia3"][z]
 p = figure(title="Julia Logo")
-scatter!(p; x, y, color, alpha=0.4, size=10)
+plot!(p, Scatter; x, y, color, alpha=0.4, size=10)
 p
 ```
 

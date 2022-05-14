@@ -1,5 +1,7 @@
 module Bokeh
 
+# Base.Experimental.@compiler_options optimize=0 compile=min
+
 import Base: IdSet
 import Base64
 import Colors
@@ -12,10 +14,8 @@ import UUIDs
 const BOKEH_VERSION = v"2.4.2"
 
 export Field, Value, Document
-export figure
-export add_layout!, add_glyph!, add_tools!
-export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap,
-    log_cmap
+export figure, plot!
+export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap, log_cmap
 export row, column
 
 include("data.jl")

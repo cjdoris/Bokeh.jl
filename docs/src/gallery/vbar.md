@@ -17,7 +17,7 @@ p = figure(
     title="Fruit Counts",
 )
 
-vbar!(p,
+plot!(p, VBar,
     x="fruits",
     top="counts",
     source=data,

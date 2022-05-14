@@ -22,7 +22,7 @@ p = figure(
 
 # Plot the histogram
 hist = fit(Histogram, scaled, range(-3, 3, length=40)) |> StatsBase.normalize
-quad!(p,
+plot!(p, Quad,
     left=hist.edges[1][1:end-1],
     right=hist.edges[1][2:end],
     top=hist.weights,
@@ -35,7 +35,7 @@ quad!(p,
 # Probability density function
 x = range(-3, 3, length=100)
 pdf = @. exp(-0.5 * x^2) / sqrt(2 * pi)
-line!(p,
+plot!(p, Line,
     x=x,
     y=pdf,
     line_width=2,
