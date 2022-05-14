@@ -6,14 +6,45 @@ Base.convert(::Type{Vector{T}}, x::T) where {T<:Documenter.Utilities.Markdown2.M
 
 open("docs/src/models.md", "w") do io
     props = sort([k for k in propertynames(Bokeh) if getproperty(Bokeh, k) isa Bokeh.ModelType])
-    props = ["Bokeh.$k" for k in props]
-    println(io, """
-    # Models
+    println(io, "# Models")
+    for (title, type) in [
+        ("Glyphs", Glyph),
+        ("Data Sources", DataSource),
+        ("Axes", Axis),
+        ("Ranges", Range),
+        ("Annotations", Annotation),
+        ("Other Renderers", Renderer),
+        ("Tools", Tool),
+        ("Transforms", Transform),
+        ("Filters", Filter),
+        ("Widgets", Widget),
+        ("Layouts", LayoutDOM),
+        ("Tickers", Ticker),
+        ("Tick Formatters", TickFormatter),
+        ("Labeling Policies", LabelingPolicy),
+        ("Math Text", MathText),
+        ("Expressions", Expression),
+        ("Other", Model),
+    ]
+        oldprops = copy(props)
+        empty!(props)
+        curprops = String[]
+        for k in oldprops
+            if Bokeh.issubmodeltype(getproperty(Bokeh, k), type)
+                push!(curprops, "Bokeh.$k")
+            else
+                push!(props, k)
+            end
+        end
+        println(io, """
 
-    ```@docs
-    $(join(props, "\n"))
-    ```
-    """)
+        ## $title
+
+        ```@docs
+        $(join(curprops, "\n"))
+        ```
+        """)
+    end
 end
 
 makedocs(
