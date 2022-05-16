@@ -113,20 +113,10 @@ function _get_browser_cmd()
     end
 end
 
-const _IS_WSL = Array{Union{Nothing,Bool},0}(undef)
 function is_wsl()
-    if !isnothing(_IS_WSL[])
-        return _IS_WSL[]
-    end
-    Sys.islinux() || return false
-    msg = _capture_stdout_run(`grep WSL /proc/version`)
-    _IS_WSL[] = !isempty(msg)
-    return _IS_WSL[]
-end
-function _capture_stdout_run(cmd)
-    io = IOBuffer()
-    run(pipeline(cmd, stdout=io))
-    return String(take!(io))
+    Sys.islinux() &&
+        isfile("/proc/version") &&
+        occursin("microsoft", lowercase(read("/proc/version", String)))
 end
 
 function bundle()
