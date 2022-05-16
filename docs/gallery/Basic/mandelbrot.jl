@@ -1,8 +1,10 @@
-# Mandelbrot Set (`Image`)
+# ---
+# title: Mandelbrot Set
+# id: demo_mandelbrot
+# ---
 
-A classic visualisation of the Mandelbrot set.
+# A classic visualisation of the Mandelbrot set.
 
-```@example
 using Bokeh
 
 function mandelbrot(c::Complex, niters=100)
@@ -43,4 +45,3 @@ plot!(p, Image,
 )
 
 p
-```

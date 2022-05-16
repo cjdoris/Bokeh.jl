@@ -1,8 +1,11 @@
-# Auto MPG (`VBar`, `factor_cmap`, `tooltips`, nested factors)
+# ---
+# title: Auto MPG
+# id: demo_mpg
+# description: "`VBar`, `factor_cmap`, `tooltips`, nested factors"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar\_pandas\_groupby\_nested.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_pandas_groupby_nested.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar\_pandas\_groupby\_nested.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_pandas_groupby_nested.html).
 
-```@example
 using Bokeh, DataFrames, Statistics
 
 df = Bokeh.Data.autompg_clean(DataFrame)
@@ -41,4 +44,3 @@ p.x_axis.major_label_orientation = 1.2
 p.outline_line_color = nothing
 
 p
-```

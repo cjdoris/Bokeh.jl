@@ -1,8 +1,11 @@
-# Colours (`ImageRGBA`)
+# ---
+# title: Colours
+# id: demo_image_rgba
+# description: "`ImageRGBA`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html](https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html](https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html).
 
-```@example
 using Bokeh
 
 N = 20
@@ -29,4 +32,3 @@ p.ranges.range_padding = 0
 plot!(p, ImageRGBA, image=[img], x=0, y=0, dw=10, dh=10)
 
 p
-```

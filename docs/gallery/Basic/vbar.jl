@@ -1,8 +1,11 @@
-# Bar Charts (`VBar`, `factor_cmap`)
+# ---
+# title: Bar Charts
+# id: demo_vbar
+# description: "`VBar`, `factor_cmap`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html).
 
-```@example
 using Bokeh
 
 data = (
@@ -34,4 +37,3 @@ p.legend.orientation = "horizontal"
 p.legend.location = "top_center"
 
 p
-```
