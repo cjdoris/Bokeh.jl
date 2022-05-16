@@ -6,8 +6,15 @@ function Base.display(d::BokehDisplay, m::MIME"text/html", x::Document)
         open(path, "w") do io
             write(io, doc_standalone_html(x; bundle=bundle()))
         end
-        cd(setting(:tempdir)) do
-            run(`$(setting(:browser_cmd)) plot.html`)
+        cmd = setting(:browser_cmd)
+        if first(cmd) == "wslview"
+            # It's a bit tricky to resolve WSL path correctly so as a workaround just cd into it
+            # https://github.com/fish-shell/fish-shell/issues/6338
+            cd(setting(:tempdir)) do
+                run(`$cmd plot.html`)
+            end
+        else
+            run(`$cmd $(path)`)
         end
         return
     else
