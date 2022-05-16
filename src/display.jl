@@ -10,7 +10,7 @@ function Base.display(d::BokehDisplay, m::MIME"text/html", x::Document)
         if first(cmd) == "wslview"
             # It's a bit tricky to resolve WSL path correctly so as a workaround just cd into it
             # https://github.com/fish-shell/fish-shell/issues/6338
-            run(Cmd(`$cmd plot.html`, dir=setting(:tempdir)))
+            run(Cmd(`$cmd $(basename(path))`, dir=setting(:tempdir)))
         else
             run(`$cmd $(path)`)
         end
