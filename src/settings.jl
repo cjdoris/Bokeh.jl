@@ -74,7 +74,8 @@ function setting(k::Symbol)
     ans = getproperty(SETTINGS, k)
     ans === nothing || return ans
     if k == :browser_cmd
-        ans2 = Sys.iswindows() ? `cmd /c start` : Sys.isapple() ? `open` : `xdg-open`
+        ans2 = _get_browser_cmd()
+        @debug "browser command: $ans2"
     elseif k == :tempdir
         ans2 = mktempdir()
     elseif k == :css_raw
@@ -96,6 +97,36 @@ function setting(k::Symbol)
     end
     setproperty!(SETTINGS, k, ans2)
     return getproperty(SETTINGS, k)
+end
+
+function _get_browser_cmd()
+    if Sys.iswindows()
+        return `cmd /c start`
+    elseif Sys.isapple()
+        return `open`
+    else
+        if is_wsl()
+            return `wslview`
+        else
+            return `xdg-open`
+        end
+    end
+end
+
+const _IS_WSL = Array{Union{Nothing,Bool},0}(undef)
+function is_wsl()
+    if !isnothing(_IS_WSL[])
+        return _IS_WSL[]
+    end
+    Sys.islinux() || return false
+    msg = _capture_stdout_run(`grep WSL /proc/version`)
+    _IS_WSL[] = !isempty(msg)
+    return _IS_WSL[]
+end
+function _capture_stdout_run(cmd)
+    io = IOBuffer()
+    run(pipeline(cmd, stdout=io))
+    return String(take!(io))
 end
 
 function bundle()
