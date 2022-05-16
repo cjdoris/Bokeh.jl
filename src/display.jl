@@ -1,6 +1,6 @@
 mutable struct BokehDisplay <: Base.Multimedia.AbstractDisplay end
 
-const IS_WSL = Sys.islinux() && isfile("/proc/version") && occursin("microsoft", lowercase(read("/proc/version", String)))
+const IS_WSL = Sys.islinux() && isfile("/proc/sys/kernel/osrelease") && occursin(r"microsoft|wsl"i, read("/proc/sys/kernel/osrelease", String))
 
 function Base.display(d::BokehDisplay, m::MIME"text/html", x::Document)
     if setting(:use_browser)
