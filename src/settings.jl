@@ -25,7 +25,7 @@ Update the global settings for Bokeh.
   Default: `false`.
 - `browser_cmd`:
   The command used to open the browser.
-  Default: `xdg-open`, `open` or `cmd /c start` depending on your operating system.
+  Default: Operating-system dependent.
 """
 function settings!(;
     offline=nothing,
@@ -72,9 +72,8 @@ See [`settings!`](@ref) for the possible settings.
 """
 function setting(k::Symbol)
     ans = getproperty(SETTINGS, k)
-    ans === nothing || return ans
-    if k == :browser_cmd
-        ans2 = Sys.iswindows() ? `cmd /c start` : Sys.isapple() ? `open` : `xdg-open`
+    if k == :browser_cmd || ans !== nothing
+        return ans
     elseif k == :tempdir
         ans2 = mktempdir()
     elseif k == :css_raw

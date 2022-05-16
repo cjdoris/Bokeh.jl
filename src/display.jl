@@ -1,12 +1,25 @@
 mutable struct BokehDisplay <: Base.Multimedia.AbstractDisplay end
 
+const IS_WSL = Sys.islinux() && isfile("/proc/version") && occursin("microsoft", lowercase(read("/proc/version", String)))
+
 function Base.display(d::BokehDisplay, m::MIME"text/html", x::Document)
     if setting(:use_browser)
-        path = joinpath(setting(:tempdir), "plot.html")
+        path = joinpath(abspath(setting(:tempdir)), "plot.html")
         open(path, "w") do io
             write(io, doc_standalone_html(x; bundle=bundle()))
         end
-        run(`$(setting(:browser_cmd)) $(path)`)
+        cmd = setting(:browser_cmd)
+        if cmd === nothing
+            @static if IS_WSL
+                # this branch can be removed if DefaultApplication ever supports WSL
+                # note: wslview requires a relative path, hence basename/dirname here
+                run(Cmd(`wslview $(basename(path))`, dir=dirname(path)))
+            else
+                DefaultApplication.open(path, wait=true)
+            end
+        else
+            run(`$cmd $path`)
+        end
         return
     else
         throw(MethodError(display, (d, m, x)))

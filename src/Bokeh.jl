@@ -6,6 +6,7 @@ import Base: IdSet
 import Base64
 import Colors
 import Dates
+import DefaultApplication
 import JSON3
 import Markdown
 import Tables
