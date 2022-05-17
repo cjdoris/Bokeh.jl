@@ -61,7 +61,7 @@ function parse_prop_type_expr(ex, ts)
             return ColorHexT()
         end
     end
-    if ex isa Expr && ex.head == :call
+    if ex isa Base.Expr && ex.head == :call
         if ex == :(Instance(Ticker))
             return TickerT()
         elseif ex == :(Seq(Color))
@@ -73,7 +73,7 @@ function parse_prop_type_expr(ex, ts)
         args = []
         kw = Dict{Symbol,Any}()
         for a in ex.args[2:end]
-            if a isa Expr && a.head == :kw
+            if a isa Base.Expr && a.head == :kw
                 @assert length(a.args) == 2
                 kw[a.args[1]] = a.args[2]
             else

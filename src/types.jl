@@ -109,6 +109,8 @@ function validate(t::PropType, x; detail::Bool=true)
             x = Value(x2)
         elseif x isa Field
             level += 1
+        elseif x isa Expr
+            level += 1
         elseif x isa AbstractString
             if t.strings_are_fields
                 x = Field(x)
@@ -223,7 +225,7 @@ function result_type(t::PropType)
         elseif t.prim == DICT_T
             ans = Dict{result_type(t.params[1]), result_type(t.params[2])}
         elseif t.prim == DATASPEC_T
-            Union{Field,Value}
+            Union{Field,Value,Expr}
         elseif t.prim == EITHER_T
             ans = Union{map(result_type, t.params)...}
         elseif t.prim == MODELINSTANCE_T

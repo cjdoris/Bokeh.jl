@@ -95,7 +95,7 @@ struct Value
     transform::Union{Nothing,ModelInstance}
     function Value(value; transform::Union{Nothing,ModelInstance}=nothing)
         transform===nothing || ismodelinstance(transform, Transform) || error("transform must be a Transform")
-        new(value, transform)
+        return new(value, transform)
     end
 end
 
@@ -104,7 +104,17 @@ struct Field
     transform::Union{Nothing,ModelInstance}
     function Field(name; transform::Union{Nothing,ModelInstance}=nothing)
         transform===nothing || ismodelinstance(transform, Transform) || error("transform must be a Transform")
-        new(convert(String, name), transform)
+        return new(convert(String, name), transform)
+    end
+end
+
+struct Expr
+    expr::ModelInstance
+    transform::Union{Nothing,ModelInstance}
+    function Expr(expr::ModelInstance; transform::Union{Nothing,ModelInstance}=nothing)
+        ismodelinstance(expr, Expression) || error("expr must be an Expression")
+        transform===nothing || ismodelinstance(transform, Transform) || error("transform must be a Transform")
+        return new(expr, transform)
     end
 end
 

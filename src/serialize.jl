@@ -30,4 +30,12 @@ function serialize(s::Serializer, x::Value)
     return ans
 end
 
+function serialize(s::Serializer, x::Expr)
+    ans = Dict{String,Any}("expr" => serialize(s, x.expr))
+    if x.transform !== nothing
+        ans["transform"] = serialize(s, x.transform)
+    end
+    return ans
+end
+
 _naninfstr(x::Float64) = isnan(x) ? "NaN" : isinf(x) ? signbit(x) ? "-Infinity" : "Infinity" : x
