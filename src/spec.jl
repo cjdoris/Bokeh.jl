@@ -587,7 +587,7 @@ function generate_model_types()
                 push!(para, Markdown.Code(string(k)), ", ")
             end
             para[end] = "."
-            push!(items, Markdown.Paragraph(para))
+            push!(items, Any[Markdown.Paragraph(para)])
         end
         push!(mtype.doc.content, Markdown.List(items, -1, true))
         if '.' ∉ mname
