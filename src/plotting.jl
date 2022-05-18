@@ -147,10 +147,10 @@ end
 """
     figure(; ...)
 
-Create a new [`Figure`](@ref) and return it.
+Create a new [`Plot`](@ref) and return it.
 
 Acceptable keyword arguments are:
-- Anything taken by [`Figure`](@ref).
+- Anything taken by [`Plot`](@ref).
 - `x_range`/`y_range`: Sets the x/y-range. May be a vector of factors or a 2-tuple representing an interval. Default: `DataRange1d()`.
 - `x_axis`/`y_axis`: Sets the x/y-axis. May be `nothing` to suppress. Default: `LinearAxis()`.
 - `x_axis_location`/`y_axis_location`: Where to put the axis. One of `"left"`, `"right"`, `"above"` or `"below"`. Default: `"below"`/`"left"`.
@@ -178,7 +178,7 @@ function figure(;
     tooltips=Undefined(),
     kw...,
 )
-    fig = Figure(; kw...)
+    fig = Plot(; kw...)
 
     # range/axis/scale/grid
     fig.x_range = x_range = get_range(x_range)
@@ -443,6 +443,7 @@ function _plot_glyph!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
     checkmodeltype(type, Glyph)
     # process the kwargs
     kw, oldkw = Kwarg[], kw
+    kw0 = Kwarg[] # properties that should appear first
     rkw = Kwarg[]
     have_source = false
     for (k, v) in oldkw
@@ -460,12 +461,12 @@ function _plot_glyph!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
         elseif k == :color
             # color -> fill_color, etc
             for k2 in (:fill_color, :line_color, :hatch_color, :text_color)
-                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+                haskey(type.propdescs, k2) && push!(kw0, Kwarg(k2, v))
             end
         elseif k == :alpha
             # alpha -> fill_alpha, etc
             for k2 in (:fill_alpha, :line_alpha, :hatch_alpha, :text_alpha)
-                haskey(type.propdescs, k2) && push!(kw, Kwarg(k2, v))
+                haskey(type.propdescs, k2) && push!(kw0, Kwarg(k2, v))
             end
         elseif k == :palette && haskey(type.propdescs, :color_mapper)
             # palette -> color_mapper
@@ -474,6 +475,7 @@ function _plot_glyph!(plot::ModelInstance, type::ModelType, kw::Vector{Kwarg})
             push!(rkw, Kwarg(k, v))
         end
     end
+    kw = vcat(kw0, kw)
     # if we haven't seen a source argument, create one by collecting all the dataspec
     # arguments which are vectors, replacing the argument with a Field.
     if !have_source

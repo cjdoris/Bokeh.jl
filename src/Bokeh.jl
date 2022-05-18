@@ -35,7 +35,7 @@ include("display.jl")
 include("init.jl")
 
 precompile(figure, ())
-precompile(Figure, ())
+precompile(Plot, ())
 precompile(plot!, (ModelInstance, ModelType))
 precompile(plot!, (ModelInstance, ModelInstance))
 precompile(display, (BokehDisplay, MIME"text/html", ModelInstance))

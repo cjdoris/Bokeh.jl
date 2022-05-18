@@ -1,30 +1,5 @@
 ### MODELTYPE
 
-function ModelType(name, subname=nothing;
-    bases=[],
-    props=[],
-    abstract=false,
-    doc=Markdown.MD([]),
-)
-    mt = ModelType(name, subname, Vector{ModelType}(), Dict{Symbol,PropDesc}(), IdSet{ModelType}(), abstract, doc)
-    init_bases!(mt, bases)
-    init_props!(mt, props)
-    return mt
-end
-
-function init_bases!(t::ModelType, bases)
-    for b in bases
-        t.abstract && !b.abstract && error("$(t.name) marked abstract but inherits from $(b.name) which is not abstract")
-        if isempty(t.doc.content)
-            t.doc = copy(b.doc)
-        end
-        push!(t.bases, b)
-        push!(t.supers, b)
-        union!(t.supers, b.supers)
-    end
-    return t
-end
-
 function init_props!(t::ModelType, props)
     for b in t.bases
         mergepropdescs!(t.propdescs, b.propdescs)
@@ -65,7 +40,7 @@ function (t::ModelType)(; kw...)
     ModelInstance(t, collect(Kwarg, kw))
 end
 
-issubmodeltype(t1::ModelType, t2::ModelType) = t1 === t2 || t2 in t1.supers
+issubmodeltype(t1::ModelType, t2::ModelType) = t2 in t1.mro
 
 function Base.show(io::IO, t::ModelType)
     show(io, typeof(t))
@@ -341,7 +316,3 @@ end
 plot_get_renderer(; kw...) = (plot::ModelInstance) -> plot_get_renderer(plot; kw...)
 
 generate_model_types()
-
-const Figure = ModelType("Plot", "Figure", bases=[Plot])
-@doc Figure.doc Figure
-export Figure

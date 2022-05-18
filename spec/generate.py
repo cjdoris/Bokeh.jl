@@ -63,24 +63,28 @@ def _walkdoc(doc):
 
 ### MODELS
 
+def _name(model):
+    return 'Model' if model is Model else model.__qualified_model__
+
 def _proto(obj, defaults=False):
     t = type(obj)
     x = obj.to_json(defaults)
     del x['id']  # id is not informative, by excluding it we can find more inherited props
-    x['__type__'] = t.__module__ + '.' + t.__name__
+    x['__type__'] = _name(t)
     return json.dumps(x, sort_keys=True, indent=None)
 
 data = []
 for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.items())):
+    assert _name(m) == name
     item = {
-        'name'  : name,
-        'fullname': m.__module__ + '.' + m.__name__,
-        'bases' : [] if m is Model else [base.__module__ + '.' + base.__name__ for base in m.__bases__],
+        'name'  : _name(m),
+        'bases' : [_name(t) for t in m.__bases__ if issubclass(t, Model)],
+        'mro': [_name(t) for t in m.__mro__ if issubclass(t, Model)],
         'desc'  : mkdesc(m.__doc__ or ""),
         'richdesc': mkrichdesc(m.__doc__ or "", name),
     }
     props = []
-    for prop_name in m.properties():
+    for prop_name in m.__properties__: # __properties__ does not include inherited props
         descriptor = m.lookup(prop_name)
         if isinstance(descriptor, AliasPropertyDescriptor):
             continue

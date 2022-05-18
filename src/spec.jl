@@ -259,8 +259,7 @@ function parse_prop_default_modelinstance(x, mts)
         end
     end
     # get the model type
-    t = get(mts, tn, nothing)
-    t === nothing && return
+    t = mts[tn]
     # return the constructor
     let t=t, kw=kw
         return ()->ModelInstance(t, kw)
@@ -470,40 +469,35 @@ function generate_model_types()
     # generate blank types
     mspecs = Dict{String,JSON3.Object}()
     for mspec in spec
-        @assert !haskey(mspecs, mspec.fullname)
-        mspecs[mspec.fullname] = mspec
+        @assert !haskey(mspecs, mspec.name)
+        mspecs[mspec.name] = mspec
     end
 
     # check bases
     missing_bases = Set(bname for mspec in spec for bname in mspec.bases if !haskey(mspecs, bname))
-    for bname in missing_bases
-        @debug "missing base type $bname (should not be a model)"
-    end
+    @assert isempty(missing_bases)
 
     # put the models in dependency order
-    order = flatten_dag(Dict(k=>[b for b in v.bases if haskey(mspecs, b)] for (k,v) in mspecs))
-    @assert order[1] == "bokeh.model.model.Model"
+    order = flatten_dag(Dict(k=>collect(v.bases) for (k,v) in mspecs))
+    @assert order[1] == "Model"
     @assert length(order) == length(mspecs)
 
     # generate types without properties
     mtypes = Dict{String,ModelType}()
-    mtypes2 = Dict{String,ModelType}()
-    for mfullname in order
+    for mname in order
         # check the name
-        mspec = mspecs[mfullname]
-        @assert mspec.fullname == mfullname
-        mname = mspec.name
-        @assert !haskey(mtypes, mfullname)
-        @assert !haskey(mtypes2, mname)
-        # doc
-        doc = Markdown.MD(parse_doc(mspec.desc::String, mspec.richdesc))
-        # bases
-        bases = ModelType[mtypes[bname] for bname in mspec.bases if haskey(mspecs, bname)]
+        mspec = mspecs[mname]
+        @assert mspec.name == mname
+        @assert !haskey(mtypes, mname)
         # make the type
-        mt = ModelType(mname; bases, doc)
-        # save it
-        mtypes[mfullname] = mt
-        mtypes2[mname] = mt
+        mt = ModelType(
+            name = mname,
+            doc = Markdown.MD(parse_doc(mspec.desc, mspec.richdesc)),
+            bases = ModelType[mtypes[bname] for bname in mspec.bases],
+        )
+        mtypes[mname] = mt
+        # the type is in its own MRO so needs to be created after
+        mt.mro = ModelType[mtypes[tname] for tname in mspec.mro]
         # export it
         if '.' ∉ mname
             xname = Symbol(mname)
@@ -551,26 +545,20 @@ function generate_model_types()
     )
 
     # add properties
-    for mfullname in order
-        mspec = mspecs[mfullname]
-        mtype = mtypes[mfullname]
-        mname = mtype.name
+    for mname in order
+        mspec = mspecs[mname]
+        mtype = mtypes[mname]
+        @assert mname == mtype.name
         extras = get(Vector, extra_props, Symbol(mtype.name))
         skippable = Set(k for (k,v) in extras if v isa PropType || v isa PropDesc)
         dskippable = Set(k for (k,v) in extras if v isa DefaultT)
         props = []
         # get props from spec
         for pspec in mspec.props
-            # skip properties inherited from a base
-            if any(pspec == bspec for bname in mspec.bases if haskey(mspecs, bname) for bspec in mspecs[bname].props)
-                continue
-            end
             pname = Symbol(pspec.name::String)
-            if pname in skippable
-                continue
-            end
+            pname in skippable && continue
             pexpr = Meta.parse(replace(pspec.type::String, '''=>'"'))
-            ptype = parse_prop_type_expr(pexpr, mtypes2)
+            ptype = parse_prop_type_expr(pexpr, mtypes)
             if pname ∉ dskippable
                 pdflt = parse_prop_default(pspec.default, ptype, mtypes)
                 if pdflt === missing
