@@ -1,8 +1,11 @@
-# Penguins (`Scatter`, `factor_mark`, `factor_cmap`)
+# ---
+# title: Penguins
+# id: demo_penguins
+# description: "`Scatter`, `factor_mark`, `factor_cmap`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html](https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html](https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html).
 
-```@example
 using Bokeh, Tables
 
 data = Bokeh.Data.penguins(columntable)
@@ -29,4 +32,3 @@ plot!(p, Scatter,
 )
 
 p
-```

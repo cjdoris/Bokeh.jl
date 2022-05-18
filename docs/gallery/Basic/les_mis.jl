@@ -1,8 +1,11 @@
-#  Les Misérables Co-occurrences (`Rect`, `tools`)
+# ---
+# title: Les Misérables Co-occurrences
+# id: demo_les_mis
+# description: "`Rect`, `tools`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).
 
-```@example
 using Bokeh, Tables
 
 data = Bokeh.Data.les_mis(rowtable)
@@ -57,9 +60,8 @@ plot!(p, Rect,
     color="color",
     alpha="alpha",
     line_color=nothing,
-    # hover_color="colors", TODO
-    # hover_line_color="black", TODO
+    ## hover_color="colors", TODO
+    ## hover_line_color="black", TODO
 )
 
 p
-```

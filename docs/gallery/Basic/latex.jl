@@ -1,16 +1,19 @@
-# Gaussian Distribution (`TeX`, `Div`, `column`, `Quad`, `Line`)
+# ---
+# title: Gaussian Distribution
+# id: demo_latex
+# description: "`TeX`, `Div`, `column`, `Quad`, `Line`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html).
 
-```@example
 using Bokeh, StatsBase
 
 N = 1000
 
-# Sample from a Gaussian distribution
+## Sample from a Gaussian distribution
 samples = randn(N)
 
-# Scale random data so that it has mean of 0 and standard deviation of 1
+## Scale random data so that it has mean of 0 and standard deviation of 1
 scaled = (samples .- mean(samples)) ./ std(samples)
 
 p = figure(
@@ -32,7 +35,7 @@ plot!(p, Quad,
     legend_label="$N random samples",
 )
 
-# Probability density function
+## Probability density function
 x = range(-3, 3, length=100)
 pdf = @. exp(-0.5 * x^2) / sqrt(2 * pi)
 plot!(p, Line,
@@ -79,4 +82,3 @@ div = Div(text=raw"""
     """)
 
 column(p, div)
-```

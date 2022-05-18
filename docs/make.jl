@@ -1,5 +1,9 @@
 using Documenter, Bokeh
 
+using DemoCards
+
+gallery, gallery_cb, gallery_assets = makedemos("gallery")
+
 # hack presumably because I didn't generate markdown properly from the spec
 # TODO: fix it
 Base.convert(::Type{Vector{T}}, x::T) where {T<:Documenter.Utilities.Markdown2.MarkdownNode} = T[x]
@@ -47,9 +51,15 @@ open("docs/src/models.md", "w") do io
     end
 end
 
+format = Documenter.HTML(
+    edit_link = "master",
+    prettyurls = get(ENV, "CI", nothing) == "true",
+    assets = Any[gallery_assets],
+)
 makedocs(
     sitename = "Bokeh",
     modules = [Bokeh],
+    format = format,
     pages = [
         "Home" => "index.md",
         "guide.md",
@@ -59,17 +69,7 @@ makedocs(
             "data.md",
             "models.md",
         ],
-        "Gallery" => [
-            "gallery/mandelbrot.md",
-            "gallery/penguins.md",
-            "gallery/vbar.md",
-            "gallery/lorenz.md",
-            "gallery/image.md",
-            "gallery/image_rgba.md",
-            "gallery/latex.md",
-            "gallery/les_mis.md",
-            "gallery/mpg.md",
-        ],
+        gallery
     ],
     strict = [
         :autodocs_block,
@@ -86,6 +86,8 @@ makedocs(
         :setup_block,
     ]
 )
+
+gallery_cb() # redirect URL and clean up tmp files
 
 deploydocs(
     repo = "github.com/cjdoris/Bokeh.jl.git",

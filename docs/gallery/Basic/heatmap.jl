@@ -1,8 +1,11 @@
-# Heatmap (`Image`)
+# ---
+# title: Heatmap
+# id: demo_heatmap
+# description: "`Image`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image.html](https://docs.bokeh.org/en/latest/docs/gallery/image.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image.html](https://docs.bokeh.org/en/latest/docs/gallery/image.html).
 
-```@example
 using Bokeh
 
 data = [
@@ -21,4 +24,3 @@ p.grids.grid_line_width = 0
 plot!(p, Image, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Spectral11")
 
 p
-```

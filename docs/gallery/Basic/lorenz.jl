@@ -1,10 +1,13 @@
-# Lorenz Attractor (`MultiLine`)
+# ---
+# title: Lorenz Attractor
+# id: demo_lorenz
+# description: "`MultiLine`"
+# ---
 
-Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html](https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html).
+# Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html](https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html).
 
-The `odeint` function is a very basic ODE solver, so the results are not quite the same.
+# The `odeint` function is a very basic ODE solver, so the results are not quite the same.
 
-```@example
 using Bokeh
 
 params = (sigma=10.0, rho=28.0, beta=8/3, theta=3π/4)
@@ -57,4 +60,3 @@ plot!(p, MultiLine,
 )
 
 p
-```
