@@ -1,7 +1,8 @@
 # ---
 # title: Gaussian Distribution
 # id: demo_latex
-# description: "`TeX`, `Div`, `column`, `Quad`, `Line`"
+# description: Uses `TeX`, `Div`, `column`, `Quad` and `Line`.
+# cover: ../assets/latex.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/latex\_normal\_distribution.html](https://docs.bokeh.org/en/latest/docs/gallery/latex_normal_distribution.html).
@@ -23,7 +24,7 @@ p = figure(
     toolbar_location=nothing
 )
 
-# Plot the histogram
+## Plot the histogram
 hist = fit(Histogram, scaled, range(-3, 3, length=40)) |> StatsBase.normalize
 plot!(p, Quad,
     left=hist.edges[1][1:end-1],

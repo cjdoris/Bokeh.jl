@@ -1,7 +1,8 @@
 # ---
 # title: Bar Charts
 # id: demo_vbar
-# description: "`VBar`, `factor_cmap`"
+# description: Uses `VBar` and `factor_cmap`.
+# cover: ../assets/vbar.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html).

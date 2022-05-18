@@ -2,11 +2,43 @@ using Documenter, Bokeh
 
 using DemoCards
 
-gallery, gallery_cb, gallery_assets = makedemos("gallery")
+gallery, gallery_cb, gallery_assets = makedemos("gallery", edit_branch="main")
 
 # hack presumably because I didn't generate markdown properly from the spec
 # TODO: fix it
 Base.convert(::Type{Vector{T}}, x::T) where {T<:Documenter.Utilities.Markdown2.MarkdownNode} = T[x]
+
+open("docs/src/palettes.md", "w") do io
+    names = Dict(v=>k for (k,v) in Bokeh.PALETTES)
+    println(io, "# Palettes")
+    for group in sort!(collect(keys(Bokeh.PALETTE_GROUPS)))
+        println(io, "## $group")
+        for len in sort!(collect(keys(Bokeh.PALETTE_GROUPS[group])))
+            name = names[Bokeh.PALETTE_GROUPS[group][len]]
+            println(io, """
+            #### $name
+            ```@example
+            using Bokeh, Colors # hide
+            parse.(Colorant, Bokeh.PALETTES["$name"]) # hide
+            ```
+            """)
+        end
+    end
+end
+
+open("docs/src/colors.md", "w") do io
+    println(io, "# Named Colors")
+    for name in sort!(collect(keys(Bokeh.NAMED_COLORS)))
+        value = Bokeh.NAMED_COLORS[name]
+        println(io, """
+        #### $name (`$value`)
+        ```@example
+        using Bokeh, Colors # hide
+        parse(Colorant, Bokeh.NAMED_COLORS["$name"]) # hide
+        ```
+        """)
+    end
+end
 
 open("docs/src/models.md", "w") do io
     props = sort([k for k in propertynames(Bokeh) if getproperty(Bokeh, k) isa Bokeh.ModelType])
@@ -52,9 +84,9 @@ open("docs/src/models.md", "w") do io
 end
 
 format = Documenter.HTML(
-    edit_link = "master",
+    edit_link = "main",
     prettyurls = get(ENV, "CI", nothing) == "true",
-    assets = Any[gallery_assets],
+    assets = Any[gallery_assets, "assets/customstyle.css"],
 )
 makedocs(
     sitename = "Bokeh",
@@ -62,14 +94,16 @@ makedocs(
     format = format,
     pages = [
         "Home" => "index.md",
+        gallery,
         "guide.md",
         "Reference" => [
             "plotting.md",
             "misc.md",
             "data.md",
             "models.md",
+            "colors.md",
+            "palettes.md",
         ],
-        gallery
     ],
     strict = [
         :autodocs_block,

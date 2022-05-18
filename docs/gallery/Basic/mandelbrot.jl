@@ -1,6 +1,8 @@
 # ---
 # title: Mandelbrot Set
 # id: demo_mandelbrot
+# description: Uses the `Image` glyph to visualise the Mandelbrot Set.
+# cover: ../assets/mandelbrot.png
 # ---
 
 # A classic visualisation of the Mandelbrot set.

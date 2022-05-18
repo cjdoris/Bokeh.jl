@@ -1,7 +1,8 @@
 # ---
 # title: Les Misérables Co-occurrences
 # id: demo_les_mis
-# description: "`Rect`, `tools`"
+# description: Uses the `Rect` glyph and some tools.
+# cover: ../assets/les_mis.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html](https://docs.bokeh.org/en/latest/docs/gallery/les_mis.html).

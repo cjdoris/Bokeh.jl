@@ -1,7 +1,8 @@
 # ---
 # title: Auto MPG
 # id: demo_mpg
-# description: "`VBar`, `factor_cmap`, `tooltips`, nested factors"
+# description: Uses `VBar`, `factor_cmap`, `tooltips` and nested factors.
+# cover: ../assets/mpg.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/bar\_pandas\_groupby\_nested.html](https://docs.bokeh.org/en/latest/docs/gallery/bar_pandas_groupby_nested.html).

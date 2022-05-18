@@ -1,7 +1,8 @@
 # ---
 # title: Penguins
 # id: demo_penguins
-# description: "`Scatter`, `factor_mark`, `factor_cmap`"
+# description: Uses `Scatter`, `factor_mark` and `factor_cmap`.
+# cover: ../assets/penguins.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html](https://docs.bokeh.org/en/latest/docs/gallery/marker_map.html).

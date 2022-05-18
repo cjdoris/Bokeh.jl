@@ -1,7 +1,8 @@
 # ---
 # title: Colours
 # id: demo_image_rgba
-# description: "`ImageRGBA`"
+# description: Displays an image using the `ImageRGBA` glyph.
+# cover: ../assets/image_rgba.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html](https://docs.bokeh.org/en/latest/docs/gallery/image_rgba.html).

@@ -1,5 +1,5 @@
 {
-    "theme": "bulmagrid",
+    "theme": "list",
     "properties": {
         "notebook": false
     }

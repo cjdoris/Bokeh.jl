@@ -1,7 +1,8 @@
 # ---
 # title: Lorenz Attractor
 # id: demo_lorenz
-# description: "`MultiLine`"
+# description: Demonstrates the `Multiline` glyph.
+# cover: ../assets/lorenz.png
 # ---
 
 # Reproduces the plot from [https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html](https://docs.bokeh.org/en/latest/docs/gallery/lorenz.html).
