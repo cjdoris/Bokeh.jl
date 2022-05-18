@@ -572,14 +572,24 @@ function generate_model_types()
         end
         append!(props, extras)
         init_props!(mtype, props)
-        # add properties to the docs and bind the docstring
-        para = []
-        push!(para, Markdown.Bold("Properties: "))
-        for k in sort(collect(keys(mtype.propdescs)))
-            push!(para, Markdown.Code(string(k)), ", ")
+        # add properties to the docs (by which type they are inherited from) and bind the docstring
+        push!(mtype.doc.content, Markdown.Header("Properties", 2))
+        pnames = []
+        for t in reverse(mtype.mro)
+            push!(pnames, t.name => Symbol[k for k in keys(t.propdescs) if !any(k in ks for (_, ks) in pnames)])
         end
-        para[end] = "."
-        push!(mtype.doc.content, Markdown.Paragraph(para))
+        items = []
+        for (n, ks) in reverse(pnames)
+            isempty(ks) && continue
+            para = []
+            push!(para, Markdown.Code(n), ": ")
+            for k in sort(ks)
+                push!(para, Markdown.Code(string(k)), ", ")
+            end
+            para[end] = "."
+            push!(items, Markdown.Paragraph(para))
+        end
+        push!(mtype.doc.content, Markdown.List(items, -1, true))
         if '.' ∉ mname
             xname = Symbol(mname)
             @eval @doc $(mtype.doc) $xname
