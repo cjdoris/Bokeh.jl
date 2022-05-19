@@ -33,6 +33,7 @@ include("templates.jl")
 include("document.jl")
 include("display.jl")
 include("init.jl")
+include("hex.jl")
 
 precompile(figure, ())
 precompile(Plot, ())
