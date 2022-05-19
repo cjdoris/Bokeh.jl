@@ -18,7 +18,7 @@ y = randn(n)
 bins = Bokeh.hexbin(x, y; size)
 
 p = figure(
-    title = "Manual hax bin for $n points",
+    title = "Manual hex bin for $n points",
     tools = [WheelZoomTool(), PanTool(), ResetTool()],
     match_aspect = true,
     background_fill_color = "#440154",
