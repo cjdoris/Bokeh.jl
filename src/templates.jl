@@ -184,13 +184,13 @@ function template_autoload_js(; code, force=false, register_mimetype=nothing, au
     """
 end
 
-function template_autoload_tag_html(; src_path, elementid)
+function template_script_tag_html(; src_path, elementid)
     """
     <script src="$src_path" id="$elementid"></script>
     """
 end
 
-function template_autoload_tag_inline_html(; code, elementid)
+function template_inline_script_tag_html(; code, elementid)
     """
     <script id="$elementid">
         $(indent(code, 4))

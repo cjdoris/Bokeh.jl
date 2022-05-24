@@ -43,54 +43,55 @@ function docs_render_items_json(docs; elementid)
     ]
 end
 
-function docs_autoload_js(docs, elementid; kw...)
-    template_autoload_js(
-        code = template_onload_js(
-            code = template_doc_js(
-                docs_json = tojson(docs_json(docs)),
-                render_items = tojson(docs_render_items_json(docs; elementid))
-            )
-        ),
-        elementid = elementid;
-        kw...
+function docs_js(docs; elementid, onload=true, autoload=false, kw...)
+    code = template_doc_js(
+        docs_json = tojson(docs_json(docs)),
+        render_items = tojson(docs_render_items_json(docs; elementid))
     )
+    if onload
+        code = template_onload_js(; code)
+    end
+    if autoload
+        code = template_autoload_js(; code, elementid, kw...)
+    end
+    return code
 end
 
-function doc_autoload_js(doc, elementid; kw...)
-    docs_autoload_js([new_global_id() => doc], elementid; kw...)
+function doc_js(doc; elementid=new_global_id(), kw...)
+    docs_js([elementid => doc]; elementid, kw...)
 end
 
-function doc_autoload_js_html(doc, src; elementid=new_global_id(), kw...)
+function doc_js_html(doc, src_path; elementid=new_global_id(), kw...)
     return (
-        doc_autoload_js(doc, elementid; kw...),
-        template_autoload_tag_html(src_path=src, elementid=elementid)
+        js = doc_js(doc; elementid, kw...),
+        html = template_script_tag_html(; src_path, elementid),
     )
 end
 
-function doc_autoload_inline_html(doc; elementid=new_global_id(), kw...)
-    template_autoload_tag_inline_html(
-        code = doc_autoload_js(doc, elementid; kw...),
-        elementid = elementid,
+function doc_inline_html(doc; elementid=new_global_id(), kw...)
+    template_inline_script_tag_html(
+        code = doc_js(doc; elementid, kw...);
+        elementid,
     )
 end
 
-function doc_standalone_html(doc; kw...)
+function doc_standalone_html(doc; autoload=true, title="Bokeh Plot", kw...)
     """
     <!DOCTYPE html>
     <html>
         <head>
             <meta charset="utf8" />
-            <title>Bokeh Plot</title>
+            <title>$title</title>
         </head>
         <body>
-            $(indent(doc_autoload_inline_html(doc; kw...), 8))
+            $(indent(doc_inline_html(doc; autoload, kw...), 8))
         </body>
     </html>
     """
 end
 
 function Base.show(io::IO, ::MIME"text/html", doc::Document)
-    write(io, doc_autoload_inline_html(doc; bundle=bundle()))
+    write(io, doc_inline_html(doc; bundle=bundle(), autoload=true))
     return
 end
 
