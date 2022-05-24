@@ -1,6 +1,5 @@
 mutable struct Settings
     offline::Bool
-    use_browser::Bool
     browser_cmd::Union{Nothing,Cmd}
     tempdir::Union{Nothing,String}
     css_raw::Union{Nothing,Vector{String}}
@@ -10,7 +9,7 @@ mutable struct Settings
     # theme?
 end
 
-const SETTINGS = Settings(false, false, nothing, nothing, nothing, nothing, nothing, nothing)
+const SETTINGS = Settings(false, nothing, nothing, nothing, nothing, nothing, nothing)
 
 """
     settings!(key=value, ...)
@@ -20,16 +19,12 @@ Update the global settings for Bokeh.
 - `offline`:
   If set to `true` then any generated plots will work offline.
   Default: `false`.
-- `use_browser`:
-  If set to `true` then plots will be displayed by opening a browser.
-  Default: `false`.
 - `browser_cmd`:
   The command used to open the browser.
   Default: Operating-system dependent.
 """
 function settings!(;
     offline=nothing,
-    use_browser=nothing,
     browser_cmd=nothing,
     tempdir=nothing,
     css_raw=nothing,
@@ -39,9 +34,6 @@ function settings!(;
 )
     if offline !== nothing
         SETTINGS.offline = offline
-    end
-    if use_browser !== nothing
-        SETTINGS.use_browser = use_browser
     end
     if browser_cmd !== nothing
         SETTINGS.browser_cmd = browser_cmd

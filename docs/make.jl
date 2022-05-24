@@ -1,6 +1,6 @@
-using Documenter, Bokeh
-
-using DemoCards
+using Documenter, Bokeh, DemoCards, Pkg
+Pkg.develop(path=joinpath(dirname(Bokeh.SRC_DIR), "BokehBlink"))
+using BokehBlink
 
 gallery, gallery_cb, gallery_assets = makedemos("gallery", edit_branch="main")
 
@@ -90,7 +90,7 @@ format = Documenter.HTML(
 )
 makedocs(
     sitename = "Bokeh",
-    modules = [Bokeh],
+    modules = [Bokeh, BokehBlink],
     format = format,
     pages = [
         "Home" => "index.md",

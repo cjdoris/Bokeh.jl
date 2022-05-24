@@ -13,6 +13,7 @@ import Tables
 import UUIDs
 
 const BOKEH_VERSION = v"2.4.2"
+const SRC_DIR = @__DIR__
 
 export Field, Value, Document
 export figure, plot!
@@ -32,14 +33,13 @@ include("plotting.jl")
 include("templates.jl")
 include("document.jl")
 include("display.jl")
-include("init.jl")
 include("hex.jl")
 
 precompile(figure, ())
 precompile(Plot, ())
 precompile(plot!, (ModelInstance, ModelType))
 precompile(plot!, (ModelInstance, ModelInstance))
-precompile(display, (BokehDisplay, MIME"text/html", ModelInstance))
-precompile(display, (BokehDisplay, MIME"text/html", Document))
+precompile(display, (BrowserDisplay, MIME"text/html", ModelInstance))
+precompile(display, (BrowserDisplay, MIME"text/html", Document))
 
 end
