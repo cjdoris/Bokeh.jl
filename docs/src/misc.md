@@ -28,7 +28,8 @@ using Bokeh, BokehBlink
 Bokeh.settings!(display=:blink)
 ```
 
-This package can also be used to export plots as images.
+This package can also be used to export plots as images. You do not need to activate the
+backend first.
 
 ```@docs
 BokehBlink.save
