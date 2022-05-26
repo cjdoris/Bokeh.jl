@@ -17,8 +17,6 @@ end
 
 ### BROWSER BACKEND
 
-const IS_WSL = Sys.islinux() && isfile("/proc/sys/kernel/osrelease") && occursin(r"microsoft|wsl"i, read("/proc/sys/kernel/osrelease", String))
-
 function backend_display(::BrowserDisplayBackend, doc::Document)
     path = joinpath(abspath(setting(:tempdir)), "plot.html")
     open(path, "w") do io
@@ -26,13 +24,7 @@ function backend_display(::BrowserDisplayBackend, doc::Document)
     end
     cmd = setting(:browser_cmd)
     if cmd === nothing
-        @static if IS_WSL
-            # this branch can be removed if DefaultApplication ever supports WSL
-            # note: wslview requires a relative path, hence basename/dirname here
-            run(Cmd(`wslview $(basename(path))`, dir=dirname(path)))
-        else
-            DefaultApplication.open(path, wait=true)
-        end
+        DefaultApplication.open(path, wait=true)
     else
         run(`$cmd $path`)
     end
