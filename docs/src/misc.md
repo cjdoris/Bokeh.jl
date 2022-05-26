@@ -20,7 +20,7 @@ Bokeh.settings!(display=:browser)
 ### Blink
 
 The `BokehBlink` package can be separately installed to enable plotting into a standalone
-[`Blink.jl`](https://github.com/JuliaGizmos/Blink.jl) window.
+[Blink.jl](https://github.com/JuliaGizmos/Blink.jl) window.
 
 To activate this backend, do
 ```julia
