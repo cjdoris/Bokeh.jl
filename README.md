@@ -16,7 +16,7 @@ wraps BokehJS directly without using Python.
 
 ## 🎨 Example
 
-Here is an example from [**the gallery**](https://cjdoris.github.io/Bokeh.jl/stable/gallery/mandelbrot):
+Here is an example from [**the gallery**](https://cjdoris.github.io/Bokeh.jl/stable/gallery):
 
 ![Mandelbrot example](https://raw.githubusercontent.com/cjdoris/Bokeh.jl/main/mandelbrot.png)
 
