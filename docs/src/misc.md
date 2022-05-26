@@ -22,18 +22,13 @@ Bokeh.settings!(display=:browser)
 The `BokehBlink` package can be separately installed to enable plotting into a standalone
 [`Blink.jl`](https://github.com/JuliaGizmos/Blink.jl) window.
 
-This package is currently experimental and unregistered. You can install it like so:
-```julia
-using Pkg
-Pkg.add(url="https://github.com/cjdoris/Bokeh.jl")
-Pkg.add(url="https://github.com/cjdoris/Bokeh.jl", subdir="BokehBlink")
-```
-
 To activate this backend, do
 ```julia
 using Bokeh, BokehBlink
 Bokeh.settings!(display=:blink)
 ```
+
+This package can also be used to export plots as images.
 
 ```@docs
 BokehBlink.save
