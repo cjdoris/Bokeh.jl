@@ -11,3 +11,4 @@ Bokeh = "c4b4474d-016b-471b-b14f-576041b951ff"
 [compat]
 Blink = "0.12.5"
 Bokeh = "= 0.4.0"
+julia = "1.6"
