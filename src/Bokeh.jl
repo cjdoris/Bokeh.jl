@@ -33,13 +33,14 @@ include("plotting.jl")
 include("templates.jl")
 include("document.jl")
 include("display.jl")
+include("init.jl")
 include("hex.jl")
 
 precompile(figure, ())
 precompile(Plot, ())
 precompile(plot!, (ModelInstance, ModelType))
 precompile(plot!, (ModelInstance, ModelInstance))
-precompile(display, (BrowserDisplay, MIME"text/html", ModelInstance))
-precompile(display, (BrowserDisplay, MIME"text/html", Document))
+precompile(display, (BokehDisplay, ModelInstance))
+precompile(display, (BokehDisplay, Document))
 
 end

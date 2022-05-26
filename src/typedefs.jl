@@ -130,3 +130,14 @@ end
 mutable struct Document
     roots::Vector{ModelInstance}
 end
+
+
+### DISPLAY
+
+abstract type AbstractDisplayBackend end
+
+struct NullDisplayBackend <: AbstractDisplayBackend end
+
+struct BrowserDisplayBackend <: AbstractDisplayBackend end
+
+struct BokehDisplay <: AbstractDisplay end

@@ -1,6 +1,7 @@
-using Documenter, Bokeh, DemoCards, Pkg
-Pkg.develop(path=joinpath(dirname(Bokeh.SRC_DIR), "BokehBlink"))
-using BokehBlink
+# to build locally:
+# > julia --project=docs/ -e 'using Pkg; Pkg.develop([PackageSpec(path="."), PackageSpec(path="./BokehBlink")]); Pkg.instantiate()'
+# > julia --project=docs/ docs/make.jl
+using Documenter, Bokeh, BokehBlink, DemoCards, Pkg
 
 gallery, gallery_cb, gallery_assets = makedemos("gallery", edit_branch="main")
 

@@ -75,31 +75,20 @@ function display(plot::Bokeh.ModelInstance; kw...)
     return display(Bokeh.Document(plot); kw...)
 end
 
-"""
-    BokehBlink.Display()
+### DISPLAY BACKEND
 
-Displays Bokeh plots in a Blink window.
+struct BlinkDisplayBackend <: Bokeh.AbstractDisplayBackend end
 
-Activate with `pushdisplay(BokehBlink.Display())`.
-"""
-struct Display <: Base.Multimedia.AbstractDisplay end
-
-function Base.display(::Display, ::MIME"text/html", doc::Bokeh.Document)
+function Bokeh.backend_display(::BlinkDisplayBackend, doc::Bokeh.Document)
     display(doc)
+    return
 end
 
-function Base.display(d::Display, doc::Bokeh.Document)
-    Base.display(d, MIME("text/html"), doc)
+function __init__()
+    Bokeh.register_display_backend(:blink, BlinkDisplayBackend())
 end
 
-function Base.display(d::Display, m::MIME"text/html", x::Bokeh.ModelInstance)
-    Bokeh.ismodelinstance(x, Bokeh.LayoutDOM) || throw(MethodError(Base.display, (d, m, x)))
-    Base.display(d, m, Bokeh.Document(x))
-end
-
-function Base.display(d::Display, x::Bokeh.ModelInstance)
-    Base.display(d, MIME("text/html"), x)
-end
+### SAVE
 
 function get_image_url(; window=curwin(), mime="image/png")
     return Blink.@js(window, document.getElementsByTagName("canvas")[0].toDataURL($mime))::String
@@ -135,6 +124,11 @@ end
     save(io_or_filename, [plot]; mime="image/png")
 
 Save a screenshot of the current plot or the given plot.
+
+!!! warning
+
+    This is an experimental feature and likely to be buggy, particularly the version taking
+    a `plot` argument.
 """
 function save(io::IO, args...; kw...)
     write(io, get_image_bytes(args...; kw...))

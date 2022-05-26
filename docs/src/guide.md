@@ -11,18 +11,8 @@ pkg> add Bokeh
 
 You will need to use Pluto, Jupyter, or any other environment capable of displaying HTML.
 
-Alternatively, you can display straight to the browser from the REPL by calling
-```julia
-using Bokeh
-pushdisplay(Bokeh.BrowserDisplay())
-```
-
-Alternatively, you can display into a standalone [`Blink.jl`](https://github.com/JuliaGizmos/Blink.jl)
-window by installing `BokehBlink` and then calling
-```julia
-using BokehBlink
-pushdisplay(Bokeh.BrowserDisplay())
-```
+Alternatively (e.g. if you are using the Julia REPL) you may activate a
+[display backend](@ref display_backends).
 
 Creating a plot generally consists of three steps:
 1. Create an empty figure using [`figure`](@ref).
@@ -39,8 +29,8 @@ p
 The final line causes the REPL or notebook you are using to display the plot `p`. You may
 explicitly call `display(p)` instead, e.g. if you are plotting in a script or a loop.
 
-If you are using `BrowserDisplay()` in the REPL, you may like to put `;` at the end of each
-command to supress displaying it.
+If you are in the REPL, you may like to put `;` at the end of each intermediate command to
+supress displaying it immediately.
 
 ## Getting help
 

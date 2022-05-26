@@ -1,4 +1,5 @@
 mutable struct Settings
+    display::AbstractDisplayBackend
     offline::Bool
     browser_cmd::Union{Nothing,Cmd}
     tempdir::Union{Nothing,String}
@@ -9,13 +10,16 @@ mutable struct Settings
     # theme?
 end
 
-const SETTINGS = Settings(false, nothing, nothing, nothing, nothing, nothing, nothing)
+const SETTINGS = Settings(NullDisplayBackend(), false, nothing, nothing, nothing, nothing, nothing, nothing)
 
 """
     settings!(key=value, ...)
 
 Update the global settings for Bokeh.
 
+- `display`:
+  The display backend to use, such as `:browser` or `:blink`.
+  Default: `:null`.
 - `offline`:
   If set to `true` then any generated plots will work offline.
   Default: `false`.
@@ -24,6 +28,7 @@ Update the global settings for Bokeh.
   Default: Operating-system dependent.
 """
 function settings!(;
+    display=nothing,
     offline=nothing,
     browser_cmd=nothing,
     tempdir=nothing,
@@ -32,6 +37,24 @@ function settings!(;
     js_raw=nothing,
     js_urls=nothing,
 )
+    if display !== nothing
+        if display isa AbstractDisplayBackend
+            SETTINGS.display = display
+        elseif display isa Symbol
+            display_backend = get(DISPLAY_BACKENDS, display, nothing)
+            if display_backend === nothing
+                display_package = get(EXTERNAL_DISPLAY_BACKENDS, display, nothing)
+                if display_package === nothing
+                    error("Unknown display: $display")
+                else
+                    error("Unknown display: $display (you need to install and import the $display_package module)")
+                end
+            end
+            SETTINGS.display = display_backend
+        else
+            error("display must be a Symbol")
+        end
+    end
     if offline !== nothing
         SETTINGS.offline = offline
     end

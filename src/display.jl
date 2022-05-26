@@ -1,15 +1,25 @@
-"""
-    BrowserDisplay()
+### ABSTRACT BACKEND
 
-Displays Bokeh plots in the Browser.
+const DISPLAY_BACKENDS = Dict{Symbol,AbstractDisplayBackend}()
 
-Activate with `pushdisplay(Bokeh.BrowserDisplay())`.
-"""
-struct BrowserDisplay <: Base.Multimedia.AbstractDisplay end
+const EXTERNAL_DISPLAY_BACKENDS = Dict{Symbol,Symbol}(:blink => :BokehBlink)
+
+function backend_display(::AbstractDisplayBackend, doc::Document)
+    @nospecialize
+    throw(MethodError(display, (BokehDisplay(), doc)))
+end
+
+function register_display_backend(name::Symbol, backend::AbstractDisplayBackend)
+    @nospecialize
+    DISPLAY_BACKENDS[name] = backend
+    return
+end
+
+### BROWSER BACKEND
 
 const IS_WSL = Sys.islinux() && isfile("/proc/sys/kernel/osrelease") && occursin(r"microsoft|wsl"i, read("/proc/sys/kernel/osrelease", String))
 
-function Base.display(::BrowserDisplay, ::MIME"text/html", doc::Document)
+function backend_display(::BrowserDisplayBackend, doc::Document)
     path = joinpath(abspath(setting(:tempdir)), "plot.html")
     open(path, "w") do io
         write(io, doc_standalone_html(doc; bundle=bundle()))
@@ -29,15 +39,14 @@ function Base.display(::BrowserDisplay, ::MIME"text/html", doc::Document)
     return
 end
 
-function Base.display(d::BrowserDisplay, doc::Document)
-    return display(d, MIME("text/html"), doc)
+### DISPLAY
+
+function Base.display(::BokehDisplay, doc::Document)
+    backend = setting(:display)::AbstractDisplayBackend
+    backend_display(backend, doc)::Nothing
 end
 
-function Base.display(d::BrowserDisplay, m::MIME"text/html", x::ModelInstance)
-    ismodelinstance(x, LayoutDOM) || throw(MethodError(display, (d, m, x)))
-    return display(d, m, Document(x))
-end
-
-function Base.display(d::BrowserDisplay, x::ModelInstance)
-    return display(d, MIME("text/html"), x)
+function Base.display(::BokehDisplay, x::ModelInstance)
+    ismodelinstance(x, LayoutDOM) || throw(MethodError(display, (BokehDisplay(), x)))
+    return display(BokehDisplay(), Document(x))
 end
