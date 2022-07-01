@@ -626,6 +626,74 @@ function interpolate_palette(xs, n)
     return ["#" * lowercase(Colors.hex(c)) for c in zs]
 end
 
+const PALETTE_GROUP_TAGS = Dict(
+    "Accent" => ["categorical"],
+    "Blues" => ["continuous", "linear"],
+    "Bokeh" => ["categorical"],
+    "BrBG" => ["continuous", "diverging"],
+    "BuGn" => ["continuous", "linear"],
+    "BuPu" => ["continuous", "linear"],
+    "Category10" => ["categorical"],
+    "Category20" => ["categorical"],
+    "Category20b" => ["categorical"],
+    "Category20c" => ["categorical"],
+    "Cividis" => ["continuous", "linear"],
+    "Colorblind" => ["categorical"],
+    "Dark2" => ["categorical"],
+    "GnBu" => ["continuous", "linear"],
+    "Greens" => ["continuous", "linear"],
+    "Greys" => ["continuous", "linear"],
+    "Inferno" => ["continuous", "linear"],
+    "Julia" => ["categorical"],
+    "Magma" => ["continuous", "linear"],
+    "OrRd" => ["continuous", "linear"],
+    "Oranges" => ["continuous", "linear"],
+    "PRGn" => ["continuous", "diverging"],
+    "Paired" => ["categorical"],
+    "Pastel1" => ["categorical"],
+    "Pastel2" => ["categorical"],
+    "PiYG" => ["continuous", "diverging"],
+    "Plasma" => ["continuous", "linear"],
+    "PuBu" => ["continuous", "linear"],
+    "PuBuGn" => ["continuous", "linear"],
+    "PuOr" => ["continuous", "diverging"],
+    "PuRd" => ["continuous", "linear"],
+    "Purples" => ["continuous", "linear"],
+    "RdBu" => ["continuous", "diverging"],
+    "RdGy" => ["continuous", "diverging"],
+    "RdPu" => ["continuous", "linear"],
+    "RdYlBu" => ["continuous", "diverging"],
+    "RdYlGn" => ["continuous", "diverging"],
+    "Reds" => ["continuous", "linear"],
+    "Set1" => ["categorical"],
+    "Set2" => ["categorical"],
+    "Set3" => ["categorical"],
+    "Spectral" => ["continuous", "diverging"],
+    "Turbo" => ["continuous", "diverging"],
+    "Viridis" => ["continuous", "linear"],
+    "YlGn" => ["continuous", "linear"],
+    "YlGnBu" => ["continuous", "linear"],
+    "YlOrBr" => ["continuous", "linear"],
+    "YlOrRd" => ["continuous", "linear"],
+)
+
+# check the tags are consistent
+for (g, tags) in PALETTE_GROUP_TAGS
+    if "categorical" in tags
+        # good
+    elseif "continuous" in tags
+        if "linear" in tags
+            # good
+        elseif "diverging" in tags
+            # good
+        else
+            error("continuous palette group $g is not tagged linear or diverging")
+        end
+    else
+        error("palette group $g is not tagged categorical or continuous")
+    end
+end
+
 function generate_palettes()
     data = load_spec("palettes")
     Julia4 = ["#4063D8", "#CB3C33", "#389826", "#9558B2", ] # blue, red, green, purple
@@ -638,19 +706,16 @@ function generate_palettes()
     palette_enum = Set(keys(palettes))
     palette_groups = Dict(String(k)=>Dict(parse(Int,String(k))=>collect(String,v) for (k,v) in v) for (k,v) in data["grouped"])
     palette_groups["Julia"] = Dict(2=>Julia2, 3=>Julia3, 4=>Julia4)
+    # ensure the tags have full coverage
+    @assert keys(palette_groups) == keys(PALETTE_GROUP_TAGS)
     # interpolate 256-color versions of continuous palettes
-    for pg in [
-        "BrBG", "BuGn", "BuPu", "GnBu", "OrRd", "PRGn", "PiYG", "PuBu", "PuBuGn", "PuOr",
-        "PuRd", "RdBu", "RdGy", "RdPu", "RdYlBu", "RdYlGn", "Spectral", "YlGn", "YlGnBu",
-        "YlOrBr", "YlOrRd",
-    ]
+    for (pg, tags) in PALETTE_GROUP_TAGS
+        "continuous" in tags || continue
         n0 = maximum(keys(palette_groups[pg]))
         p0 = "$(pg)$(n0)"
         old_palette = palettes[p0]
         for n1 in [3:11; 256]
-            if haskey(palette_groups[pg], n1)
-                continue
-            end
+            haskey(palette_groups[pg], n1) && continue
             p1 = "$(pg)$(n1)"
             new_palette = interpolate_palette(old_palette, n1)
             push!(palette_enum, p1)

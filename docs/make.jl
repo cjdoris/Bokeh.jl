@@ -9,15 +9,43 @@ gallery, gallery_cb, gallery_assets = makedemos("gallery", edit_branch="main")
 # TODO: fix it
 Base.convert(::Type{Vector{T}}, x::T) where {T<:Documenter.Utilities.Markdown2.MarkdownNode} = T[x]
 
+function ranges(xs)
+    rs = UnitRange{eltype(xs)}[]
+    x0 = x1 = first(xs)
+    for x in xs
+        if x in (x1, x1+1)
+            x1 = x
+        else
+            push!(rs, x0:x1)
+            x0 = x1 = x
+        end
+    end
+    push!(rs, x0:x1)
+    return rs
+end
+
+function ranges_str(xs)
+    return join([r.start == r.stop ? "$(r.start)" : "$(r.start)–$(r.stop)" for r in ranges(xs)], ", ")
+end
+
 open("docs/src/palettes.md", "w") do io
     names = Dict(v=>k for (k,v) in Bokeh.PALETTES)
-    println(io, "# Palettes")
-    for group in sort!(collect(keys(Bokeh.PALETTE_GROUPS)))
-        println(io, "## $group")
-        for len in sort!(collect(keys(Bokeh.PALETTE_GROUPS[group])))
-            name = names[Bokeh.PALETTE_GROUPS[group][len]]
+    println(io, """
+    # Palettes
+    Only the largest palette in each group is shown.
+
+    To get the full name of a palette, append the size to the group name, such as `Accent6`.
+    If the group name ends contains a number, put an underscore between, such as `Category10_8`.
+    """)
+    for (tag, hdr) in [("categorical", "Categorical"), ("linear", "Linear"), ("diverging", "Diverging")]
+        println(io, "## $hdr")
+        for group in sort!(collect(keys(Bokeh.PALETTE_GROUPS)))
+            tag in Bokeh.PALETTE_GROUP_TAGS[group] || continue
+            println(io, "### $group")
+            lens = sort(collect(keys(Bokeh.PALETTE_GROUPS[group])))
+            name = names[Bokeh.PALETTE_GROUPS[group][lens[end]]]
             println(io, """
-            #### $name
+            Sizes: $(ranges_str(lens)).
             ```@example
             using Bokeh, Colors # hide
             parse.(Colorant, Bokeh.PALETTES["$name"]) # hide
