@@ -608,6 +608,24 @@ function generate_colors()
 end
 generate_colors()
 
+function interpolate_palette(xs, n)
+    xs = parse.(Colors.Colorant, xs)
+    m = length(xs)
+    ys = eltype(xs)[]
+    for i in 1:(m-1)
+        append!(ys, range(xs[i], xs[i+1], length=n))
+        if i < m-1
+            pop!(ys)
+        end
+    end
+    @assert length(ys) == (n - 1) * (m - 1) + 1
+    zs = ys[1:(m-1):end]
+    @assert length(zs) == n
+    @assert zs[1] == xs[1]
+    @assert zs[end] == xs[end]
+    return ["#" * lowercase(Colors.hex(c)) for c in zs]
+end
+
 function generate_palettes()
     data = load_spec("palettes")
     Julia4 = ["#4063D8", "#CB3C33", "#389826", "#9558B2", ] # blue, red, green, purple
@@ -620,6 +638,26 @@ function generate_palettes()
     palette_enum = Set(keys(palettes))
     palette_groups = Dict(String(k)=>Dict(parse(Int,String(k))=>collect(String,v) for (k,v) in v) for (k,v) in data["grouped"])
     palette_groups["Julia"] = Dict(2=>Julia2, 3=>Julia3, 4=>Julia4)
+    # interpolate 256-color versions of continuous palettes
+    for pg in [
+        "BrBG", "BuGn", "BuPu", "GnBu", "OrRd", "PRGn", "PiYG", "PuBu", "PuBuGn", "PuOr",
+        "PuRd", "RdBu", "RdGy", "RdPu", "RdYlBu", "RdYlGn", "Spectral", "YlGn", "YlGnBu",
+        "YlOrBr", "YlOrRd",
+    ]
+        n0 = maximum(keys(palette_groups[pg]))
+        p0 = "$(pg)$(n0)"
+        old_palette = palettes[p0]
+        for n1 in [3:11; 256]
+            if haskey(palette_groups[pg], n1)
+                continue
+            end
+            p1 = "$(pg)$(n1)"
+            new_palette = interpolate_palette(old_palette, n1)
+            push!(palette_enum, p1)
+            palettes[p1] = new_palette
+            palette_groups[pg][n1] = new_palette
+        end
+    end
     @eval const PALETTES = $palettes
     @eval const PALETTE_ENUM = $palette_enum
     @eval const PALETTE_GROUPS = $palette_groups
