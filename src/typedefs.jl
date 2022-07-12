@@ -51,6 +51,16 @@ mutable struct PropDesc
 end
 
 
+### RESOURCES
+
+Base.@kwdef mutable struct Resource
+    type::String = "js"
+    name::String = ""
+    url::String = ""
+    raw::String = ""
+end
+
+
 ### MODELS
 
 Base.@kwdef mutable struct ModelType
@@ -59,6 +69,7 @@ Base.@kwdef mutable struct ModelType
     mro::Vector{ModelType} = ModelType[]
     propdescs::Dict{Symbol,PropDesc} = Dict{Symbol,PropDesc}()
     doc::Markdown.MD = Markdown.MD([])
+    resources::Vector{Resource} = Resource[]
 end
 
 const Arg = Any

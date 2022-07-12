@@ -28,6 +28,9 @@ using Bokeh, BokehBlink
 Bokeh.settings!(display=:blink)
 ```
 
+By default, the plot will have a fixed size. To have it resize to fill the window, you may
+set `sizing_mode="stretch_both"` on the top-level figure.
+
 This package can also be used to export plots as images. You do not need to activate the
 backend first.
 

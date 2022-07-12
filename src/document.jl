@@ -1,6 +1,32 @@
 Document() = Document([])
 Document(m::ModelInstance) = Document([m])
 
+function doc_resources(doc::Document)
+    ans = Resource[]
+    ser = Serializer()
+    for model in doc.roots
+        serialize(ser, model)
+    end
+    for model in values(ser.refs)
+        for t in reverse(modeltype(model).mro)
+            union!(ans, t.resources)
+        end
+    end
+    return ans
+end
+
+function docs_resources(docs)
+    ans = Resource[]
+    for (_, doc) in docs
+        union!(ans, doc_resources(doc))
+    end
+    return ans
+end
+
+doc_bundle(doc; kw...) = bundle(doc_resources(doc); kw...)
+
+docs_bundle(docs; kw...) = bundle(docs_resources(docs); kw...)
+
 function root_ids_json(doc::Document)
     return [modelid(model) for model in doc.roots]
 end
@@ -43,7 +69,7 @@ function docs_render_items_json(docs; elementid)
     ]
 end
 
-function docs_js(docs; elementid, onload=true, autoload=false, kw...)
+function docs_js(docs; elementid, onload=true, autoload=false, bundle=docs_bundle(docs), kw...)
     code = template_doc_js(
         docs_json = tojson(docs_json(docs)),
         render_items = tojson(docs_render_items_json(docs; elementid))
@@ -52,7 +78,7 @@ function docs_js(docs; elementid, onload=true, autoload=false, kw...)
         code = template_onload_js(; code)
     end
     if autoload
-        code = template_autoload_js(; code, elementid, kw...)
+        code = template_autoload_js(; code, elementid, bundle, kw...)
     end
     return code
 end
@@ -91,7 +117,7 @@ function doc_standalone_html(doc; autoload=true, title="Bokeh Plot", kw...)
 end
 
 function Base.show(io::IO, ::MIME"text/html", doc::Document)
-    write(io, doc_inline_html(doc; bundle=bundle(), autoload=true))
+    write(io, doc_inline_html(doc; autoload=true))
     return
 end
 

@@ -316,3 +316,17 @@ end
 plot_get_renderer(; kw...) = (plot::ModelInstance) -> plot_get_renderer(plot; kw...)
 
 generate_model_types()
+
+const RESOURCES = Dict(
+    name => Resource(
+        type = "js",
+        name = name,
+        url = "https://cdn.bokeh.org/bokeh/release/$name-$BOKEH_VERSION.min.js",
+        raw = read(joinpath(dirname(@__DIR__), "bokehjs", "$name-$BOKEH_VERSION.min.js"), String),
+    )
+    for name in ["bokeh", "bokeh-gl", "bokeh-mathjax", "bokeh-widgets", "bokeh-tables"]
+)
+
+push!(Model.resources, RESOURCES["bokeh"], RESOURCES["bokeh-gl"], RESOURCES["bokeh-mathjax"])
+push!(Widget.resources, RESOURCES["bokeh-widgets"])
+push!(TableWidget.resources, RESOURCES["bokeh-tables"])

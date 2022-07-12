@@ -26,57 +26,88 @@ function guess_format(filename)
     return split(basename(filename), '.'; limit=2)[end]
 end
 
-function guess_size(doc::Bokeh.Document)
+function guess_size(doc::Bokeh.Document; oldsize=nothing)
     w = h = nothing
+    fixed_width = false
+    fixed_height = false
     for plot in doc.roots
+        if oldsize === nothing
+            ignore_width = plot.sizing_mode ∈ ("stretch_width", "stretch_both")
+            ignore_height = plot.sizing_mode ∈ ("stretch_height", "stretch_both")
+        else
+            ignore_width = plot.sizing_mode ∉ (nothing, "fixed", "stretch_height")
+            ignore_height = plot.sizing_mode ∉ (nothing, "fixed", "stretch_width")
+        end
         w0 = plot.width
         h0 = plot.height
-        if w0 !== nothing
-            w0 = convert(Int, w0)::Int
-            w = w === nothing ? w0 : max(w, w0)
+        if !ignore_width
+            fixed_width = true
+            if w0 !== nothing
+                w0 = convert(Int, w0)::Int
+                w = w === nothing ? w0 : max(w, w0)
+            end
         end
-        if h0 !== nothing
-            h0 = convert(Int, h0)::Int
-            h = h === nothing ? h0 : max(h, h0)
+        if !ignore_height
+            fixed_height = true
+            if h0 !== nothing
+                h0 = convert(Int, h0)::Int
+                h = h === nothing ? h0 : max(h, h0)
+            end
         end
     end
-    if w === nothing
-        w = 600
+    if (fixed_width || oldsize === nothing) && w === nothing
+        w = oldsize === nothing ? 600 : convert(Int, oldsize[1])
     end
-    if h === nothing
-        h = 600
+    if (fixed_height || oldsize === nothing) && h === nothing
+        h = oldsize === nothing ? 600 : convert(Int, oldsize[2])
     end
+    @show (w, h)
     return (w, h)
 end
 
 ### DISPLAY
 
-const _curwin = Ref{Union{Nothing,Blink.Window}}(nothing)
+mutable struct Window
+    blink::Blink.Window
+    resources::Vector{Bokeh.Resource}
+end
 
-const _hiddenwin = Ref{Union{Nothing,Blink.Window}}(nothing)
+Window(blink::Blink.Window) = Window(blink, Bokeh.Resource[])
+
+const _curwin = Ref{Union{Nothing,Window}}(nothing)
+
+const _hiddenwin = Ref{Union{Nothing,Window}}(nothing)
 
 const _opts = Dict{Symbol,Any}(
     :title => "Bokeh.jl",
     :icon => joinpath(@__DIR__, "bokeh-favicon-32x32.png"),
 )
 
-function load_bundle(window, bundle=Bokeh.bundle())
+function load_resources!(window::Window, resources)
+    # filter out resources already loaded
+    resources = Bokeh.Resource[res for res in resources if res ∉ window.resources]
+    bundle = Bokeh.bundle(resources)
     for url in bundle.js_urls
-        Blink.loadjs!(window, url)
-    end
-    for code in bundle.js_raw
-        Blink.loadjs!(window, data_url("text/javascript", code))
+        Blink.loadjs!(window.blink, url)
     end
     for url in bundle.css_urls
-        Blink.loadcss!(window, url)
+        Blink.loadcss!(window.blink, url)
+    end
+    for code in bundle.js_raw
+        Blink.loadjs!(window.blink, data_url("text/javascript", code))
     end
     for code in bundle.css_raw
-        Blink.loadcss!(window, data_url("text/css", code))
+        Blink.loadcss!(window.blink, data_url("text/css", code))
     end
+    append!(window.resources, resources)
+    return window
 end
 
-function newwin(; size=nothing, title=nothing, always_on_top=nothing)
+function newwin(; size=nothing, doc=nothing, title=nothing, always_on_top=nothing)
     opts = copy(_opts)
+    if size === nothing && doc !== nothing
+        size = guess_size(doc)
+    end
     if size !== nothing
         opts[:width], opts[:height] = size
         opts[:useContentSize] = true
@@ -87,17 +118,23 @@ function newwin(; size=nothing, title=nothing, always_on_top=nothing)
     if always_on_top !== nothing
         opts[:alwaysOnTop] = always_on_top
     end
-    window = Blink.Window(opts)
-    load_bundle(window)
+    window = Window(Blink.Window(opts))
     _curwin[] = window
-    return window
+    return window::Window
 end
 
-function curwin(; size=nothing, title=nothing)
+function curwin(; resize=true, doc=nothing, size=nothing, title=nothing)
     window = _curwin[]
     if !isopen(window)
-        window = newwin(; size, title)
+        window = newwin(; title, size, doc)
     else
+        if size === nothing && doc !== nothing && resize
+            oldsize = (
+                Blink.@js(window.blink, window.innerWidth)::Int,
+                Blink.@js(window.blink, window.innerHeight)::Int,
+            )
+            size = guess_size(doc; oldsize)
+        end
         if size !== nothing
             setsize(size...; window)
         end
@@ -105,39 +142,40 @@ function curwin(; size=nothing, title=nothing)
             settitle(title; window)
         end
     end
-    return window
+    return window::Window
 end
 
 function hiddenwin()
     window = _hiddenwin[]
     if !isopen(window)
-        window = Blink.Window(Dict("show"=>false, "paintWhenInitiallyHidden"=>true))
-        load_bundle(window)
+        window = Window(Blink.Window(Dict("show"=>false, "paintWhenInitiallyHidden"=>true)))
         _hiddenwin[] = window
     end
-    return window
+    return window::Window
 end
 
 isopen(::Nothing) = false
+isopen(window::Window) = isopen(window.blink)
 isopen(window) = Blink.active(window)
 
 function close(window=_curwin[])
     if isopen(window)
-        Blink.close(window)
+        Blink.close(window.blink)
     end
     return
 end
 
 function setsize(w, h; window=curwin())
     if isopen(window)
-        Blink.@js window window.resizeTo($w + window.outerWidth - window.innerWidth, $h + window.outerHeight - window.innerHeight)
+        w === nothing || Blink.@js window.blink window.resizeTo($w + window.outerWidth - window.innerWidth, window.outerHeight)
+        h === nothing || Blink.@js window.blink window.resizeTo(window.outerWidth, $h + window.outerHeight - window.innerHeight)
     end
     return
 end
 
 function settitle(title; window=curwin())
     if isopen(window)
-        Blink.title(window, title)
+        Blink.title(window.blink, title)
     end
     return
 end
@@ -147,8 +185,9 @@ end
 
 Displays a Bokeh document or plot in the given Blink window.
 """
-function display(doc::Bokeh.Document; size=guess_size(doc), window=curwin(; size))
-    Blink.body!(window, Bokeh.doc_inline_html(doc))
+function display(doc::Bokeh.Document; resize=true, size=nothing, window=curwin(; resize, size, doc))
+    load_resources!(window, Bokeh.doc_resources(doc))
+    Blink.body!(window.blink, Bokeh.doc_inline_html(doc))
     return
 end
 
@@ -208,7 +247,7 @@ function save(out::Union{IO,AbstractString}, plot=nothing;
     end
     # get the screenshot
     mime = "image/$format"
-    url = Blink.@js(window, document.getElementsByTagName("canvas")[0].toDataURL($mime, $quality))::String
+    url = Blink.@js(window.blink, document.getElementsByTagName("canvas")[0].toDataURL($mime, $quality))::String
     image = data_url_to_bytes(url, format)
     write(out, image)
     return

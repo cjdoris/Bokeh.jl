@@ -20,7 +20,7 @@ end
 function backend_display(::BrowserDisplayBackend, doc::Document)
     path = joinpath(abspath(setting(:tempdir)), "plot.html")
     open(path, "w") do io
-        write(io, doc_standalone_html(doc; bundle=bundle()))
+        write(io, doc_standalone_html(doc))
     end
     cmd = setting(:browser_cmd)
     if cmd === nothing
