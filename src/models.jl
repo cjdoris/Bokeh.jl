@@ -274,6 +274,10 @@ function serialize(s::Serializer, m::ModelInstance)
     return Dict("id" => id)
 end
 
+# TODO: cache this on the theme
+# TODO: search the whole MRO of the model type
+modeldefaults(model::ModelInstance, theme::Theme) = get(Dict{Symbol,Any}, theme.attrs, Symbol(modeltype(model).name))
+
 function serialize_noref(s::Serializer, m::ModelInstance)
     id = modelid(m)
     if get(s.refs, id, nothing) === m
@@ -281,14 +285,27 @@ function serialize_noref(s::Serializer, m::ModelInstance)
     end
     mt = modeltype(m)
     ds = mt.propdescs
-    vs = modelvalues(m)
     attrs = Dict{String,Any}()
-    for (k, v) in vs
+    for (k, v) in modelvalues(m)
         v === Undefined() && continue
         f = (ds[k].type::PropType).serialize
         k2 = string(k)
         v2 = f === nothing ? serialize(s, v) : f(s, v)
         attrs[k2] = v2
+    end
+    for (k, v) in modeldefaults(m, s.theme)
+        v === Undefined() && continue
+        k2 = string(k)
+        haskey(attrs, k2) && continue
+        d = get(ds, k, nothing)
+        d === nothing && continue
+        d.kind == TYPE_K || continue
+        t = d.type::PropType
+        v2 = validate(t, v)
+        v2 isa Invalid && error("Theme: $(mt.name): .$k: $(v2.msg)")
+        f = (d.type::PropType).serialize
+        v3 = f === nothing ? serialize(s, v2) : f(s, v2)
+        attrs[k2] = v3
     end
     ans = Dict(
         "type"=>mt.name,

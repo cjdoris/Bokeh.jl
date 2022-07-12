@@ -1,8 +1,17 @@
+### THEMES
+
+mutable struct Theme
+    attrs::Dict{Symbol,Dict{Symbol,Any}}
+    Theme() = new(Dict{Symbol,Dict{Symbol,Any}}())
+end
+
+
 ### SERIALIZE
 
 struct Serializer
     refs::Dict{String,Any}
     refscache::Dict{String,Any}
+    theme::Theme
 end
 
 
@@ -140,6 +149,7 @@ end
 
 mutable struct Document
     roots::Vector{ModelInstance}
+    theme::Theme
 end
 
 

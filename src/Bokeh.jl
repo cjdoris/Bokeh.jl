@@ -15,7 +15,7 @@ import UUIDs
 const BOKEH_VERSION = v"2.4.2"
 const SRC_DIR = @__DIR__
 
-export Field, Value, Document
+export Field, Value, Document, Theme
 export figure, plot!
 export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap, log_cmap
 export row, column
@@ -32,6 +32,7 @@ include("models.jl")
 include("plotting.jl")
 include("templates.jl")
 include("resources.jl")
+include("theme.jl")
 include("document.jl")
 include("display.jl")
 include("init.jl")

@@ -3,14 +3,10 @@ mutable struct Settings
     offline::Bool
     browser_cmd::Union{Nothing,Cmd}
     tempdir::Union{Nothing,String}
-    css_raw::Union{Nothing,Vector{String}}
-    css_urls::Union{Nothing,Vector{String}}
-    js_raw::Union{Nothing,Vector{String}}
-    js_urls::Union{Nothing,Vector{String}}
-    # theme?
+    theme::Theme
 end
 
-const SETTINGS = Settings(NullDisplayBackend(), false, nothing, nothing, nothing, nothing, nothing, nothing)
+const SETTINGS = Settings(NullDisplayBackend(), false, nothing, nothing, Theme())
 
 """
     settings!(key=value, ...)
@@ -32,6 +28,7 @@ function settings!(;
     offline=nothing,
     browser_cmd=nothing,
     tempdir=nothing,
+    theme=nothing,
 )
     if display !== nothing
         if display isa AbstractDisplayBackend
@@ -59,6 +56,9 @@ function settings!(;
     end
     if tempdir !== nothing
         SETTINGS.tempdir = tempdir
+    end
+    if theme !== nothing
+        SETTINGS.theme = theme
     end
 end
 

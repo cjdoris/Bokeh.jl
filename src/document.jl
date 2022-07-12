@@ -1,5 +1,5 @@
-Document() = Document([])
-Document(m::ModelInstance) = Document([m])
+Document(roots; theme::Theme=setting(:theme)) = Document(roots, theme)
+Document(root::ModelInstance; kw...) = Document([root]; kw...)
 
 function doc_resources(doc::Document)
     ans = Resource[]
@@ -32,7 +32,7 @@ function root_ids_json(doc::Document)
 end
 
 function refs_json(doc::Document)
-    ser = Serializer()
+    ser = Serializer(; theme=doc.theme)
     for model in doc.roots
         serialize(ser, model)
     end
