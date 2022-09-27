@@ -26,20 +26,22 @@ function guess_format(filename)
     return split(basename(filename), '.'; limit=2)[end]
 end
 
-function guess_size(doc::Bokeh.Document; oldsize=nothing)
+function guess_size(sdoc::Bokeh.SerializedDocument; oldsize=nothing)
     w = h = nothing
     fixed_width = false
     fixed_height = false
-    for plot in doc.roots
+    for plot in sdoc.doc.roots
+        attrs = sdoc.ser.refscache[Bokeh.modelid(plot)]["attributes"]::Dict{String,Any}
+        sizing_mode = get(attrs, "sizing_mode", nothing)
         if oldsize === nothing
-            ignore_width = plot.sizing_mode ∈ ("stretch_width", "stretch_both")
-            ignore_height = plot.sizing_mode ∈ ("stretch_height", "stretch_both")
+            ignore_width = sizing_mode ∈ ("stretch_width", "stretch_both")
+            ignore_height = sizing_mode ∈ ("stretch_height", "stretch_both")
         else
-            ignore_width = plot.sizing_mode ∉ (nothing, "fixed", "stretch_height")
-            ignore_height = plot.sizing_mode ∉ (nothing, "fixed", "stretch_width")
+            ignore_width = sizing_mode ∉ (nothing, "fixed", "stretch_height")
+            ignore_height = sizing_mode ∉ (nothing, "fixed", "stretch_width")
         end
-        w0 = plot.width
-        h0 = plot.height
+        w0 = get(attrs, "width", nothing)
+        h0 = get(attrs, "height", nothing)
         if !ignore_width
             fixed_width = true
             if w0 !== nothing
@@ -61,7 +63,6 @@ function guess_size(doc::Bokeh.Document; oldsize=nothing)
     if (fixed_height || oldsize === nothing) && h === nothing
         h = oldsize === nothing ? 600 : convert(Int, oldsize[2])
     end
-    @show (w, h)
     return (w, h)
 end
 
@@ -83,6 +84,8 @@ const _opts = Dict{Symbol,Any}(
     :icon => joinpath(@__DIR__, "bokeh-favicon-32x32.png"),
 )
 
+const _theme = Bokeh.Theme(Dict(:Plot=>Dict(:sizing_mode => "stretch_both")))
+
 function load_resources!(window::Window, resources)
     # filter out resources already loaded
     resources = Bokeh.Resource[res for res in resources if res ∉ window.resources]
@@ -103,10 +106,10 @@ function load_resources!(window::Window, resources)
     return window
 end
 
-function newwin(; size=nothing, doc=nothing, title=nothing, always_on_top=nothing)
+function newwin(; size=nothing, sdoc=nothing, title=nothing, always_on_top=nothing)
     opts = copy(_opts)
-    if size === nothing && doc !== nothing
-        size = guess_size(doc)
+    if size === nothing && sdoc !== nothing
+        size = guess_size(sdoc)
     end
     if size !== nothing
         opts[:width], opts[:height] = size
@@ -123,17 +126,17 @@ function newwin(; size=nothing, doc=nothing, title=nothing, always_on_top=nothin
     return window::Window
 end
 
-function curwin(; resize=true, doc=nothing, size=nothing, title=nothing)
+function curwin(; resize=true, sdoc=nothing, size=nothing, title=nothing)
     window = _curwin[]
     if !isopen(window)
-        window = newwin(; title, size, doc)
+        window = newwin(; title, size, sdoc)
     else
-        if size === nothing && doc !== nothing && resize
+        if size === nothing && sdoc !== nothing && resize
             oldsize = (
                 Blink.@js(window.blink, window.innerWidth)::Int,
                 Blink.@js(window.blink, window.innerHeight)::Int,
             )
-            size = guess_size(doc; oldsize)
+            size = guess_size(sdoc; oldsize)
         end
         if size !== nothing
             setsize(size...; window)
@@ -185,10 +188,14 @@ end
 
 Displays a Bokeh document or plot in the given Blink window.
 """
-function display(doc::Bokeh.Document; resize=true, size=nothing, window=curwin(; resize, size, doc))
-    load_resources!(window, Bokeh.doc_resources(doc))
-    Blink.body!(window.blink, Bokeh.doc_inline_html(doc))
+function display(sdoc::Bokeh.SerializedDocument; resize=true, size=nothing, window=curwin(; resize, size, sdoc))
+    load_resources!(window, Bokeh.doc_resources(sdoc))
+    Blink.body!(window.blink, Bokeh.doc_inline_html(sdoc))
     return
+end
+
+function display(doc::Bokeh.Document; kw...)
+    return display(Bokeh.serialize(doc; backend_theme=_theme); kw...)
 end
 
 function display(plot::Bokeh.ModelInstance; kw...)
@@ -200,9 +207,13 @@ end
 
 struct BlinkDisplayBackend <: Bokeh.AbstractDisplayBackend end
 
-function Bokeh.backend_display(::BlinkDisplayBackend, doc::Bokeh.Document)
-    display(doc)
+function Bokeh.backend_display(::BlinkDisplayBackend, sdoc::Bokeh.SerializedDocument)
+    display(sdoc)
     return
+end
+
+function Bokeh.backend_theme(::BlinkDisplayBackend)
+    return _theme
 end
 
 function __init__()

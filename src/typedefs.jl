@@ -11,7 +11,7 @@ end
 struct Serializer
     refs::Dict{String,Any}
     refscache::Dict{String,Any}
-    theme::Theme
+    themes::Vector{Theme}
 end
 
 
@@ -150,6 +150,14 @@ end
 mutable struct Document
     roots::Vector{ModelInstance}
     theme::Theme
+end
+
+
+## SERIALIZED DOCUMENT
+
+mutable struct SerializedDocument
+    doc::Document
+    ser::Serializer
 end
 
 

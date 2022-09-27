@@ -293,19 +293,21 @@ function serialize_noref(s::Serializer, m::ModelInstance)
         v2 = f === nothing ? serialize(s, v) : f(s, v)
         attrs[k2] = v2
     end
-    for (k, v) in modeldefaults(m, s.theme)
-        v === Undefined() && continue
-        k2 = string(k)
-        haskey(attrs, k2) && continue
-        d = get(ds, k, nothing)
-        d === nothing && continue
-        d.kind == TYPE_K || continue
-        t = d.type::PropType
-        v2 = validate(t, v)
-        v2 isa Invalid && error("Theme: $(mt.name): .$k: $(v2.msg)")
-        f = (d.type::PropType).serialize
-        v3 = f === nothing ? serialize(s, v2) : f(s, v2)
-        attrs[k2] = v3
+    for theme in reverse(s.themes)
+        for (k, v) in modeldefaults(m, theme)
+            v === Undefined() && continue
+            k2 = string(k)
+            haskey(attrs, k2) && continue
+            d = get(ds, k, nothing)
+            d === nothing && continue
+            d.kind == TYPE_K || continue
+            t = d.type::PropType
+            v2 = validate(t, v)
+            v2 isa Invalid && error("Theme: $(mt.name): .$k: $(v2.msg)")
+            f = (d.type::PropType).serialize
+            v3 = f === nothing ? serialize(s, v2) : f(s, v2)
+            attrs[k2] = v3
+        end
     end
     ans = Dict(
         "type"=>mt.name,

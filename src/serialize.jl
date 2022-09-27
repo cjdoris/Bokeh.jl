@@ -1,4 +1,4 @@
-Serializer(; theme::Theme=Theme()) = Serializer(Dict{String,Any}(), Dict{String,Any}(), theme)
+Serializer(; themes=Theme[]) = Serializer(Dict{String,Any}(), Dict{String,Any}(), themes)
 
 serialize(s::Serializer, x::Nothing) = nothing
 serialize(s::Serializer, x::Missing) = "NaN"
