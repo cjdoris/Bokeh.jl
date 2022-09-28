@@ -1,5 +1,13 @@
-Document(roots; theme::Theme=setting(:theme)) = Document(roots, theme)
+"""
+    Document(plot; [theme])
+
+Construct a new document to render the given `plot`.
+
+The given `theme` (a [`Theme`](@ref)) is used to override attributes of the plot. It takes
+precedence over the global theme set using [`Bokeh.settings!`](@ref).
+"""
 Document(root::ModelInstance; kw...) = Document([root]; kw...)
+Document(roots; theme=setting(:theme)) = Document(roots, Theme(theme))
 
 function serialize(doc::Document; backend_theme=Theme(), themes=Theme[backend_theme, setting(:theme), doc.theme])
     ser = Serializer(; themes)

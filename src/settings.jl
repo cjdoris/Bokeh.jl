@@ -22,6 +22,10 @@ Update the global settings for Bokeh.
 - `browser_cmd`:
   The command used to open the browser.
   Default: Operating-system dependent.
+- `theme`:
+  The [`Theme`](@ref) to apply when displaying plots. May instead be the name of a [builtin
+  theme](@ref themes) or a JSON or YAML file.
+  Default: `Theme()`.
 """
 function settings!(;
     display=nothing,
@@ -58,8 +62,9 @@ function settings!(;
         SETTINGS.tempdir = tempdir
     end
     if theme !== nothing
-        SETTINGS.theme = theme
+        SETTINGS.theme = Theme(theme)
     end
+    return
 end
 
 """

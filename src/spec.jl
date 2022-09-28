@@ -747,3 +747,18 @@ function generate_dash_patterns()
     @eval const DASH_PATTERNS = $patterns
 end
 generate_dash_patterns()
+
+function generate_themes()
+    data = load_spec("themes")
+    themes = Dict(String(k) => Theme(v.attrs) for (k, v) in data)
+    # HACK: set the default colors to be blue (pybokeh sets this in the plotting api)
+    for theme in values(themes)
+        attrs = get!(valtype(theme.attrs), theme.attrs, :Glyph)
+        get!(attrs, :fill_color, "#1f77b4")
+        get!(attrs, :line_color, "#1f77b4")
+        get!(attrs, :hatch_color, "#1f77b4")
+        get!(attrs, :text_color, "#1f77b4")
+    end
+    @eval const THEMES = $themes
+end
+# generate_themes()  --> in theme.jl
