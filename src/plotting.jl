@@ -147,10 +147,10 @@ end
 """
     figure(; ...)
 
-Create a new [`Plot`](@ref) and return it.
+Create a new [`Figure`](@ref) and return it.
 
 Acceptable keyword arguments are:
-- Anything taken by [`Plot`](@ref).
+- Anything taken by [`Figure`](@ref).
 - `x_range`/`y_range`: Sets the x/y-range. May be a vector of factors or a 2-tuple representing an interval. Default: `DataRange1d()`.
 - `x_axis`/`y_axis`: Sets the x/y-axis. May be `nothing` to suppress. Default: `LinearAxis()`.
 - `x_axis_location`/`y_axis_location`: Where to put the axis. One of `"left"`, `"right"`, `"above"` or `"below"`. Default: `"below"`/`"left"`.
@@ -178,7 +178,7 @@ function figure(;
     tooltips=Undefined(),
     kw...,
 )
-    fig = Plot(; kw...)
+    fig = Figure(; kw...)
 
     # range/axis/scale/grid
     fig.x_range = x_range = get_range(x_range)

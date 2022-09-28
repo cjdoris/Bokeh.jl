@@ -309,11 +309,14 @@ function serialize_noref(s::Serializer, m::ModelInstance)
             attrs[k2] = v3
         end
     end
-    ans = Dict(
-        "type"=>mt.name,
+    ans = Dict{String,Any}(
+        "type"=>mt.view_type,
         "id"=>id,
         "attributes"=>attrs,
     )
+    if mt.view_subtype !== nothing
+        ans["subtype"] = mt.view_subtype
+    end
     s.refs[id] = m
     s.refscache[id] = ans
     return ans

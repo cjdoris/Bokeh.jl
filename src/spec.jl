@@ -492,6 +492,8 @@ function generate_model_types()
         # make the type
         mt = ModelType(
             name = mname,
+            view_type = get(mspec, :view_type, mname),
+            view_subtype = get(mspec, :view_subtype, nothing),
             doc = Markdown.MD(parse_doc(mspec.desc, mspec.richdesc)),
             bases = ModelType[mtypes[bname] for bname in mspec.bases],
         )

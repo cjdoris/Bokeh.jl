@@ -39,7 +39,7 @@ include("init.jl")
 include("hex.jl")
 
 precompile(figure, ())
-precompile(Plot, ())
+precompile(Figure, ())
 precompile(plot!, (ModelInstance, ModelType))
 precompile(plot!, (ModelInstance, ModelInstance))
 precompile(display, (BokehDisplay, ModelInstance))

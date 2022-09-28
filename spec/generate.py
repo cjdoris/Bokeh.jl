@@ -22,6 +22,7 @@ from bokeh.core.property.bases import UndefinedType
 from bokeh.core.property.descriptors import AliasPropertyDescriptor
 from bokeh.model import Model
 
+import bokeh.plotting  # so that Figure is included when enumerating model types
 import bokeh.palettes
 import bokeh.colors.named
 import bokeh.models
@@ -83,6 +84,17 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         'desc'  : mkdesc(m.__doc__ or ""),
         'richdesc': mkrichdesc(m.__doc__ or "", name),
     }
+    view_model = getattr(m, '__view_model__', None)
+    if view_model is not None:
+        if '.' in item['name']:
+            view_type = m.__view_module__ + '.' + view_model
+        else:
+            view_type = view_model
+        if view_type != item['name']:
+            item['view_type'] = view_type
+    view_subtype = getattr(m, '__subtype__', None)
+    if view_subtype is not None:
+        item['view_subtype'] = view_subtype
     props = []
     for prop_name in m.__properties__: # __properties__ does not include inherited props
         descriptor = m.lookup(prop_name)

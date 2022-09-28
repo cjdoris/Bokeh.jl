@@ -74,6 +74,8 @@ end
 
 Base.@kwdef mutable struct ModelType
     name::String = ""
+    view_type::String = name
+    view_subtype::Union{String,Nothing} = nothing
     bases::Vector{ModelType} = ModelType[]
     mro::Vector{ModelType} = ModelType[]
     propdescs::Dict{Symbol,PropDesc} = Dict{Symbol,PropDesc}()
