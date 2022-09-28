@@ -8,7 +8,7 @@ Construct a theme from the given source, which is either:
 
 For example, here is a theme which overrides some attributes on all figures, axes, grids
 and titles:
-```
+```julia
 Theme([
     "Figure" => [
         "background_fill_color" => "#2F2F2F",
