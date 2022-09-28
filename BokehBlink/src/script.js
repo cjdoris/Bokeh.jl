@@ -17,7 +17,9 @@
         }
         const dw = Math.max(w1 - w0, 0)
         const dh = Math.max(h1 - h0, 0)
-        window.resizeBy(dw, dh)
+        if ((dw > 0) || (dh > 0)) {
+            window.resizeBy(dw, dh)
+        }
     })
     observer.observe(document.querySelector('body'), {childList: true, subtree: true})
 
