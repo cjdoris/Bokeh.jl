@@ -1,0 +1,19 @@
+.list-card-text {
+    padding: 0;
+    margin-top: 1em;
+}
+
+.list-card-description {
+    padding: 0;
+    margin-top: 1em;
+}
+
+.list-card-cover {
+    box-shadow: none;
+}
+
+.list-card-cover img {
+    width: 140px;
+    height: 140px;
+    object-fit: none;
+}
