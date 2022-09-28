@@ -1,7 +1,20 @@
-# Settings & Backends
+# Settings, Theming & Backends
 
 ```@docs
 Bokeh.settings!
+```
+
+## [Theming](@id theming)
+
+The appearance of a Bokeh plot comes from these sources, in order of precedence:
+- A plot-specific theme, given by creating a [`Document`](@ref) with the specified theme.
+- A global theme, given as the `theme` argument to [`Bokeh.settings!`](@ref).
+- The display backend.
+- Bokeh defaults.
+
+```@docs
+Bokeh.Theme
+Bokeh.Document
 ```
 
 ## [Display Backends](@id display_backends)
@@ -28,8 +41,8 @@ using Bokeh, BokehBlink
 Bokeh.settings!(display=:blink)
 ```
 
-By default, the plot will have a fixed size. To have it resize to fill the window, you may
-set `sizing_mode="stretch_both"` on the top-level figure.
+By default, plots are stretched to fill the window. You may override this by setting
+`sizing_mode` on the top-level figure or in the theme for [`Figure`](@ref).
 
 This package can also be used to export plots as images. You do not need to activate the
 backend first.

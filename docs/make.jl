@@ -112,6 +112,27 @@ open("docs/src/models.md", "w") do io
     end
 end
 
+open("docs/src/themes.md", "w") do io
+    println(io, """
+    # [Themes](@id themes)
+
+    See [the theming section](@ref theming) to find out how to apply these themes.
+    """)
+    for name in sort(collect(keys(Bokeh.THEMES)))
+        println(io, """
+
+        ## $name
+
+        ```@example
+        using Bokeh
+        p = figure(title="$name", width=300, height=300)
+        plot!(p, Line; x=[1, 2, 3, 4, 5], y=[6, 7, 6, 4, 5])
+        Document(p, theme="$name")
+        ```
+        """)
+    end
+end
+
 format = Documenter.HTML(
     edit_link = "main",
     prettyurls = get(ENV, "CI", nothing) == "true",
@@ -132,6 +153,7 @@ makedocs(
             "models.md",
             "colors.md",
             "palettes.md",
+            "themes.md",
         ],
     ],
     strict = [
