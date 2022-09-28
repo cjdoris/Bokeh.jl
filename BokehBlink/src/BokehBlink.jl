@@ -88,7 +88,7 @@ function newwin(; size=nothing, title=nothing, always_on_top=nothing)
     return window::Window
 end
 
-function curwin(; resize=true, size=nothing, title=nothing)
+function curwin(; size=nothing, title=nothing)
     window = _curwin[]
     if !isopen(window)
         window = newwin(; title, size)
@@ -143,7 +143,7 @@ end
 
 Displays a Bokeh document or plot in the given Blink window.
 """
-function display(sdoc::Bokeh.SerializedDocument; resize=true, size=nothing, window=curwin(; resize, size))
+function display(sdoc::Bokeh.SerializedDocument; window=curwin())
     load_resources!(window, Bokeh.doc_resources(sdoc))
     Blink.body!(window.blink, Bokeh.doc_inline_html(sdoc))
     return
