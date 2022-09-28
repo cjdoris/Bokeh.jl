@@ -29,6 +29,7 @@ import bokeh.models
 import bokeh.models.widgets
 import bokeh.core.enums
 import bokeh.core.property.visual
+import bokeh.themes
 
 def save(data, name):
     with open(f'spec/{name}.json', 'wt') as fp:
@@ -159,3 +160,9 @@ save(hatch_patterns, 'hatch_patterns')
 
 dash_patterns = bokeh.core.property.visual.DashPattern._dash_patterns
 save(dash_patterns, 'dash_patterns')
+
+
+### THEMES
+
+themes = {k: v._json for (k, v) in bokeh.themes.built_in_themes.items()}
+save(themes, 'themes')
