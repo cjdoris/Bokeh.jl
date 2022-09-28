@@ -42,7 +42,7 @@ Bokeh.settings!(display=:blink)
 ```
 
 By default, plots are stretched to fill the window. You may override this by setting
-`sizing_mode` on the top-level figure or in the theme for [`Figure`](@ref).
+`sizing_mode` on the top-level figure/column/row/etc.
 
 This package can also be used to export plots as images. You do not need to activate the
 backend first.
