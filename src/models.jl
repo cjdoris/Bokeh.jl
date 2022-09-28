@@ -275,8 +275,14 @@ function serialize(s::Serializer, m::ModelInstance)
 end
 
 # TODO: cache this on the theme
-# TODO: search the whole MRO of the model type
-modeldefaults(model::ModelInstance, theme::Theme) = get(Dict{Symbol,Any}, theme.attrs, Symbol(modeltype(model).name))
+function modeldefaults(model::ModelInstance, theme::Theme)
+    ds = Dict{Symbol,Any}()
+    for mt in Iterators.reverse(modeltype(model).mro)
+        ds0 = get(theme.attrs, Symbol(mt.name), nothing)
+        ds0 === nothing || merge!(ds, ds0)
+    end
+    return ds
+end
 
 function serialize_noref(s::Serializer, m::ModelInstance)
     id = modelid(m)
