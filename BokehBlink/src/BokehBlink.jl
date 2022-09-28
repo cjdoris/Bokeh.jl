@@ -26,46 +26,6 @@ function guess_format(filename)
     return split(basename(filename), '.'; limit=2)[end]
 end
 
-function guess_size(sdoc::Bokeh.SerializedDocument; oldsize=nothing)
-    w = h = nothing
-    fixed_width = false
-    fixed_height = false
-    for plot in sdoc.doc.roots
-        attrs = sdoc.ser.refscache[Bokeh.modelid(plot)]["attributes"]::Dict{String,Any}
-        sizing_mode = get(attrs, "sizing_mode", nothing)
-        if oldsize === nothing
-            ignore_width = sizing_mode ∈ ("stretch_width", "stretch_both")
-            ignore_height = sizing_mode ∈ ("stretch_height", "stretch_both")
-        else
-            ignore_width = sizing_mode ∉ (nothing, "fixed", "stretch_height")
-            ignore_height = sizing_mode ∉ (nothing, "fixed", "stretch_width")
-        end
-        w0 = get(attrs, "width", nothing)
-        h0 = get(attrs, "height", nothing)
-        if !ignore_width
-            fixed_width = true
-            if w0 !== nothing
-                w0 = convert(Int, w0)::Int
-                w = w === nothing ? w0 : max(w, w0)
-            end
-        end
-        if !ignore_height
-            fixed_height = true
-            if h0 !== nothing
-                h0 = convert(Int, h0)::Int
-                h = h === nothing ? h0 : max(h, h0)
-            end
-        end
-    end
-    if (fixed_width || oldsize === nothing) && w === nothing
-        w = oldsize === nothing ? 600 : convert(Int, oldsize[1])
-    end
-    if (fixed_height || oldsize === nothing) && h === nothing
-        h = oldsize === nothing ? 600 : convert(Int, oldsize[2])
-    end
-    return (w, h)
-end
-
 ### DISPLAY
 
 mutable struct Window
@@ -84,7 +44,11 @@ const _opts = Dict{Symbol,Any}(
     :icon => joinpath(@__DIR__, "bokeh-favicon-32x32.png"),
 )
 
-const _theme = Bokeh.Theme(Dict(:Plot=>Dict(:sizing_mode => "stretch_both")))
+const _theme = Bokeh.Theme([
+    :Plot => [
+        :sizing_mode => "stretch_both",
+    ],
+])
 
 function load_resources!(window::Window, resources)
     # filter out resources already loaded
@@ -106,15 +70,11 @@ function load_resources!(window::Window, resources)
     return window
 end
 
-function newwin(; size=nothing, sdoc=nothing, title=nothing, always_on_top=nothing)
+function newwin(; size=nothing, title=nothing, always_on_top=nothing)
     opts = copy(_opts)
-    if size === nothing && sdoc !== nothing
-        size = guess_size(sdoc)
-    end
-    if size !== nothing
-        opts[:width], opts[:height] = size
-        opts[:useContentSize] = true
-    end
+    size = something(size, (600, 600))
+    opts[:width], opts[:height] = size
+    opts[:useContentSize] = true
     if title !== nothing
         opts[:title] = title
     end
@@ -122,22 +82,17 @@ function newwin(; size=nothing, sdoc=nothing, title=nothing, always_on_top=nothi
         opts[:alwaysOnTop] = always_on_top
     end
     window = Window(Blink.Window(opts))
+    # Blink.loadjs!(window.blink, joinpath(@__DIR__, "script.js"))
+    Blink.loadjs!(window.blink, data_url("text/javascript", read(joinpath(@__DIR__, "script.js"), String)))
     _curwin[] = window
     return window::Window
 end
 
-function curwin(; resize=true, sdoc=nothing, size=nothing, title=nothing)
+function curwin(; resize=true, size=nothing, title=nothing)
     window = _curwin[]
     if !isopen(window)
-        window = newwin(; title, size, sdoc)
+        window = newwin(; title, size)
     else
-        if size === nothing && sdoc !== nothing && resize
-            oldsize = (
-                Blink.@js(window.blink, window.innerWidth)::Int,
-                Blink.@js(window.blink, window.innerHeight)::Int,
-            )
-            size = guess_size(sdoc; oldsize)
-        end
         if size !== nothing
             setsize(size...; window)
         end
@@ -188,7 +143,7 @@ end
 
 Displays a Bokeh document or plot in the given Blink window.
 """
-function display(sdoc::Bokeh.SerializedDocument; resize=true, size=nothing, window=curwin(; resize, size, sdoc))
+function display(sdoc::Bokeh.SerializedDocument; resize=true, size=nothing, window=curwin(; resize, size))
     load_resources!(window, Bokeh.doc_resources(sdoc))
     Blink.body!(window.blink, Bokeh.doc_inline_html(sdoc))
     return
