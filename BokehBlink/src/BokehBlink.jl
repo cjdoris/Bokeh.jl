@@ -45,7 +45,7 @@ const _opts = Dict{Symbol,Any}(
 )
 
 const _theme = Bokeh.Theme([
-    :Plot => [
+    :LayoutDOM => [
         :sizing_mode => "stretch_both",
     ],
 ])

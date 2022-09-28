@@ -584,7 +584,7 @@ _layoutdom_has_auto_sizing(x) = x.sizing_mode === nothing && x.width_policy == "
 function _rowcol_handle_child_sizing(children, sizing_mode)
     for child in children
         ismodelinstance(child, LayoutDOM) || error("child must be a LayoutDOM, got a $(modeltype(child).name)")
-        if sizing_mode !== nothing && _layoutdom_has_auto_sizing(child)
+        if sizing_mode !== Undefined() && sizing_mode !== nothing && _layoutdom_has_auto_sizing(child)
             child.sizing_mode = sizing_mode
         end
     end
@@ -596,7 +596,7 @@ end
 
 Create a new [`Row`](@ref) with the given items.
 """
-function row(children::Vector{ModelInstance}; sizing_mode=nothing, kw...)
+function row(children::Vector{ModelInstance}; sizing_mode=Undefined(), kw...)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Row(; children, sizing_mode, kw...)
 end
@@ -608,7 +608,7 @@ row(children::ModelInstance...; kw...) = row(collect(ModelInstance, children); k
 
 Create a new [`Column`](@ref) with the given items.
 """
-function column(children::Vector{ModelInstance}; sizing_mode=nothing, kw...)
+function column(children::Vector{ModelInstance}; sizing_mode=Undefined(), kw...)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Column(; children, sizing_mode, kw...)
 end
