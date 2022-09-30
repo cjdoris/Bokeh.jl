@@ -20,6 +20,7 @@ import docutils.utils
 
 from bokeh.core.property.bases import UndefinedType
 from bokeh.core.property.descriptors import AliasPropertyDescriptor
+from bokeh.core.property_mixins import HasProps
 from bokeh.model import Model
 
 import bokeh.plotting  # so that Figure is included when enumerating model types
@@ -97,37 +98,49 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
     if view_subtype is not None:
         item['view_subtype'] = view_subtype
     props = []
-    for prop_name in m.__properties__: # __properties__ does not include inherited props
-        descriptor = m.lookup(prop_name)
-        if isinstance(descriptor, AliasPropertyDescriptor):
-            continue
+    props_names = set()
+    def find_props(m):
+        for prop_name in m.__properties__: # __properties__ does not include inherited props
+            if prop_name in props_names:
+                continue
+            descriptor = m.lookup(prop_name)
+            if isinstance(descriptor, AliasPropertyDescriptor):
+                continue
 
-        prop = descriptor.property
+            prop = descriptor.property
 
-        detail = {
-            'name'    : prop_name,
-            'type'    : str(prop),
-            'desc'    : mkdesc(prop.__doc__ or ""),
-            'richdesc': mkrichdesc(prop.__doc__ or '', '{name}.{prop_name}'),
-        }
+            detail = {
+                'name'    : prop_name,
+                'type'    : str(prop),
+                'desc'    : mkdesc(prop.__doc__ or ""),
+                'richdesc': mkrichdesc(prop.__doc__ or '', '{name}.{prop_name}'),
+            }
 
-        default = descriptor.instance_default(m())
+            default = descriptor.instance_default(m())
 
-        if isinstance(default, UndefinedType):
-            default = "<Undefined>"
+            if isinstance(default, UndefinedType):
+                default = "<Undefined>"
 
-        if isinstance(default, Model):
-            default = _proto(default)
+            if isinstance(default, Model):
+                default = _proto(default)
 
-        if isinstance(default, (list, tuple)) and any(isinstance(x, Model) for x in default):
-            default = [_proto(x) for x in default]
+            if isinstance(default, (list, tuple)) and any(isinstance(x, Model) for x in default):
+                default = [_proto(x) for x in default]
 
-        if isinstance(default, dict) and any(isinstance(x, Model) for x in default.values()):
-            default = { k: _proto(v) for k, v in default.items() }
+            if isinstance(default, dict) and any(isinstance(x, Model) for x in default.values()):
+                default = { k: _proto(v) for k, v in default.items() }
 
-        detail['default'] = default
+            detail['default'] = default
 
-        props.append(detail)
+            props.append(detail)
+            props_names.add(prop_name)
+
+            # include properties from any bases which are not models, since these are not enumerated
+            for b in m.__bases__:
+                if issubclass(b, HasProps) and not issubclass(b, Model):
+                    find_props(b)
+    find_props(m)
+    props.sort(key=lambda x: x['name'])
 
     item['props'] = props
 
