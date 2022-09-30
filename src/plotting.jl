@@ -627,6 +627,7 @@ function widgetbox(children::AbstractVector; sizing_mode=Undefined(), kw...)
     _rowcol_handle_child_sizing(children, sizing_mode)
     return WidgetBox(; children, sizing_mode, kw...)
 end
+widgetbox(children::ModelInstance...; kw...) = widgetbox(collect(ModelInstance, children); kw...)
 
 """
     gridplot(items; ...)
