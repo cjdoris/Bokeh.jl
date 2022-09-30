@@ -25,7 +25,7 @@ Update the global settings for Bokeh.
 - `theme`:
   The [`Theme`](@ref) to apply when displaying plots. May instead be the name of a [builtin
   theme](@ref themes) or a JSON or YAML file.
-  Default: `Theme()`.
+  Default: `"default"`.
 """
 function settings!(;
     display=nothing,

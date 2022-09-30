@@ -94,3 +94,4 @@ function Base.show(io::IO, ::MIME"text/plain", theme::Theme)
 end
 
 generate_themes()
+SETTINGS.theme = THEMES["default"]
