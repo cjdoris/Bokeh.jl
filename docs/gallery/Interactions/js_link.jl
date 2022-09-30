@@ -1,13 +1,13 @@
 # ---
-# title: Linked properties
+# title: Linked Properties
 # id: js_link
 # description: Links a glyph size to a slider widget.
-# #cover: ../assets/heatmap.png
+# cover: ../assets/js_link.png
 # ---
 
 # Demonstrates using [`js_link`](@ref) to use a slider widget to control the size of a glyph.
 # 
-# Reproduces the plot from [https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/linking.html#linked-properties](https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/linking.html#linked-properties).
+# Reproduces the plot from [https://docs.bokeh.org/en/2.4.2/docs/user\_guide/interaction/linking.html#linked-properties](https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/linking.html#linked-properties).
 
 using Bokeh
 
