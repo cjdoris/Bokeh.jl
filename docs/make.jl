@@ -149,6 +149,7 @@ makedocs(
         "Reference" => [
             "plotting.md",
             "misc.md",
+            "interaction.md",
             "data.md",
             "models.md",
             "colors.md",

@@ -358,3 +358,71 @@ const RESOURCES = Dict(
 push!(Model.resources, RESOURCES["bokeh"], RESOURCES["bokeh-gl"], RESOURCES["bokeh-mathjax"])
 push!(Widget.resources, RESOURCES["bokeh-widgets"])
 push!(TableWidget.resources, RESOURCES["bokeh-tables"])
+
+"""
+    js_on_change(model, event, callbacks...)
+
+Attach [`CustomJS`](@ref) callbacks to an arbitrary BokehJS model change event.
+
+Change events for model properties are of the form `"change:property_name"` but as a
+convenience you can simply provide `"property_name"`.
+"""
+function js_on_change(model::ModelInstance, event::AbstractString, callbacks::ModelInstance...)
+    # check inputs
+    event = convert(String, event)
+    all(cb -> ismodelinstance(cb, CustomJS), callbacks) || error("callbacks must be CustomJS instances")
+
+    # convert property_name to change:property_name
+    if haskey(modeltype(model).propdescs, Symbol(event))
+        event = "change:$event"
+    end
+
+    # add the callbacks
+    # TODO: the python library does not add a callback already there
+    # TODO: trigger a change on js_property_callbacks (when we have triggers)
+    cbs = model.js_property_callbacks::Dict{String,Vector{ModelInstance}}
+    push!(get!(valtype(cbs), cbs, event), callbacks...)
+    return
+end
+
+"""
+    js_link(model, property, other_model, other_property)
+
+Link two Bokeh model properties via JavaScript.
+
+Whenever `model.property` is changed, then `other_property.other_model` is set to its value.
+"""
+function js_link(model::ModelInstance, property::String, other::ModelInstance, other_property::String, index=nothing)
+    # ensure the properties exist
+    haskey(modeltype(model).propdescs, Symbol(property)) || error("$(modeltype(model).name).$(property): invalid property")
+    haskey(modeltype(other).propdescs, Symbol(other_property)) || error("$(modeltype(other).name).$(other_property): invalid property")
+
+    # select the index
+    selector = index === nothing ? "" : "[$(JSON3.write(index))]"
+
+    # make the callback
+    callback = CustomJS(
+        args = Dict("other" => other),
+        code = "other[$(JSON3.write(other_property))] = this[$(JSON3.write(property))]$selector"
+    )
+
+    js_on_change(model, "change:$property", callback)
+end
+
+"""
+    js_on_event(model, event, callbacks...)
+
+Attach [`CustomJS`](@ref) callbacks to an arbitrary BokehJS model event.
+"""
+function js_on_event(model::ModelInstance, event::AbstractString, callbacks::ModelInstance...)
+    # check inputs
+    event = convert(String, event)
+    all(cb -> ismodelinstance(cb, CustomJS), callbacks) || error("callbacks must be CustomJS instances")
+
+    # add the callbacks
+    # TODO: the python library does not add a callback already there
+    # TODO: trigger a change on js_property_callbacks (when we have triggers)
+    cbs = model.js_event_callbacks::Dict{String,Vector{ModelInstance}}
+    push!(get!(valtype(cbs), cbs, event), callbacks...)
+    return
+end
