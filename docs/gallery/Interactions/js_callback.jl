@@ -2,7 +2,7 @@
 # title: JavaScript Callbacks
 # id: js_callback
 # description: Writing custom JavaScript for advanced interactivity.
-# #cover: ../assets/linked_brushing.png
+# cover: ../assets/js_callback.png
 # ---
 
 # In this example we write some custom JavaScript which is called whenever the value of a
