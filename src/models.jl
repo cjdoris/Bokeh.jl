@@ -398,7 +398,7 @@ end
 
 Link two Bokeh model properties via JavaScript.
 
-Whenever `model.property` is changed, then `other_property.other_model` is set to its value.
+Whenever `model.property` is changed, then `other_model.other_property` is set to its value.
 """
 function js_link(model::ModelInstance, property::String, other::ModelInstance, other_property::String, index=nothing)
     # ensure the properties exist
