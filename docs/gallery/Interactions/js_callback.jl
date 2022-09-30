@@ -13,7 +13,7 @@
 
 using Bokeh
 
-x = range(0, 1, 200)
+x = range(0, 1, length=200)
 y = x
 
 source = ColumnDataSource(data=(; x, y))
