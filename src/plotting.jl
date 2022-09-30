@@ -596,7 +596,8 @@ end
 
 Create a new [`Row`](@ref) with the given items.
 """
-function row(children::Vector{ModelInstance}; sizing_mode=Undefined(), kw...)
+function row(children::AbstractVector; sizing_mode=Undefined(), kw...)
+    all(m->ismodelinstance(m, LayoutDOM)) || error("all children must be LayoutDOM instances")
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Row(; children, sizing_mode, kw...)
 end
@@ -608,11 +609,24 @@ row(children::ModelInstance...; kw...) = row(collect(ModelInstance, children); k
 
 Create a new [`Column`](@ref) with the given items.
 """
-function column(children::Vector{ModelInstance}; sizing_mode=Undefined(), kw...)
+function column(children::AbstractVector; sizing_mode=Undefined(), kw...)
+    all(m->ismodelinstance(m, LayoutDOM)) || error("all children must be LayoutDOM instances")
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Column(; children, sizing_mode, kw...)
 end
 column(children::ModelInstance...; kw...) = column(collect(ModelInstance, children); kw...)
+
+"""
+    widgetbox(items; ...)
+    widgetbox(items...; ...)
+
+Create a new [`WidgetBox`](@ref) with the given items.
+"""
+function widgetbox(children::AbstractVector; sizing_mode=Undefined(), kw...)
+    all(m->ismodelinstance(m, Widget)) || error("all children must be Widget instances")
+    _rowcol_handle_child_sizing(children, sizing_mode)
+    return WidgetBox(; children, sizing_mode, kw...)
+end
 
 """
     gridplot(items; ...)

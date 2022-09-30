@@ -18,7 +18,7 @@ const SRC_DIR = @__DIR__
 export Field, Value, Document, Theme
 export figure, plot!
 export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap, log_cmap
-export row, column, gridplot
+export row, column, widgetbox, gridplot
 export js_on_change, js_link, js_on_event, js_on_click
 
 include("data.jl")
