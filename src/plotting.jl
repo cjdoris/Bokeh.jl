@@ -613,3 +613,89 @@ function column(children::Vector{ModelInstance}; sizing_mode=Undefined(), kw...)
     return Column(; children, sizing_mode, kw...)
 end
 column(children::ModelInstance...; kw...) = column(collect(ModelInstance, children); kw...)
+
+"""
+    gridplot(items; ...)
+    gridplot(items...; ...)
+
+Arrange the given `items` into a grid.
+
+The `items` must be a matrix or vector of layoutable models (such as plots). An item may
+also be `nothing` to skip that cell.
+
+### Keyword arguments
+- `merge_tools=true`: When true, toolbars of constituent plots are merged into one.
+- `toolbar_location="above"`: Where to place the merged toolbar. May be `nothing`.
+- `toolbar_options`: A named tuple of options for the merged toolbar.
+- `sizing_mode`: The sizing mode of the resulting grid.
+- `width`: The width of each item.
+- `height`: The height of each item.
+- `ncols`: When `items` is a vector, they are arranged into a grid with this number of columns.
+"""
+function gridplot(
+    items::AbstractMatrix;
+    merge_tools=true,
+    width=nothing,
+    height=nothing,
+    sizing_mode=Undefined(),
+    toolbar_location="above",
+    toolbar_options=NamedTuple(),
+)
+    toolbars = ModelInstance[]
+    children = Tuple{ModelInstance,Int,Int}[]
+    for (i, row) in enumerate(eachrow(items))
+        for (j, item) in enumerate(row)
+            if item === nothing
+                continue
+            elseif ismodelinstance(item, LayoutDOM)
+                if merge_tools && ismodelinstance(item, Plot)
+                    # TODO: implement select, so we can find all subplots
+                    push!(toolbars, item.toolbar)
+                    item.toolbar_location = nothing
+                end
+                if width !== nothing
+                    item.width = width
+                end
+                if height !== nothing
+                    item.height = height
+                end
+                if sizing_mode !== Undefined() && _layoutdom_has_auto_sizing(item)
+                    item.sizing_mode = sizing_mode
+                end
+                push!(children, (item, i-1, j-1))
+            else
+                error("items[$j, $i]: expecting a LayoutDOM or nothing")
+            end
+        end
+    end
+    if !merge_tools || toolbar_location === nothing
+        return GridBox(; children, sizing_mode)
+    else
+        grid = GridBox(; children)
+        tools = [tool for toolbar in toolbars for tool in toolbar.tools]
+        toolbar = ProxyToolbar(; toolbars, tools, toolbar_options...)
+        toolbar = ToolbarBox(; toolbar, toolbar_location)
+        if toolbar_location == "above"
+            return Column(; children=[toolbar, grid], sizing_mode)
+        elseif toolbar_location == "below"
+            return Column(; children=[grid, toolbar], sizing_mode)
+        elseif toolbar_location == "left"
+            return Row(; children=[toolbar, grid], sizing_mode)
+        elseif toolbar_location == "right"
+            return Row(; children=[grid, toolbar], sizing_mode)
+        else
+            error("toolbar_location: expecting \"above\", \"below\", \"left\" or \"right\"")
+        end
+    end
+end
+function gridplot(children::AbstractVector; ncols=1, kw...)
+    nrows = cld(length(children), ncols)
+    grid = Matrix{Union{Nothing,ModelInstance}}(nothing, nrows, ncols)
+    for (i, item) in enumerate(children)
+        grid[div(i-1, ncols)+1, mod(i-1, ncols)+1] = item
+    end
+    return gridplot(grid; kw...)
+end
+function gridplot(children::Union{Nothing,ModelInstance}...; kw...)
+    return gridplot(collect(Union{Nothing,ModelInstance}, children); kw...)
+end
