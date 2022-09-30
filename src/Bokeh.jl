@@ -19,7 +19,7 @@ export Field, Value, Document, Theme
 export figure, plot!
 export transform, dodge, factor_mark, factor_cmap, factor_hatch, jitter, linear_cmap, log_cmap
 export row, column
-export js_on_change, js_link, js_on_event
+export js_on_change, js_link, js_on_event, js_on_click
 
 include("data.jl")
 include("typedefs.jl")

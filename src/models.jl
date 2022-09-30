@@ -407,6 +407,7 @@ function js_link(model::ModelInstance, property::String, other::ModelInstance, o
     )
 
     js_on_change(model, "change:$property", callback)
+    return
 end
 
 """
@@ -425,4 +426,35 @@ function js_on_event(model::ModelInstance, event::AbstractString, callbacks::Mod
     cbs = model.js_event_callbacks::Dict{String,Vector{ModelInstance}}
     push!(get!(valtype(cbs), cbs, event), callbacks...)
     return
+end
+
+const _js_on_click_methods = Dict(
+    Button => ((m, cbs...) -> js_on_event(m, "button_click", cbs...)),
+    Toggle => ((m, cbs...) -> js_on_change(m, "change:active", cbs...)),
+    AbstractGroup => ((m, cbs...) -> js_on_change(m, "change:active", cbs...)),
+    Dropdown => ((m, cbs...) -> (js_on_event(m, "button_click", cbs...); js_on_event(m, "menu_item_click", cbs...))),
+)
+
+"""
+    js_on_click(model, callbacks...)
+
+Attach [`CustomJS`](@ref) callbacks to run when the `model` is clicked.
+
+This applies to button widgets such as [`Button`](@ref), [`Toggle`](@ref) and
+[`Dropdown`](@ref). It also includes group widgets such as [`CheckboxGroup`](@ref),
+[`RadioGroup`](@ref), [`CheckboxButtonGroup`](@ref) and [`RadioButtonGroup`](@ref).
+"""
+function js_on_click(model::ModelInstance, callbacks::ModelInstance...)
+    # check inputs
+    all(cb -> ismodelinstance(cb, CustomJS), callbacks) || error("callbacks must be CustomJS instances")
+
+    # search for the right click method
+    for t in modeltype(model).mro
+        f = get(_js_on_click_methods, t, nothing)
+        if f !== nothing
+            f(model, callbacks...)
+            return
+        end
+    end
+    error("$(modeltype(model).name): not clickable")
 end
