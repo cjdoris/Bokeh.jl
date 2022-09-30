@@ -30,4 +30,4 @@ plot!(s2, Scatter; x, y=y1, size=10, color="firebrick", alpha=0.5, marker="trian
 s3 = figure(x_range=s1.x_range, title=nothing)
 plot!(s3, Scatter; x, y=y2, size=10, color="olive", alpha=0.5, marker="square")
 
-gridplot([s1 s2 s3], toolbar_location=nothing, width=250, height=250)
+grid([s1 s2 s3], merge_tools=true, toolbar_location=nothing, item_width=250, item_height=250)
