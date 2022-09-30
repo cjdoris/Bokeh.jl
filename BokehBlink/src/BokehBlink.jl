@@ -48,6 +48,9 @@ const _theme = Bokeh.Theme([
     :LayoutDOM => [
         :sizing_mode => "stretch_both",
     ],
+    :Widget => [
+        :sizing_mode => nothing,
+    ]
 ])
 
 function load_resources!(window::Window, resources)
