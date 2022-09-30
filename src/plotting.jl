@@ -597,7 +597,7 @@ end
 Create a new [`Row`](@ref) with the given items.
 """
 function row(children::AbstractVector; sizing_mode=Undefined(), kw...)
-    all(m->ismodelinstance(m, LayoutDOM)) || error("all children must be LayoutDOM instances")
+    all(m->ismodelinstance(m, LayoutDOM), children) || error("all children must be LayoutDOM instances")
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Row(; children, sizing_mode, kw...)
 end
@@ -610,7 +610,7 @@ row(children::ModelInstance...; kw...) = row(collect(ModelInstance, children); k
 Create a new [`Column`](@ref) with the given items.
 """
 function column(children::AbstractVector; sizing_mode=Undefined(), kw...)
-    all(m->ismodelinstance(m, LayoutDOM)) || error("all children must be LayoutDOM instances")
+    all(m->ismodelinstance(m, LayoutDOM), children) || error("all children must be LayoutDOM instances")
     _rowcol_handle_child_sizing(children, sizing_mode)
     return Column(; children, sizing_mode, kw...)
 end
@@ -623,94 +623,162 @@ column(children::ModelInstance...; kw...) = column(collect(ModelInstance, childr
 Create a new [`WidgetBox`](@ref) with the given items.
 """
 function widgetbox(children::AbstractVector; sizing_mode=Undefined(), kw...)
-    all(m->ismodelinstance(m, Widget)) || error("all children must be Widget instances")
+    all(m->ismodelinstance(m, Widget), children) || error("all children must be Widget instances")
     _rowcol_handle_child_sizing(children, sizing_mode)
     return WidgetBox(; children, sizing_mode, kw...)
 end
 widgetbox(children::ModelInstance...; kw...) = widgetbox(collect(ModelInstance, children); kw...)
 
 """
-    gridplot(items; ...)
-    gridplot(items...; ...)
+    grid(items; ...)
+    grid(items...; ...)
 
-Arrange the given `items` into a grid.
+Create a [`GridBox`](@ref) from the given items.
 
-The `items` must be a matrix or vector of layoutable models (such as plots). An item may
-also be `nothing` to skip that cell.
+The `items` argument is one of:
+- A vector of other items. The top-level vector arranges its items in a column. Subsequent
+  nesting of vectors switch between rows and columns, making it easy to create complex
+  layouts.
+- A matrix, specifying two levels of nesting.
+- A `LayoutDOM` object, which is the terminal entry in the grid.
+- A [`Row`](@ref) or [`Column`](@ref), explicitly specifying a row or column of the grid.
+- `nothing`, representing a blank cell.
 
-### Keyword arguments
+## Keyword arguments
+- `sizing_mode`: How the resulting grid is sized.
+- `nrows` or `ncols`: If `items` is a vector and one of these arguments is specified, it is
+  partitioned into a 2D layout with the given number of rows or columns.
+- `item_width`, `item_height`: The width and height of each item.
 - `merge_tools=true`: When true, toolbars of constituent plots are merged into one.
 - `toolbar_location="above"`: Where to place the merged toolbar. May be `nothing`.
 - `toolbar_options`: A named tuple of options for the merged toolbar.
-- `sizing_mode`: The sizing mode of the resulting grid.
-- `width`: The width of each item.
-- `height`: The height of each item.
-- `ncols`: When `items` is a vector, they are arranged into a grid with this number of columns.
+- Remaining arguments are passed to [`GridBox`](@ref).
 """
-function gridplot(
-    items::AbstractMatrix;
-    merge_tools=true,
-    width=nothing,
-    height=nothing,
-    sizing_mode=Undefined(),
-    toolbar_location="above",
-    toolbar_options=NamedTuple(),
-)
-    toolbars = ModelInstance[]
-    children = Tuple{ModelInstance,Int,Int}[]
-    for (i, row) in enumerate(eachrow(items))
-        for (j, item) in enumerate(row)
-            if item === nothing
-                continue
-            elseif ismodelinstance(item, LayoutDOM)
-                if merge_tools && ismodelinstance(item, Plot)
-                    # TODO: implement select, so we can find all subplots
-                    push!(toolbars, item.toolbar)
-                    item.toolbar_location = nothing
-                end
-                if width !== nothing
-                    item.width = width
-                end
-                if height !== nothing
-                    item.height = height
-                end
-                if sizing_mode !== Undefined() && _layoutdom_has_auto_sizing(item)
-                    item.sizing_mode = sizing_mode
-                end
-                push!(children, (item, i-1, j-1))
-            else
-                error("items[$j, $i]: expecting a LayoutDOM or nothing")
-            end
+function grid(items; sizing_mode=Undefined(), nrows=nothing, ncols=nothing, item_width=nothing, item_height=nothing, merge_tools=false, toolbar_location="above", toolbar_options=(), kw...)
+    # NOTE: This function is a combination of grid() and gridplot() from pybokeh.
+    if items isa AbstractVector
+        if nrows !== nothing
+            ncols = cld(length(items), nrows)
+        end
+        if ncols !== nothing
+            items = collect(Iterators.partition(items, ncols))
         end
     end
-    if !merge_tools || toolbar_location === nothing
-        return GridBox(; children, sizing_mode)
-    else
-        grid = GridBox(; children)
+    spec = _gridspec(items, 0)
+    children = [(i.layout, i.r0, i.c0, i.r1-i.r0, i.c1-i.c0) for i in spec.items if i.layout!==nothing]
+    toolbars = ModelInstance[]
+    for (x,_,_,_,_) in children
+        if merge_tools && ismodelinstance(x, Plot)
+            # TODO: implement select, so we can find all subplots
+            push!(toolbars, x.toolbar)
+            x.toolbar_location = nothing
+        end
+        if item_width !== nothing
+            x.width = item_width
+        end
+        if item_height !== nothing
+            x.height = item_height
+        end
+        if sizing_mode !== Undefined() && _layoutdom_has_auto_sizing(x)
+            x.sizing_mode = sizing_mode
+        end
+    end
+    if merge_tools && toolbar_location !== nothing
         tools = [tool for toolbar in toolbars for tool in toolbar.tools]
         toolbar = ProxyToolbar(; toolbars, tools, toolbar_options...)
         toolbar = ToolbarBox(; toolbar, toolbar_location)
         if toolbar_location == "above"
-            return Column(; children=[toolbar, grid], sizing_mode)
+            children = [(x,r+1,c,h,w) for (x,r,c,h,w) in children]
+            push!(children, (toolbar,0,0,1,spec.ncols))
         elseif toolbar_location == "below"
-            return Column(; children=[grid, toolbar], sizing_mode)
+            push!(children, (toolbar,spec.nrows,0,spec.nrows+1,spec.ncols))
         elseif toolbar_location == "left"
-            return Row(; children=[toolbar, grid], sizing_mode)
+            children = [(x,r,c+1,h,w) for (x,r,c,h,w) in children]
+            push!(children, (toolbar,0,0,spec.nrows,1))
         elseif toolbar_location == "right"
-            return Row(; children=[grid, toolbar], sizing_mode)
+            push!(children, (toolbar,0,spec.ncols,spec.nrows,spec.ncols+1))
         else
             error("toolbar_location: expecting \"above\", \"below\", \"left\" or \"right\"")
         end
     end
+    return GridBox(; children, sizing_mode, kw...)
 end
-function gridplot(children::AbstractVector; ncols=1, kw...)
-    nrows = cld(length(children), ncols)
-    grid = Matrix{Union{Nothing,ModelInstance}}(nothing, nrows, ncols)
-    for (i, item) in enumerate(children)
-        grid[div(i-1, ncols)+1, mod(i-1, ncols)+1] = item
+function grid(items...; kw...)
+    return grid(collect(items); kw...)
+end
+
+struct _GridItem
+    layout::Union{ModelInstance,Nothing}
+    r0::Int
+    c0::Int
+    r1::Int
+    c1::Int
+end
+
+struct _GridSpec
+    nrows::Int
+    ncols::Int
+    items::Vector{_GridItem}
+end
+
+function _gridspec(x, depth)
+    error("grid items must be a Vector, Matrix, LayoutDOM or nothing")
+end
+
+function _gridspec(x::Nothing, depth)
+    return _GridSpec(1, 1, [_GridItem(x, 0, 0, 1, 1)])
+end
+
+function _gridspec(xs::AbstractMatrix, depth)
+    if iseven(depth)
+        return _gridspec(collect(eachrow(xs)), depth)
+    else
+        return _gridspec(collect(eachcol(xs)), depth)
     end
-    return gridplot(grid; kw...)
 end
-function gridplot(children::Union{Nothing,ModelInstance}...; kw...)
-    return gridplot(collect(Union{Nothing,ModelInstance}, children); kw...)
+
+function _gridspec(x::ModelInstance, depth)
+    if ismodelinstance(x, Box) && (depth == 0 || (_layoutdom_has_auto_sizing(x) && x.spacing == 0))
+        if ismodelinstance(x, Column)
+            return _gridspec(x.children, 2)
+        elseif ismodelinstance(x, Row)
+            return _gridspec(x.children, 1)
+        end
+    end
+    return _GridSpec(1, 1, [_GridItem(x, 0, 0, 1, 1)])
+end
+
+function _gridspec(xs::AbstractVector, depth)
+    # recurse
+    children = _GridSpec[_gridspec(x, depth+1) for x in xs]
+    filter!(x->(x.nrows != 0 && x.ncols != 0), children)
+    # flatten
+    iscol = iseven(depth)
+    if iscol
+        nrows = sum(x->x.nrows, children)
+        ncols = mapreduce(x->x.ncols, lcm, children)
+        items = _GridItem[]
+        offset = 0
+        for child in children
+            factor = div(ncols, child.ncols)
+            for item in child.items
+                push!(items, _GridItem(item.layout, item.r0+offset, item.c0*factor, item.r1+offset, item.c1*factor))
+            end
+            offset += child.nrows
+        end
+        return _GridSpec(nrows, ncols, items)
+    else
+        nrows = mapreduce(x->x.nrows, lcm, children)
+        ncols = sum(x->x.ncols, children)
+        items = _GridItem[]
+        offset = 0
+        for child in children
+            factor = div(nrows, child.nrows)
+            for item in child.items
+                push!(items, _GridItem(item.layout, item.r0*factor, item.c0+offset, item.r1*factor, item.c1+offset))
+            end
+            offset += child.ncols
+        end
+        return _GridSpec(nrows, ncols, items)
+    end
 end

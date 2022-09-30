@@ -12,8 +12,8 @@ plot!
 ```@docs
 column
 row
+grid
 widgetbox
-gridplot
 ```
 
 ## Transforms
