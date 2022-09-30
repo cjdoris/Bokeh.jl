@@ -101,16 +101,26 @@ modelvalues(m::ModelInstance) = getfield(m, :values)
 ismodelinstance(m) = m isa ModelInstance
 ismodelinstance(m, t::ModelType) = ismodelinstance(m) && issubmodeltype(modeltype(m), t)
 
+function _findprop(mt::ModelType, k::Symbol)
+    ds = mt.propdescs
+    pd = get(ds, k, nothing)
+    pd !== nothing && return (pd, k)
+    if k == :end_
+        # allow end_ to alias for end, since foo(end=12) is not a syntax error
+        pd = get(ds, :end, nothing)
+        pd !== nothing && return (pd, :end)
+    end
+    error("$(mt.name): .$k: invalid property")
+end
+
 function Base.getproperty(m::ModelInstance, k::Symbol)
+    # look up the descriptor
+    mt = modeltype(m)
+    pd, k = _findprop(mt, k)
     # look up the value
     vs = modelvalues(m)
     v = get(vs, k, Undefined())
     v === Undefined() || return v
-    # look up the descriptor
-    mt = modeltype(m)
-    ds = mt.propdescs
-    pd = get(ds, k, nothing)
-    pd === nothing && error("$(mt.name): .$k: invalid property")
     # branch on the kind of the descriptor
     kd = pd.kind
     if kd == TYPE_K
@@ -140,9 +150,7 @@ end
 function Base.setproperty!(m::ModelInstance, k::Symbol, x)
     # look up the descriptor
     mt = modeltype(m)
-    ds = mt.propdescs
-    pd = get(ds, k, nothing)
-    pd === nothing && error("$(mt.name): .$k: invalid property")
+    pd, k = _findprop(mt, k)
     # branch on the kind of the descriptor
     kd = pd.kind
     if kd == TYPE_K
