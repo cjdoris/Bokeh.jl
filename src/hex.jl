@@ -33,7 +33,7 @@ function _hex_cartesian_to_axial(x, y; size=1, orientation="pointytop", aspect_s
     return _hex_round(q, r)
 end
 
-function _hex_round(q, r) where {T}
+function _hex_round(q, r)
     x = q
     z = r
     y = -(x+z)
