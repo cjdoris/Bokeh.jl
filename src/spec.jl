@@ -760,6 +760,7 @@ function generate_themes()
         get!(attrs, :hatch_color, "#1f77b4")
         get!(attrs, :text_color, "#1f77b4")
     end
+    themes["blank"] = Theme()
     @eval const THEMES = $themes
 end
 # generate_themes()  --> in theme.jl
