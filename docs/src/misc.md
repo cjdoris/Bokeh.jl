@@ -14,6 +14,9 @@ The appearance of a Bokeh plot comes from these sources, in order of precedence:
 
 ```@docs
 Bokeh.Theme
+Bokeh.theme!
+Bokeh.load_theme
+Bokeh.save_theme
 Bokeh.Document
 ```
 

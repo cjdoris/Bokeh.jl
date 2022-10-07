@@ -54,9 +54,16 @@ end
 function named_theme(name::AbstractString)
     theme = get(THEMES, name, nothing)
     theme === nothing && error("no such builtin theme: $(repr(name)), expecting one of $(join(sort([repr(k) for k in keys(THEMES)]), ", ", " or "))")
-    return theme
+    return deepcopy(theme)  # so we can modify it
 end
 
+"""
+    load_theme(filename)
+
+Load a theme from the given file.
+
+The format (JSON or YAML) is deduced from the file name.
+"""
 function load_theme(filename::AbstractString)
     ext = lowercase(splitext(filename)[2])
     if ext == ".json"
@@ -69,20 +76,65 @@ function load_theme(filename::AbstractString)
     end
 end
 
+"""
+    save_theme(filename, [theme])
+
+Save the given theme to the given file.
+
+If `theme` is not given, the default theme is saved.
+
+The format (JSON or YAML) is deduced from the file name.
+"""
+function save_theme(filename::AbstractString, theme::Theme=setting(:theme))
+    json = Dict(:attrs => theme.attrs)
+    ext = lowercase(splitext(filename)[2])
+    if ext == ".json"
+        open(filename, "w") do io
+            JSON3.write(io, json)
+        end
+    elseif ext in (".yml", ".yaml")
+        error("saving themes as YAML is not implemented")
+    else
+        error("themes can only be saved to JSON or YAML format")
+    end
+    return
+end
+
+"""
+    theme!([theme], "Type.attr" => value, ...)
+
+Modify the `theme` with the given key-value pairs.
+
+If `theme` is not given, the default theme is modified.
+
+For example, here we change the default height and width of all plots:
+```
+Bokeh.theme!("Plot.width"=>1000, "Plot.height"=>800)
+```
+"""
+function theme!(theme::Theme, attrs::Pair...)
+    for (k, v) in attrs
+        k = String(k)
+        '.' in k || error("each attr must be of the form \"Type.attribute\"")
+        t, a = split(k, '.', limit=2)
+        dict = get!(valtype(theme.attrs), theme.attrs, Symbol(t))
+        dict[Symbol(a)] = v
+    end
+end
+function theme!(attrs::Pair...)
+    theme!(setting(:theme), attrs...)
+end
+
 function Base.show(io::IO, ::MIME"text/plain", theme::Theme)
     show(io, typeof(theme))
     print(io, ":")
     isblank = true
     if !isempty(theme.attrs)
         isblank = false
-        println(io)
-        print(io, "  Attrs:")
         for t in sort!(collect(keys(theme.attrs)))
-            println(io)
-            print(io, "    ", t, ":")
             for k in sort!(collect(keys(theme.attrs[t])))
                 println(io)
-                print(io, "      ", k, ": ")
+                print(io, "  ", t, ".", k, ": ")
                 show(io, theme.attrs[t][k])
             end
         end
