@@ -14,8 +14,8 @@ const SETTINGS = Settings(NullDisplayBackend(), false, nothing, nothing, Theme()
 Update the global settings for Bokeh.
 
 - `display`:
-  The display backend to use, such as `:browser` or `:blink`.
-  Default: `:null`.
+  The display backend to use, such as `"browser"` or `"blink"`.
+  Default: `"null"`.
 - `offline`:
   If set to `true` then any generated plots will work offline.
   Default: `false`.
@@ -37,7 +37,8 @@ function settings!(;
     if display !== nothing
         if display isa AbstractDisplayBackend
             SETTINGS.display = display
-        elseif display isa Symbol
+        elseif display isa Union{Symbol,AbstractString}
+            display = Symbol(display)
             display_backend = get(DISPLAY_BACKENDS, display, nothing)
             if display_backend === nothing
                 display_package = get(EXTERNAL_DISPLAY_BACKENDS, display, nothing)
@@ -49,7 +50,7 @@ function settings!(;
             end
             SETTINGS.display = display_backend
         else
-            error("display must be a Symbol")
+            error("display must be a string")
         end
     end
     if offline !== nothing

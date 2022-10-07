@@ -27,7 +27,7 @@ be activated.
 
 To display plots in your default browser, set
 ```julia
-Bokeh.settings!(display=:browser)
+Bokeh.settings!(display="browser")
 ```
 
 ### Blink
@@ -38,7 +38,7 @@ The `BokehBlink` package can be separately installed to enable plotting into a s
 To activate this backend, do
 ```julia
 using Bokeh, BokehBlink
-Bokeh.settings!(display=:blink)
+Bokeh.settings!(display="blink")
 ```
 
 By default, plots are stretched to fill the window. You may override this by setting
@@ -56,7 +56,7 @@ BokehBlink.save
 The null backend cannot display anything. It is the default backend. Use it to deactivate
 another backend:
 ```julia
-Bokeh.settings!(display=:null)
+Bokeh.settings!(display="null")
 ```
 
 ## Interactive Backends
