@@ -38,4 +38,4 @@ plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm") * (
 )
 ```
 
-![Example plot](https://raw.githubusercontent.com/cjdoris/Algebrokeh.jl/main/example.png)
+![Example plot](https://raw.githubusercontent.com/cjdoris/Bokeh.jl/main/Algebrokeh/example.png)
