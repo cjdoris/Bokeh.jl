@@ -232,25 +232,64 @@ function _get_axis_label(layers, keys)
 end
 
 function _get_range_scale_axis(layers, keys)
+    # gather defined information
     props = [v for layer in layers for (k, v) in layer.props if k in keys]
     is_factor = false
     factors = []
+    axis = nothing
+    scale = nothing
+    range = nothing
     for v in props
         if v.datainfo.datatype ∈ ANY_FACTOR_DATA
             is_factor = true
             union!(factors, v.datainfo.factors)
         end
+        if v.orig isa Mapping
+            if axis === nothing
+                axis = v.orig.axis
+            end
+            if range === nothing
+                range = v.orig.range
+            end
+        end
     end
-    if is_factor
-        range = Bokeh.FactorRange(; factors)
-        scale = Bokeh.CategoricalScale()
-        axis = Bokeh.CategoricalAxis()
-    else
-        range = Bokeh.DataRange1d()
-        scale = Bokeh.LinearScale()
-        axis = Bokeh.LinearAxis()
+    # select the range
+    if range === nothing
+        if is_factor
+            range = Bokeh.FactorRange(; factors)
+        else
+            range = Bokeh.DataRange1d()
+        end
     end
-    axis.axis_label = _get_axis_label(layers, keys)
+    # select scale and axis
+    if scale === nothing && axis === nothing
+        if is_factor
+            scale = Bokeh.CategoricalScale()
+            axis = Bokeh.CategoricalAxis()
+        else
+            scale = Bokeh.LinearScale()
+            axis = Bokeh.LinearAxis()
+        end
+    elseif scale === nothing
+        if Bokeh.ismodelinstance(axis, Bokeh.CategoricalAxis)
+            scale = Bokeh.CategoricalScale()
+        elseif Bokeh.ismodelinstance(axis, Bokeh.LogAxis)
+            scale = Bokeh.LogScale()
+        else
+            scale = Bokeh.LinearScale()
+        end
+    elseif axis === nothing
+        if Bokeh.ismodelinstance(scale, Bokeh.CategoricalScale)
+            axis = Bokeh.CategoricalAxis()
+        elseif Bokeh.ismodelinstance(scale, Bokeh.LogScale)
+            axis = Bokeh.LogAxis()
+        else
+            axis = Bokeh.LinearAxis()
+        end
+    end
+    if axis.axis_label === nothing
+        axis.axis_label = _get_axis_label(layers, keys)
+    end
     return (range, scale, axis)
 end
 

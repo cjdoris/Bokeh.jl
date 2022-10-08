@@ -40,12 +40,15 @@ property, such as color, marker or location.
     name::String
     type::MappingType
     field::Field
-    label::Any = nothing
     transforms::Vector{Bokeh.ModelInstance} = Bokeh.ModelInstance[]
     datainfo::Union{DataInfo,Nothing} = nothing
+    # optional display information for the mapping
+    label::Any = nothing
     palette::Any = nothing
     markers::Any = nothing
     patterns::Any = nothing
+    axis::Union{Nothing,Bokeh.ModelInstance} = nothing
+    range::Union{Nothing,Bokeh.ModelInstance} = nothing
 end
 
 """

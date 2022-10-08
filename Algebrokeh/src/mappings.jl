@@ -44,6 +44,8 @@ function parse_mapping(k, v)
     palette = nothing
     markers = nothing
     patterns = nothing
+    axis = nothing
+    range = nothing
     for x in vs[2:end]
         if Bokeh.ismodelinstance(x, Bokeh.Transform)
             push!(transforms, x)
@@ -64,9 +66,13 @@ function parse_mapping(k, v)
                     error("not implemented")
                 end
             end
+        elseif Bokeh.ismodelinstance(x, Bokeh.Axis)
+            axis = x
+        elseif Bokeh.ismodelinstance(x, Bokeh.Range)
+            range = x
         else
             error("invalid mapping argument of type $(typeof(x))")
         end
     end
-    return Mapping(; name, type, field, transforms, datainfo, label, palette, markers, patterns)
+    return Mapping(; name, type, field, transforms, datainfo, label, palette, markers, patterns, axis, range)
 end
