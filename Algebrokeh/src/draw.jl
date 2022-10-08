@@ -218,6 +218,11 @@ const PROPERTY_ALIASES = Dict(
     :y => [:ys, :top],
 )
 
+const PROPERTY_GROUPS = Dict(
+    :color => [:fill_color, :line_color, :text_color, :hatch_color],
+    :alpha => [:fill_alpha, :line_alpha, :text_alpha, :hatch_alpha],
+)
+
 function _get_axis_label(layers, keys)
     props = [v for layer in layers for (k, v) in layer.props if k in keys]
     labels = [p.label for p in props if p.label !== nothing]
@@ -399,17 +404,56 @@ function draw(layers::Layers; theme::ThemeDict)
             v.datainfo !== nothing || continue
             v.datainfo.datatype ∈ ANY_FACTOR_DATA || continue
             m = v.orig
-            m isa Mapping || continue
             m.type in (COLOR_MAP, MARKER_MAP, HATCH_PATTERN_MAP) || continue
-            push!(get!(legendinfos, (layer.orig.data.source, v.fieldname), []), (layer, v))
+            m isa Mapping || continue
+            push!(get!(legendinfos, (layer.orig.data.source, v.fieldname), []), (layer, k, v))
         end
     end
     # Generate a legend for each unique source+field combination.
     legends = []
     for ((source, fieldname), layerprops) in legendinfos
-        item = Bokeh.LegendItem(; label=Bokeh.Field(fieldname), renderers=[layer.renderer for (layer, _) in layerprops])
-        items = [item]
-        titles = [p.label for (_, p) in layerprops if p.label !== nothing]
+        if _get_theme(theme, :better_legends)
+            factors = []
+            for (_, _, prop) in layerprops
+                union!(factors, prop.mapper.factors)
+            end
+            legend_source = Bokeh.ColumnDataSource(; data=Dict(fieldname=>factors))
+            legend_renderers = Bokeh.ModelInstance[]
+            legend_view = Bokeh.CDSView(; source=legend_source)
+            for layer in Set([layer for (layer, _, _) in layerprops])
+                glyph = layer.orig.glyph
+                kw = Pair{Symbol,Any}[]
+                for (k, prop) in layer.props
+                    if prop.orig isa Mapping && (prop.datainfo === nothing || prop.datainfo.datatype ∉ ANY_FACTOR_DATA || prop.orig.type ∉ (COLOR_MAP, MARKER_MAP, HATCH_PATTERN_MAP) || prop.fieldname != fieldname)
+                        continue
+                    end
+                    if haskey(PROPERTY_GROUPS, k)
+                        for k2 in PROPERTY_GROUPS[k]
+                            if haskey(glyph.propdescs, k2)
+                                push!(kw, k2 => prop.value)
+                            end
+                        end
+                    else
+                        if haskey(glyph.propdescs, k)
+                            push!(kw, k => prop.value)
+                        end
+                    end                    
+                end
+                legend_glyph = glyph(; kw...)
+                legend_renderer = Bokeh.GlyphRenderer(; glyph=legend_glyph, data_source=legend_source, view=legend_view, visible=false)
+                push!(fig.renderers, legend_renderer)
+                push!(legend_renderers, legend_renderer)
+            end
+            items = Bokeh.ModelInstance[]
+            for (i, factor) in enumerate(factors)
+                item = Bokeh.LegendItem(; label=Bokeh.Value(factor), renderers=legend_renderers, index=i-1)
+                push!(items, item)
+            end
+        else
+            item = Bokeh.LegendItem(; label=Bokeh.Field(fieldname), renderers=[layer.renderer for (layer, _, _) in layerprops])
+            items = [item]
+        end
+        titles = [p.label for (_, _, p) in layerprops if p.label !== nothing]
         if !isempty(titles)
             title = titles[1]
         else
