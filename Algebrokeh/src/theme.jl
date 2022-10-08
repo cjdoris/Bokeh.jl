@@ -19,6 +19,12 @@ const BOKEH_THEME = Bokeh.Theme([
     "Axis" => Pair[
         "axis_label_text_font_style" => "bold",
     ],
+    "Glyph" => Pair[
+        "fill_alpha" => 0.5,
+    ],
+    "Marker" => Pair[
+        "size" => 10,
+    ],
 ])
 
 function _as_theme(xs)

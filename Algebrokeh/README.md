@@ -30,7 +30,7 @@ colmetadata!(data, :bill_depth_mm, "label", "Bill Depth (mm)"; style=:note)
 
 # Create a scatter plot. You can use any Bokeh glyph instead of `Scatter`. Named arguments
 # whose value start with "@" map columns from the data to visual properties on the glyph.
-plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm", color="@species", marker="@island", size=10, fill_alpha=0.5)
+plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm", color="@species", marker="@island")
 ```
 
 ![Example plot](https://raw.githubusercontent.com/cjdoris/Algebrokeh.jl/main/example.png)
