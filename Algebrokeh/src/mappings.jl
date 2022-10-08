@@ -41,6 +41,9 @@ function parse_mapping(k, v)
     transforms = Bokeh.ModelInstance[]
     datainfo = nothing
     label = nothing
+    palette = nothing
+    markers = nothing
+    patterns = nothing
     for x in vs[2:end]
         if Bokeh.ismodelinstance(x, Bokeh.Transform)
             push!(transforms, x)
@@ -48,9 +51,22 @@ function parse_mapping(k, v)
             datainfo = x
         elseif x isa AbstractString || Bokeh.ismodelinstance(x, Bokeh.BaseText)
             label = x
+        elseif x isa NamedTuple
+            for (k, v) in pairs(x)
+                if k == :palette
+                    palette = v
+                elseif k == :markers
+                    markers = v
+                elseif k == :patterns
+                    patterns = v
+                else
+                    # TODO
+                    error("not implemented")
+                end
+            end
         else
             error("invalid mapping argument of type $(typeof(x))")
         end
     end
-    return Mapping(; name, type, field, transforms, datainfo, label)
+    return Mapping(; name, type, field, transforms, datainfo, label, palette, markers, patterns)
 end

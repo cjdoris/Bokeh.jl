@@ -138,7 +138,7 @@ function _get_property(v; data::Data, theme)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.ContinuousColorMapper)
                     if mapper.palette === Bokeh.Undefined()
-                        mapper.palette = _get_palette(_get_theme(theme, :continuous_palette))
+                        mapper.palette = _get_palette(@something(v.palette, _get_theme(theme, :continuous_palette)))
                     end
                 end
             else @assert datatype ∈ ANY_FACTOR_DATA
@@ -148,7 +148,7 @@ function _get_property(v; data::Data, theme)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalColorMapper)
                     if mapper.palette === Bokeh.Undefined()
-                        mapper.palette = _get_palette(_get_theme(theme, :categorical_palette), nfactors)
+                        mapper.palette = _get_palette(@something(v.palette, _get_theme(theme, :categorical_palette)), nfactors)
                     end
                 end
             end
@@ -160,7 +160,7 @@ function _get_property(v; data::Data, theme)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalMarkerMapper)
                     if mapper.markers === Bokeh.Undefined()
-                        mapper.markers = _get_markers(_get_theme(theme, :markers), nfactors)
+                        mapper.markers = _get_markers(@something(v.markers, _get_theme(theme, :markers)), nfactors)
                     end
                 end
             else
@@ -173,7 +173,7 @@ function _get_property(v; data::Data, theme)
                     push!(transforms, mapper)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalPatternMapper)
-                    mapper.patterns = _get_hatch_patterns(_get_theme(theme, :hatch_patterns), nfactors)
+                    mapper.patterns = _get_hatch_patterns(@something(v.patterns, _get_theme(theme, :hatch_patterns)), nfactors)
                 end
             else
                 error("$(v.name) is a hatch-pattern mapping but $fieldnames is not categorical")

@@ -43,6 +43,9 @@ property, such as color, marker or location.
     label::Any = nothing
     transforms::Vector{Bokeh.ModelInstance} = Bokeh.ModelInstance[]
     datainfo::Union{DataInfo,Nothing} = nothing
+    palette::Any = nothing
+    markers::Any = nothing
+    patterns::Any = nothing
 end
 
 """

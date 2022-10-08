@@ -33,8 +33,8 @@ colmetadata!(data, :bill_depth_mm, "label", "Bill Depth (mm)"; style=:note)
 # whose value start with "@" map columns from the data to visual properties on the glyph.
 # Use * to combine plots and + to layer them up.
 plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm") * (
-  plot(color="@species", marker="@island", size=20, fill_alpha=0, line_width=3) +
-  plot(color="@sex")
+  plot(color="@sex" => (palette=["purple", "gold", "grey"],)) +
+  plot(color="@species", marker="@island", size=20, fill_alpha=0, line_width=3)
 )
 ```
 
