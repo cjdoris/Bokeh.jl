@@ -35,6 +35,16 @@ const BOKEH_THEME = Bokeh.Theme([
         :major_tick_in => 0,
         :minor_tick_line_color => "#aaaaaa",
     ),
+    :CategoricalAxis => ThemeDict(
+        :group_text_font_size => "13px",
+        :group_text_color => "black",
+        :group_text_font_style => "normal",
+        :subgroup_text_font_size => "13px",
+        :subgroup_text_color => "black",
+        :subgroup_text_font_style => "normal",
+        :separator_line_color => "#aaaaaa",
+        :separator_line_width => 1,
+    ),
     :ColorBar => ThemeDict(
         :title_text_font_size => "14px",
         :title_text_font_style => "bold",

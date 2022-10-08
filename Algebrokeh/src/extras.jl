@@ -5,9 +5,8 @@ function linesby(cols...; kw...)
         table0 === nothing && error("linesby() requires data to be specified explicitly")
         df = DataFrame(table0)
         table = combine(groupby(df, cols), [c => (c in cols ? (x -> [first(x)]) : (x -> [x])) => c for c in names(df)])
-        source = Bokeh.ColumnDataSource(; data=table)
         columns = copy(data.columns)
-        return Data(; table, source, columns)
+        return Data(; table, columns)
     end
     return plot(tr, Bokeh.MultiLine; kw...)
 end
@@ -59,25 +58,45 @@ end
 # end
 # export histby
 
-# function plotvbar(args...; x, y, dodge=nothing, kw...)
-#     dodge === nothing && return plot(args..., Bokeh.VBar; x, y, kw...)
-#     xcol = mapfield(x)
-#     ycol = mapfield(y)
-#     dodgecol = mapfield(dodge)
-#     width = get(kw, :width, nothing)
-#     newxcol = string(gensym("dodge#$xcol#$dodgecol"))
-#     function tr(df)
-#         # TODO: the list of factors should be defined somewhere extrinsic - maybe use DataFrames metadata?
-#         facidxs = Dict(x=>i for (i, x) in enumerate(sort(unique(df[!, dodgecol]))))
-#         nfacs = length(facidxs)
-#         if nfacs > 0
-#             w = something(width, 1/nfacs)
-#             df[!, newxcol] = [(a, (facidxs[x] - (nfacs + 1) / 2) * w) for (a, x) in zip(df[!, xcol], df[!, dodgecol])]
-#         else
-#             df[!, newxcol] = []
-#         end
-#         return df
-#     end
-#     return plot(args..., Bokeh.VBar, tr; x="@$newxcol", y, kw...)
-# end
-# export plotvbar
+function plotvbar(args...; x, y, dodge=nothing, kw...)
+    dodge === nothing && return plot(args..., Bokeh.VBar; x, y, kw...)
+    dodgemap = maybe_parse_mapping(:dodge, dodge)
+    dodgemap isa Mapping || error("expecting dodge to be a mapping")
+    xmap = maybe_parse_mapping(:x, x)
+    xmap isa Mapping || error("expecting x to be a mapping")
+    ymap = maybe_parse_mapping(:y, y)
+    ymap isa Mapping || error("expecting y to be a mapping")
+    xcol = xmap.field.names
+    xcol isa String || error("x can only map a single column")
+    dodgecol = dodgemap.field.names
+    dodgecol isa String || error("dodge can only map a single column")
+    width = get(kw, :width, nothing)
+    newxcol = string(gensym("dodge#$xcol#$dodgecol"))
+    xdatainfo = xmap.datainfo
+    if xdatainfo === nothing
+        newxdatainfo = nothing
+    else
+        xdatainfo.datatype == FACTOR_DATA || error("x should be a single-level factor")
+        newxdatainfo = DataInfo(xdatainfo; FACTOR_DODGE_DATA)
+    end
+    newxmap = Mapping(xmap; datainfo=newxdatainfo, field=Field(newxcol))
+    function tr(data::Data)
+        table0 = data.table
+        table0 === nothing && error("linesby() requires data to be specified explicitly")
+        table = DataFrame(table0)
+        # TODO: the list of factors should be defined somewhere extrinsic - maybe use DataFrames metadata?
+        facidxs = Dict(x=>i for (i, x) in enumerate(data.columns[dodgecol].factors))
+        nfacs = length(facidxs)
+        if nfacs > 0
+            w = width isa Real ? width : 1/nfacs
+            table[!, newxcol] = [(a, (facidxs[x] - (nfacs + 1) / 2) * w) for (a, x) in zip(table[!, xcol], table[!, dodgecol])]
+        else
+            table[!, newxcol] = []
+        end        
+        columns = copy(data.columns)
+        columns[newxcol] = DataInfo(columns[xcol], datatype=FACTOR_DODGE_DATA)
+        return Data(; table, columns)
+    end
+    return plot(args..., Bokeh.VBar, tr; x=newxmap, y=ymap, kw...)
+end
+export plotvbar

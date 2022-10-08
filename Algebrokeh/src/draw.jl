@@ -62,6 +62,30 @@ _factor_str(x::AbstractString) = x
 _factor_str(x::Symbol) = String(x)
 _factor_str(x) = string(x)
 
+function _populate_data_source(data::Data, cols=nothing; theme)
+    mv = _get_theme(theme, :missing_label)
+    ov = _get_theme(theme, :other_label)
+    columns = Tables.columns(data.table)
+    scolumns = data.source.data
+    for name in (cols === nothing ? keys(data.columns) : cols)
+        info = data.columns[name]
+        column = Tables.getcolumn(columns, Symbol(name))
+        datatype = info.datatype
+        factors = info.factors
+        if datatype == FACTOR_DATA
+            scolumn = [x === missing ? mv : x in factors ? _factor_str(x) : ov for x in column]
+        elseif datatype == FACTOR2_DATA
+            scolumn = [x === missing ? (mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov) for x in column]
+        elseif datatype == FACTOR3_DATA
+            scolumn = [x === missing ? (mv, mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov, ov) for x in column]
+        else
+            scolumn = [x for x in column]
+        end
+        scolumns[name] = scolumn
+    end
+    return
+end
+
 function _get_data(data, transforms; cache, theme)
     get!(cache, (data, transforms)) do 
         # apply transforms
@@ -72,25 +96,7 @@ function _get_data(data, transforms; cache, theme)
         end
         # populate the data source
         if ans.table !== nothing
-            mv = _get_theme(theme, :missing_label)
-            ov = _get_theme(theme, :other_label)
-            columns = Tables.columns(ans.table)
-            scolumns = ans.source.data
-            for (name, info) in ans.columns
-                column = Tables.getcolumn(columns, Symbol(name))
-                datatype = info.datatype
-                factors = info.factors
-                if datatype == FACTOR_DATA
-                    scolumn = [x === missing ? mv : x in factors ? _factor_str(x) : ov for x in column]
-                elseif datatype == FACTOR2_DATA
-                    scolumn = [x === missing ? (mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov) for x in column]
-                elseif datatype == FACTOR3_DATA
-                    scolumn = [x === missing ? (mv, mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov, ov) for x in column]
-                else
-                    scolumn = [x for x in column]
-                end
-                scolumns[name] = scolumn
-            end
+            _populate_data_source(ans; theme)
         end
         return ans
     end
@@ -104,8 +110,26 @@ function _get_property(v; data::Data, theme)
         if fieldnames isa String
             fieldname = fieldnames
         else
-            # TODO: add a new combined column
-            error("not implemented: hierarchical fields")
+            Bokeh.ismodelinstance(data.source, Bokeh.ColumnDataSource) || error("hierarchical fields require a ColumnDataSource")
+            n = length(fieldnames)
+            @assert n ∈ (2, 3)
+            data.table isa DataFrame || error("hierarchical fields require a DataFrame")
+            fieldname = "##join#" * join(fieldnames, "#")
+            if fieldname ∉ names(data.table)
+                datainfos = map(n->data.columns[n], fieldnames)
+                all(d->d.datatype == FACTOR_DATA, datainfos) || error("components of hierarchical fields must be non-hierarchical")
+                newcol = collect(zip(map(n->data.table[!,n], fieldnames)...))
+                data.table[!,fieldname] = newcol
+                datainfo = DataInfo(;
+                    datatype = n == 2 ? FACTOR2_DATA : n == 3 ? FACTOR3_DATA : @assert(false),
+                    factors = any(d->d.factors === nothing, datainfos) ? nothing : n == 2 ? [x === missing || y === missing ? missing : (x, y) for x in datainfos[1].factors for y in datainfos[2].factors] : n == 3 ? [x === missing || y === missing || z === missing ? missing : (x, y, z) for x in datainfos[1].factors for y in datainfos[2].factors for z in datainfos[3].factors] : @assert(false),
+                    has_other = any(d->d.has_other, datainfos),
+                    has_missing = any(d->d.has_missing, datainfos),
+                    label = all(d->d.label isa AbstractString, datainfos) ? join(map(d->d.label, datainfos), " / ") : nothing,
+                )
+                data.columns[fieldname] = datainfo
+                _populate_data_source(data, [fieldname]; theme)
+            end
         end
         # datainfo
         datainfo = v.datainfo
@@ -229,7 +253,7 @@ function _get_axis_label(layers, keys)
     if !isempty(labels)
         return first(labels)
     end
-    labels = String[string(p.field.names) for p in props if p.field !== nothing]
+    labels = String[p.field.names isa String ? p.field.names : string("(", join(p.field.names, ", "), ")") for p in props if p.field !== nothing]
     if !isempty(labels)
         return join(sort(unique(labels)), " / ")
     end
@@ -246,7 +270,7 @@ function _get_range_scale_axis_grid(layers, keys, dimension)
     range = nothing
     grid = nothing
     for v in props
-        if v.datainfo.datatype ∈ ANY_FACTOR_DATA
+        if (v.datainfo.datatype ∈ ANY_FACTOR_DATA) || (v.datainfo.datatype ∈ ANY_FACTOR_DODGE_DATA)
             is_factor = true
             union!(factors, v.datainfo.factors)
         end
@@ -307,7 +331,7 @@ function _get_range_scale_axis_grid(layers, keys, dimension)
     return (range, scale, axis, grid)
 end
 
-function draw(layers::Layers; theme::ThemeDict)
+function draw(layers::Layers; theme::ThemeDict=ThemeDict())
     fig = Bokeh.Figure()
 
     # PLOT/RESOLVE EACH LAYER

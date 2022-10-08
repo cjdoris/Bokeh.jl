@@ -33,9 +33,10 @@ function parse_mapping(k, v)
         field = vs[1]
     elseif vs[1] isa AbstractString
         @assert startswith(vs[1], "@")
-        field = Field(vs[1][2:end])
+        field = Field(String(vs[1])[2:end])
     else
-        error("not implemented")
+        all(x->startswith(x, "@"), vs[1]) || error("invalid hierarchical mapping: $(vs[1])")
+        field = Field(map(x->String(x)[2:end], vs[1]))
     end
     # remaining entries define optional info
     transforms = Bokeh.ModelInstance[]
