@@ -1,7 +1,7 @@
 const ThemeDict = Dict{Symbol,Any}
 
 const DEFAULT_THEME = ThemeDict(
-    :categorical_palette => "Dark2",
+    :categorical_palette => "Category10",
     :continuous_palette => "Viridis",
     :markers => ["circle", "square", "triangle"],
     :hatch_patterns => ["/", "\\", "+", ".", "o"],
@@ -16,18 +16,47 @@ const BOKEH_THEME = Bokeh.Theme([
     :Algebrokeh => DEFAULT_THEME,
     :Plot => ThemeDict(
         :width => 1000,
+        :outline_line_width => 0,
     ),
     :Legend => ThemeDict(
+        :title_text_font_size => "14px",
         :title_text_font_style => "bold",
+        :border_line_width => 0,
+        :glyph_height => 24,
+        :glyph_width => 24,
     ),
     :Axis => ThemeDict(
+        :axis_label_text_font_size => "14px",
         :axis_label_text_font_style => "bold",
+        :axis_line_color => "#aaaaaa",
+        :major_label_text_font_size => "13px",
+        :major_tick_line_color => "#aaaaaa",
+        :major_tick_in => 0,
+        :minor_tick_line_color => "#aaaaaa",
+    ),
+    :ColorBar => ThemeDict(
+        :title_text_font_size => "14px",
+        :title_text_font_style => "bold",
+        :title_standoff => 5,
+        :major_label_text_font_size => "13px",
+        :major_tick_out => 6,
+        :major_tick_in => 0,
+        :major_tick_line_color => "black",
+        :minor_tick_out => 4,
+        :minor_tick_in => 0,
+        :minor_tick_line_color => "black",
     ),
     :Glyph => ThemeDict(
-        :fill_alpha => 0.5,
+        :fill_alpha => 0.7,
     ),
     :Marker => ThemeDict(
         :size => 10,
+    ),
+    :Line => ThemeDict(
+        :line_width => 3,
+    ),
+    :MultiLine => ThemeDict(
+        :line_width => 3,
     ),
 ])
 
