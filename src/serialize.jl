@@ -13,6 +13,10 @@ serialize(s::Serializer, x::AbstractVector) = [serialize(s,x) for x in x]
 serialize(s::Serializer, x::AbstractMatrix) = [serialize(s,x) for x in eachcol(x)]
 serialize(s::Serializer, x::AbstractDict) = Dict(serialize(s,k)=>serialize(s,v) for (k,v) in x)
 serialize(s::Serializer, x::Tuple) = [serialize(s,x) for x in x]
+serialize(s::Serializer, x::Dates.TimePeriod) = serialize(s, x / Dates.Millisecond(1))
+serialize(s::Serializer, x::Dates.DateTime) = serialize(s, x - Dates.DateTime(1970))
+serialize(s::Serializer, x::Dates.Date) = serialize(s, Dates.DateTime(x))
+serialize(s::Serializer, x::Dates.Time) = serialize(s, Dates.DateTime(Dates.Date(1970), x))
 
 function serialize(s::Serializer, x::Field)
     ans = Dict{String,Any}("field" => x.name)
