@@ -188,11 +188,11 @@ function _get_property(v; data::Data, theme)
                     has_other && push!(mapper.factors, ov)
                     has_missing && push!(mapper.factors, mv)
                 elseif datatype == FACTOR2_DATA
-                    mapper.factors = map(_factor2_str, factors)
+                    mapper.factors = map(x->map(_factor_str, x), factors)
                     has_other && push!(mapper.factors, (ov, ov))
                     has_missing && push!(mapper.factors, (mv, mv))
                 else @assert datatype == FACTOR3_DATA
-                    mapper.factors = map(_factor3_str, factors)
+                    mapper.factors = map(x->map(_factor_str, x), factors)
                     has_other && push!(mapper.factors, (ov, ov, ov))
                     has_missing && push!(mapper.factors, (mv, mv, mv))
                 end
