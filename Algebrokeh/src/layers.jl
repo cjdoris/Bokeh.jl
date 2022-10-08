@@ -42,8 +42,17 @@ function plot(args...; kw...)
     return layers
 end
 
+_is_factor(x) = false
+_is_factor(x::AbstractString) = true
+_is_factor(x::Symbol) = true
+
 function plotdata(data)
-    if !isa(data, Data)
+    # deconstruct data into table, source and columns
+    if data isa Data
+        table = data.table
+        source = data.source
+        columns = data.columns
+    else
         if Bokeh.ismodelinstance(data, Bokeh.ColumnDataSource)
             table = DataFrame(data.data)
             source = data
@@ -54,31 +63,70 @@ function plotdata(data)
             throw(ArgumentError("expecting a DataSource, got a $(Bokeh.modeltype(data).name)"))
         elseif Tables.istable(data)
             table = data
-            source = Bokeh.ColumnDataSource(; data)
+            source = Bokeh.ColumnDataSource()
         else
             throw(ArgumentError("expecting a table, got a $(typeof(data))"))
         end
         columns = Dict{String,DataInfo}()
-        if table !== nothing
-            tablecols = Tables.columns(table)
-            for name in Tables.columnnames(tablecols)
-                col = Tables.getcolumn(tablecols, name)
+        data = Data(; source, table, columns)
+    end
+    # set column info
+    if table !== nothing
+        # iterate over columns
+        tablecols = Tables.columns(table)
+        for name in Tables.columnnames(tablecols)
+            # get the column
+            col = Tables.getcolumn(tablecols, name)
+            # get existing column info
+            info = get(columns, String(name), nothing)
+            if info === nothing
+                datatype = nothing
+                factors = nothing
+                label = nothing
+                has_other = false
+                has_missing = false
+            else
+                datatype = info.datatype
+                factors = info.factors
+                label = info.label
+                has_other = info.has_other
+                has_missing = info.has_missing
+            end
+            # get a label
+            if label === nothing
                 if DataAPI.colmetadatasupport(typeof(table)).read
                     label = DataAPI.colmetadata(table, name, "label", nothing)
                 else
                     label = nothing
                 end
-                if !isempty(col) && all(x->isa(x, Factor), col)
+            end
+            # get the datatype
+            if datatype === nothing
+                if all(x -> x === missing || _is_factor(x), col)
                     datatype = FACTOR_DATA
-                    factors = sort(unique(col))
+                elseif all(x -> x === missing || (x isa Tuple && length(x) == 2 && all(_is_factor, x)), col)
+                    datatype = FACTOR2_DATA
+                elseif all(x -> x === missing || (x isa Tuple && length(x) == 3 && all(_is_factor, x)), col)
+                    datatype = FACTOR3_DATA
                 else
                     datatype = NUMBER_DATA
-                    factors = []
                 end
-                columns[String(name)] = DataInfo(; datatype, factors, label)
             end
+            # get the factors
+            if datatype ∈ ANY_FACTOR_DATA && factors === nothing
+                factors = sort(unique(skipmissing(col)))
+            end
+            # get has_other
+            if datatype ∈ ANY_FACTOR_DATA && !has_other
+                has_other = any(x -> x !== missing && x ∉ factors, col)
+            end
+            # get has_missing
+            if !has_missing
+                has_missing = any(x -> x === missing, col)
+            end
+            # set the column info
+            columns[String(name)] = DataInfo(; datatype, factors, label, has_other, has_missing)
         end
-        data = Data(; source, table, columns)
     end
     return Layer(; data)
 end

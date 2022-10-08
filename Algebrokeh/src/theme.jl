@@ -8,6 +8,8 @@ const DEFAULT_THEME = ThemeDict(
     :legend_location => "right",
     :x_axis_location => "below",
     :y_axis_location => "left",
+    :missing_label => "Unknown",
+    :other_label => "Other",
 )
 
 const BOKEH_THEME = Bokeh.Theme([

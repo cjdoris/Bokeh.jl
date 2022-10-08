@@ -58,14 +58,41 @@ function _get_hatch_patterns(p, n=nothing)
     return _get_markers(p, n)
 end
 
-function _get_data(data, transforms, source_cache)
-    if isempty(transforms)
-        return data
-    else
-        return get!(source_cache, (data, transforms)) do 
-            data0 = _get_data(data, transforms[begin:end-1], source_cache)
-            return transforms[end](data0)
+_factor_str(x::AbstractString) = x
+_factor_str(x::Symbol) = String(x)
+_factor_str(x) = string(x)
+
+function _get_data(data, transforms; cache, theme)
+    get!(cache, (data, transforms)) do 
+        # apply transforms
+        if isempty(transforms)
+            ans = data::Data
+        else
+            ans = transforms[end](_get_data(data, transforms[begin:end-1]; cache, theme))::Data
         end
+        # populate the data source
+        if ans.table !== nothing
+            mv = _get_theme(theme, :missing_label)
+            ov = _get_theme(theme, :other_label)
+            columns = Tables.columns(ans.table)
+            scolumns = ans.source.data
+            for (name, info) in ans.columns
+                column = Tables.getcolumn(columns, Symbol(name))
+                datatype = info.datatype
+                factors = info.factors
+                if datatype == FACTOR_DATA
+                    scolumn = [x === missing ? mv : x in factors ? _factor_str(x) : ov for x in column]
+                elseif datatype == FACTOR2_DATA
+                    scolumn = [x === missing ? (mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov) for x in column]
+                elseif datatype == FACTOR3_DATA
+                    scolumn = [x === missing ? (mv, mv, mv) : x in factors ? map(_factor_str, x) : (ov, ov, ov) for x in column]
+                else
+                    scolumn = [x for x in column]
+                end
+                scolumns[name] = scolumn
+            end
+        end
+        return ans
     end
 end
 
@@ -89,8 +116,10 @@ function _get_property(v; data::Data, theme)
             end
         end
         datatype = datainfo.datatype
+        has_other = datainfo.has_other
+        has_missing = datainfo.has_missing
         factors = datainfo.factors
-        nfactors = length(factors)
+        nfactors = factors === nothing ? 0 : length(factors) + has_other + has_missing
         label = v.label
         if label === nothing
             label = datainfo.label
@@ -112,7 +141,7 @@ function _get_property(v; data::Data, theme)
                         mapper.palette = _get_palette(_get_theme(theme, :continuous_palette))
                     end
                 end
-            else @assert datatype == FACTOR_DATA
+            else @assert datatype ∈ ANY_FACTOR_DATA
                 if mapper === nothing
                     mapper = Bokeh.CategoricalColorMapper()
                     push!(transforms, mapper)
@@ -124,7 +153,7 @@ function _get_property(v; data::Data, theme)
                 end
             end
         elseif v.type == MARKER_MAP
-            if datatype == FACTOR_DATA
+            if datatype ∈ ANY_FACTOR_DATA
                 if mapper === nothing
                     mapper = Bokeh.CategoricalMarkerMapper()
                     push!(transforms, mapper)
@@ -135,10 +164,10 @@ function _get_property(v; data::Data, theme)
                     end
                 end
             else
-                error("$(v.name) is a marker mapping but $fields is not categorical")
+                error("$(v.name) is a marker mapping but $fieldnames is not categorical")
             end
         else @assert v.type == HATCH_PATTERN_MAP
-            if datatype == FACTOR_DATA
+            if datatype ∈ ANY_FACTOR_DATA
                 if mapper === nothing
                     mapper = Bokeh.CategoricalPatternMapper()
                     push!(transforms, mapper)
@@ -147,12 +176,26 @@ function _get_property(v; data::Data, theme)
                     mapper.patterns = _get_hatch_patterns(_get_theme(theme, :hatch_patterns), nfactors)
                 end
             else
-                error("$(v.name) is a hatch-pattern mapping but $fields is not categorical")
+                error("$(v.name) is a hatch-pattern mapping but $fieldnames is not categorical")
             end
         end
         if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalMapper)
-            if mapper.factors === Bokeh.Undefined()
-                mapper.factors = factors
+            if datatype ∈ ANY_FACTOR_DATA && mapper.factors === Bokeh.Undefined()
+                mv = _get_theme(theme, :missing_label)
+                ov = _get_theme(theme, :other_label)
+                if datatype == FACTOR_DATA
+                    mapper.factors = map(_factor_str, factors)
+                    has_other && push!(mapper.factors, ov)
+                    has_missing && push!(mapper.factors, mv)
+                elseif datatype == FACTOR2_DATA
+                    mapper.factors = map(_factor2_str, factors)
+                    has_other && push!(mapper.factors, (ov, ov))
+                    has_missing && push!(mapper.factors, (mv, mv))
+                else @assert datatype == FACTOR3_DATA
+                    mapper.factors = map(_factor3_str, factors)
+                    has_other && push!(mapper.factors, (ov, ov, ov))
+                    has_missing && push!(mapper.factors, (mv, mv, mv))
+                end
             end
         end
         # done
@@ -193,7 +236,7 @@ function _get_range_scale_axis(layers, keys)
     is_factor = false
     factors = []
     for v in props
-        if v.datainfo.datatype == FACTOR_DATA
+        if v.datainfo.datatype ∈ ANY_FACTOR_DATA
             is_factor = true
             union!(factors, v.datainfo.factors)
         end
@@ -215,14 +258,14 @@ function draw(layers::Layers; theme::ThemeDict)
     fig = Bokeh.Figure()
 
     # PLOT/RESOLVE EACH LAYER
-    source_cache = Dict{Any,Data}()
+    data_cache = Dict{Any,Data}()
     resolved = Vector{ResolvedLayer}()
     for layer in layers.layers
         # get the data
         orig_data = layer.data
         transforms = layer.transforms
         orig_data === nothing && error("no data")
-        data = _get_data(orig_data, transforms, source_cache)
+        data = _get_data(orig_data, transforms; cache=data_cache, theme)
         source = data.source
         # get the glyph
         glyph = layer.glyph
@@ -267,7 +310,7 @@ function draw(layers::Layers; theme::ThemeDict)
     for layer in resolved
         for (k, v) in layer.props
             v.datainfo !== nothing || continue
-            v.datainfo.datatype == FACTOR_DATA || continue
+            v.datainfo.datatype ∈ ANY_FACTOR_DATA || continue
             m = v.orig
             m isa Mapping || continue
             m.type in (COLOR_MAP, MARKER_MAP, HATCH_PATTERN_MAP) || continue

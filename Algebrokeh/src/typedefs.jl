@@ -1,4 +1,6 @@
-@enum DataType NUMBER_DATA FACTOR_DATA
+@enum DataType NUMBER_DATA FACTOR_DATA FACTOR2_DATA FACTOR3_DATA
+
+const ANY_FACTOR_DATA = (FACTOR_DATA, FACTOR2_DATA, FACTOR3_DATA)
 
 @enum MappingType COLOR_MAP MARKER_MAP HATCH_PATTERN_MAP DATA_MAP
 
@@ -7,7 +9,9 @@ Holds information about a collection of data, such as a column in a DataSource.
 """
 @kwdef struct DataInfo
     datatype::DataType = NUMBER_DATA
-    factors::Vector = []
+    factors::Union{Nothing,Vector} = nothing
+    has_other::Bool = false
+    has_missing::Bool = false
     label::Any = nothing
 end
 
@@ -61,8 +65,6 @@ A collection of layers, stacked one on top of the next. This is returned by [`pl
 struct Layers
     layers::Vector{Layer}
 end
-
-const Factor = Union{AbstractString,NTuple{2,AbstractString},NTuple{3,AbstractString}}
 
 @kwdef struct ResolvedProperty
     orig::Any

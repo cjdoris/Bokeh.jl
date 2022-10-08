@@ -25,12 +25,17 @@ using DataFrames
 data = DataFrame(data)
 colmetadata!(data, :species, "label", "Species"; style=:note)
 colmetadata!(data, :island, "label", "Island"; style=:note)
+colmetadata!(data, :sex, "label", "Sex"; style=:note)
 colmetadata!(data, :bill_length_mm, "label", "Bill Length (mm)"; style=:note)
 colmetadata!(data, :bill_depth_mm, "label", "Bill Depth (mm)"; style=:note)
 
 # Create a scatter plot. You can use any Bokeh glyph instead of `Scatter`. Named arguments
 # whose value start with "@" map columns from the data to visual properties on the glyph.
-plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm", color="@species", marker="@island")
+# Use * to combine plots and + to layer them up.
+plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm") * (
+  plot(color="@species", marker="@island", size=20, fill_alpha=0, line_width=3) +
+  plot(color="@sex")
+)
 ```
 
 ![Example plot](https://raw.githubusercontent.com/cjdoris/Algebrokeh.jl/main/example.png)
