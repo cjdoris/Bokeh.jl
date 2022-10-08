@@ -42,9 +42,6 @@ const BOKEH_THEME = Bokeh.Theme([
         :major_tick_out => 6,
         :major_tick_in => 0,
         :major_tick_line_color => "black",
-        :minor_tick_out => 4,
-        :minor_tick_in => 0,
-        :minor_tick_line_color => "black",
     ),
     :Glyph => ThemeDict(
         :fill_alpha => 0.7,
