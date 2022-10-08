@@ -1,51 +1,50 @@
-const DEFAULT_THEME = Dict{String,Any}(
-    "categorical_palette" => "Dark2",
-    "continuous_palette" => "Viridis",
-    "markers" => ["circle", "square", "triangle"],
-    "hatch_patterns" => ["/", "\\", "+", ".", "o"],
-    "legend_location" => "right",
-    "x_axis_location" => "below",
-    "y_axis_location" => "left",
+const ThemeDict = Dict{Symbol,Any}
+
+const DEFAULT_THEME = ThemeDict(
+    :categorical_palette => "Dark2",
+    :continuous_palette => "Viridis",
+    :markers => ["circle", "square", "triangle"],
+    :hatch_patterns => ["/", "\\", "+", ".", "o"],
+    :legend_location => "right",
+    :x_axis_location => "below",
+    :y_axis_location => "left",
 )
 
 const BOKEH_THEME = Bokeh.Theme([
-    "Algebrokeh" => DEFAULT_THEME,
-    "Plot" => Pair[
-        "width" => 1000,
-    ],
-    "Legend" => Pair[
-        "title_text_font_style" => "bold",
-    ],
-    "Axis" => Pair[
-        "axis_label_text_font_style" => "bold",
-    ],
-    "Glyph" => Pair[
-        "fill_alpha" => 0.5,
-    ],
-    "Marker" => Pair[
-        "size" => 10,
-    ],
+    :Algebrokeh => DEFAULT_THEME,
+    :Plot => ThemeDict(
+        :width => 1000,
+    ),
+    :Legend => ThemeDict(
+        :title_text_font_style => "bold",
+    ),
+    :Axis => ThemeDict(
+        :axis_label_text_font_style => "bold",
+    ),
+    :Glyph => ThemeDict(
+        :fill_alpha => 0.5,
+    ),
+    :Marker => ThemeDict(
+        :size => 10,
+    ),
 ])
 
 function _as_theme(xs)
-    if xs isa Dict{String,Any}
+    if xs isa ThemeDict
         theme = xs
     else
-        theme = Dict{String,Any}()
+        theme = ThemeDict()
         if xs !== nothing
             for (k, v) in xs
-                theme[String(k)] = v
+                theme[Symbol(k)] = v
             end
         end
     end
     return theme
 end
 
-function _get_theme(themes, k)
-    for theme in themes
-        if haskey(theme, k)
-            return theme[k]
-        end
+function _get_theme(theme, k)
+    get(theme, k) do
+        DEFAULT_THEME[k]
     end
-    return DEFAULT_THEME[k]
 end

@@ -69,7 +69,7 @@ function _get_data(data, transforms, source_cache)
     end
 end
 
-function _get_property(v; data::Data, themes)
+function _get_property(v; data::Data, theme)
     if v isa Mapping
         # field
         field = v.field
@@ -109,7 +109,7 @@ function _get_property(v; data::Data, themes)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.ContinuousColorMapper)
                     if mapper.palette === Bokeh.Undefined()
-                        mapper.palette = _get_palette(_get_theme(themes, "continuous_palette"))
+                        mapper.palette = _get_palette(_get_theme(theme, :continuous_palette))
                     end
                 end
             else @assert datatype == FACTOR_DATA
@@ -119,7 +119,7 @@ function _get_property(v; data::Data, themes)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalColorMapper)
                     if mapper.palette === Bokeh.Undefined()
-                        mapper.palette = _get_palette(_get_theme(themes, "categorical_palette"), nfactors)
+                        mapper.palette = _get_palette(_get_theme(theme, :categorical_palette), nfactors)
                     end
                 end
             end
@@ -131,7 +131,7 @@ function _get_property(v; data::Data, themes)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalMarkerMapper)
                     if mapper.markers === Bokeh.Undefined()
-                        mapper.markers = _get_markers(_get_theme(themes, "markers"), nfactors)
+                        mapper.markers = _get_markers(_get_theme(theme, :markers), nfactors)
                     end
                 end
             else
@@ -144,7 +144,7 @@ function _get_property(v; data::Data, themes)
                     push!(transforms, mapper)
                 end
                 if Bokeh.ismodelinstance(mapper, Bokeh.CategoricalPatternMapper)
-                    mapper.patterns = _get_hatch_patterns(_get_theme(themes, "hatch_patterns"), nfactors)
+                    mapper.patterns = _get_hatch_patterns(_get_theme(theme, :hatch_patterns), nfactors)
                 end
             else
                 error("$(v.name) is a hatch-pattern mapping but $fields is not categorical")
@@ -211,7 +211,7 @@ function _get_range_scale_axis(layers, keys)
     return (range, scale, axis)
 end
 
-function draw(layers::Layers; themes=[])
+function draw(layers::Layers; theme::ThemeDict)
     fig = Bokeh.Figure()
 
     # PLOT/RESOLVE EACH LAYER
@@ -244,7 +244,7 @@ function draw(layers::Layers; themes=[])
             end
         end
         # resolve the properties
-        props = Dict{Symbol,ResolvedProperty}(k => _get_property(v; data, themes) for (k, v) in props)
+        props = Dict{Symbol,ResolvedProperty}(k => _get_property(v; data, theme) for (k, v) in props)
         # plot the glyph
         kw = Dict{Symbol,Any}(k => v.value for (k, v) in props)
         renderer = Bokeh.plot!(fig, glyph; source, kw...)
@@ -255,8 +255,8 @@ function draw(layers::Layers; themes=[])
     # RANGES, SCALES and AXES
     fig.x_range, fig.x_scale, x_axis = _get_range_scale_axis(resolved, [:x, :xs, :right, :left])
     fig.y_range, fig.y_scale, y_axis = _get_range_scale_axis(resolved, [:y, :ys, :top, :bottom])
-    Bokeh.plot!(fig, x_axis, location=_get_theme(themes, "x_axis_location"))
-    Bokeh.plot!(fig, y_axis, location=_get_theme(themes, "y_axis_location"))
+    Bokeh.plot!(fig, x_axis, location=_get_theme(theme, :x_axis_location))
+    Bokeh.plot!(fig, y_axis, location=_get_theme(theme, :y_axis_location))
 
     # TOOLS
     fig.toolbar = Bokeh.figure().toolbar
@@ -275,7 +275,7 @@ function draw(layers::Layers; themes=[])
         end
     end
     # Generate a legend for each unique source+field combination.
-    legend_location = _get_theme(themes, "legend_location")
+    legend_location = _get_theme(theme, :legend_location)
     legend_orientation = legend_location in ("above", "below") ? "horizontal" : "vertical"
     legends = []
     for ((source, fieldname), layerprops) in legendinfos
@@ -307,6 +307,5 @@ end
 
 function Base.display(d::Bokeh.BokehDisplay, layers::Layers)
     theme = _as_theme(get(Bokeh.setting(:theme).attrs, :Algebrokeh, nothing))
-    themes = [theme]
-    return display(d, draw(layers; themes))
+    return display(d, draw(layers; theme))
 end
