@@ -16,7 +16,8 @@ const DEFAULT_THEME = ThemeDict(
 const BOKEH_THEME = Bokeh.Theme([
     :Algebrokeh => DEFAULT_THEME,
     :Plot => ThemeDict(
-        :width => 1000,
+        :frame_width => 500,
+        :frame_height => 500,
         :outline_line_width => 0,
     ),
     :Legend => ThemeDict(
