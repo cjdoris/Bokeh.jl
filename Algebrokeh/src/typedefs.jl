@@ -49,6 +49,7 @@ property, such as color, marker or location.
     patterns::Any = nothing
     axis::Union{Nothing,Bokeh.ModelInstance} = nothing
     range::Union{Nothing,Bokeh.ModelInstance} = nothing
+    grid::Union{Nothing,Bokeh.ModelInstance} = nothing
 end
 
 """
@@ -79,6 +80,7 @@ end
     field::Union{Field,Nothing} = nothing
     fieldname::Union{String,Nothing} = nothing
     datainfo::Union{DataInfo,Nothing} = nothing
+    mapper::Union{Bokeh.ModelInstance,Nothing} = nothing
 end
 
 @kwdef struct ResolvedLayer

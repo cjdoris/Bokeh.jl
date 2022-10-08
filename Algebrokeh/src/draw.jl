@@ -207,7 +207,7 @@ function _get_property(v; data::Data, theme)
             # TODO: https://stackoverflow.com/questions/48772907/layering-or-nesting-multiple-bokeh-transforms
             error("not implemented: multiple transforms (on mapping $(v.name))")
         end
-        return ResolvedProperty(; orig=v, value, label, field, fieldname, datainfo)
+        return ResolvedProperty(; orig=v, value, label, field, fieldname, datainfo, mapper)
     else
         return ResolvedProperty(; orig=v, value=v)
     end
@@ -231,7 +231,7 @@ function _get_axis_label(layers, keys)
     return nothing
 end
 
-function _get_range_scale_axis(layers, keys)
+function _get_range_scale_axis_grid(layers, keys, dimension)
     # gather defined information
     props = [v for layer in layers for (k, v) in layer.props if k in keys]
     is_factor = false
@@ -239,6 +239,7 @@ function _get_range_scale_axis(layers, keys)
     axis = nothing
     scale = nothing
     range = nothing
+    grid = nothing
     for v in props
         if v.datainfo.datatype ∈ ANY_FACTOR_DATA
             is_factor = true
@@ -250,6 +251,9 @@ function _get_range_scale_axis(layers, keys)
             end
             if range === nothing
                 range = v.orig.range
+            end
+            if grid === nothing
+                grid = v.orig.grid
             end
         end
     end
@@ -290,7 +294,12 @@ function _get_range_scale_axis(layers, keys)
     if axis.axis_label === nothing
         axis.axis_label = _get_axis_label(layers, keys)
     end
-    return (range, scale, axis)
+    # select grid (none by default)
+    if grid !== nothing
+        grid.axis = axis
+        grid.dimension = dimension
+    end
+    return (range, scale, axis, grid)
 end
 
 function draw(layers::Layers; theme::ThemeDict)
@@ -335,13 +344,52 @@ function draw(layers::Layers; theme::ThemeDict)
     end
 
     # RANGES, SCALES and AXES
-    fig.x_range, fig.x_scale, x_axis = _get_range_scale_axis(resolved, [:x, :xs, :right, :left])
-    fig.y_range, fig.y_scale, y_axis = _get_range_scale_axis(resolved, [:y, :ys, :top, :bottom])
+    fig.x_range, fig.x_scale, x_axis, x_grid = _get_range_scale_axis_grid(resolved, [:x, :xs, :right, :left], 0)
+    fig.y_range, fig.y_scale, y_axis, y_grid = _get_range_scale_axis_grid(resolved, [:y, :ys, :top, :bottom], 1)
     Bokeh.plot!(fig, x_axis, location=_get_theme(theme, :x_axis_location))
     Bokeh.plot!(fig, y_axis, location=_get_theme(theme, :y_axis_location))
+    x_grid !== nothing && Bokeh.plot!(fig, x_grid)
+    y_grid !== nothing && Bokeh.plot!(fig, y_grid)
 
     # TOOLS
     fig.toolbar = Bokeh.figure().toolbar
+
+    # COLOR BARS
+    legend_location = _get_theme(theme, :legend_location)
+    legend_orientation = legend_location in ("above", "below") ? "horizontal" : "vertical"
+    # Find all layers+props for continuous color mappings.
+    colorbarinfos = Dict()
+    for layer in resolved
+        for (k, v) in layer.props
+            v.datainfo !== nothing || continue
+            v.datainfo.datatype == NUMBER_DATA || continue
+            m = v.orig
+            m isa Mapping || continue
+            m.type == COLOR_MAP || continue
+            push!(get!(colorbarinfos, (layer.orig.data.source, v.fieldname), []), (layer, v))
+        end
+    end
+    # Generate a colorbar for each unique source+field combination.
+    colorbars = []
+    for ((source, fieldname), layerprops) in colorbarinfos
+        # item = Bokeh.LegendItem(; label=Bokeh.Field(fieldname), renderers=[layer.renderer for (layer, _) in layerprops])
+        # items = [item]
+        titles = [p.label for (_, p) in layerprops if p.label !== nothing]
+        mappers = [p.mapper for (_, p) in layerprops if p.mapper !== nothing]
+        mapper = mappers[1]  # TODO: what if there is not exactly one?
+        if !isempty(titles)
+            title = titles[1]
+        else
+            title = fieldname
+        end
+        colorbar = Bokeh.ColorBar(; color_mapper=mapper, title, orientation=legend_orientation)
+        push!(colorbars, (fieldname, colorbar))
+    end
+    # Plot the legends, sorted by title.
+    sort!(colorbars, by=x->x[1])
+    for (_, colorbar) in colorbars
+        Bokeh.plot!(fig, colorbar, location=legend_location)
+    end
 
     # LEGENDS
     # Find all layers+props for categorical mappings.
@@ -357,8 +405,6 @@ function draw(layers::Layers; theme::ThemeDict)
         end
     end
     # Generate a legend for each unique source+field combination.
-    legend_location = _get_theme(theme, :legend_location)
-    legend_orientation = legend_location in ("above", "below") ? "horizontal" : "vertical"
     legends = []
     for ((source, fieldname), layerprops) in legendinfos
         item = Bokeh.LegendItem(; label=Bokeh.Field(fieldname), renderers=[layer.renderer for (layer, _) in layerprops])
@@ -377,8 +423,6 @@ function draw(layers::Layers; theme::ThemeDict)
     for (_, legend) in legends
         Bokeh.plot!(fig, legend, location=legend_location)
     end
-
-    # TODO: COLOR BARS
 
     return fig
 end

@@ -28,14 +28,14 @@ colmetadata!(data, :island, "label", "Island"; style=:note)
 colmetadata!(data, :sex, "label", "Sex"; style=:note)
 colmetadata!(data, :bill_length_mm, "label", "Bill Length (mm)"; style=:note)
 colmetadata!(data, :bill_depth_mm, "label", "Bill Depth (mm)"; style=:note)
+colmetadata!(data, :flipper_length_mm, "label", "Flipper Length (mm)"; style=:note)
+colmetadata!(data, :body_mass_g, "label", "Body Mass (g)"; style=:note)
 
 # Create a scatter plot. You can use any Bokeh glyph instead of `Scatter`. Named arguments
 # whose value start with "@" map columns from the data to visual properties on the glyph.
-# Use * to combine plots and + to layer them up.
-plot(data, Scatter, x="@bill_length_mm", y="@bill_depth_mm") * (
-  plot(color="@sex" => (palette=["purple", "gold", "grey"],)) +
-  plot(color="@species", marker="@island", size=20, fill_alpha=0, line_width=3)
-)
+plot(data, Scatter,
+  x="@bill_length_mm", y="@bill_depth_mm", line_color="@species",
+  fill_color="@body_mass_g", marker="@island", size=15, line_width=3)
 ```
 
 ![Example plot](https://raw.githubusercontent.com/cjdoris/Bokeh.jl/main/Algebrokeh/example.png)
