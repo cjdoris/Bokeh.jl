@@ -49,6 +49,10 @@ function settings!(;
                 end
             end
             SETTINGS.display = display_backend
+            # ensure the Bokeh display is on top
+            # https://github.com/cjdoris/Bokeh.jl/issues/19
+            popdisplay(BokehDisplay())
+            pushdisplay(BokehDisplay())
         else
             error("display must be a string")
         end
