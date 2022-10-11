@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bar Charts · Bokeh</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../democards/listtheme.css" rel="stylesheet" type="text/css"/><link href="../../../assets/customstyle.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="Bokeh logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Bokeh</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><a class="tocitem" href="../../">Gallery</a></li><li><a class="tocitem" href="../../../guide/">User Guide</a></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../../../plotting/">Plotting</a></li><li><a class="tocitem" href="../../../misc/">Settings, Theming &amp; Backends</a></li><li><a class="tocitem" href="../../../interaction/">Interaction</a></li><li><a class="tocitem" href="../../../data/">Sample Data</a></li><li><a class="tocitem" href="../../../models/">Models</a></li><li><a class="tocitem" href="../../../colors/">Named Colors</a></li><li><a class="tocitem" href="../../../palettes/">Palettes</a></li><li><a class="tocitem" href="../../../themes/">Themes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Bar Charts</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Bar Charts</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cjdoris/Bokeh.jl/blob/main/docs/gallery/Basic/vbar.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="demo_vbar"><a class="docs-heading-anchor" href="#demo_vbar">Bar Charts</a><a id="demo_vbar-1"></a><a class="docs-heading-anchor-permalink" href="#demo_vbar" title="Permalink"></a></h1><p><a href="../vbar.jl"><img src="https://img.shields.io/badge/download-julia-brightgreen.svg" alt="Source code"/></a></p><p>Reproduces the plot from <a href="https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html">https://docs.bokeh.org/en/latest/docs/gallery/bar_colormapped.html</a>.</p><pre><code class="language-julia hljs">using Bokeh
+
+data = (
+    fruits = [&quot;Apples&quot;, &quot;Pears&quot;, &quot;Nectarines&quot;, &quot;Plums&quot;, &quot;Grapes&quot;, &quot;Strawberries&quot;],
+    counts = [5, 3, 4, 2, 4, 6],
+)
+
+p = figure(
+    x_range=data.fruits,
+    height=350,
+    toolbar_location=nothing,
+    title=&quot;Fruit Counts&quot;,
+)
+
+plot!(p, VBar,
+    x=&quot;fruits&quot;,
+    top=&quot;counts&quot;,
+    source=data,
+    width=0.9,
+    legend_field=&quot;fruits&quot;,
+    line_color=&quot;white&quot;,
+    fill_color=factor_cmap(&quot;fruits&quot;, &quot;Spectral6&quot;, data.fruits),
+)
+
+p.x_grid.grid_line_color = nothing
+p.y_range.start = 0
+p.y_range.end = 9
+p.legend.orientation = &quot;horizontal&quot;
+p.legend.location = &quot;top_center&quot;
+
+p</code></pre><script id="201ccafe-dddb-4305-94aa-ceb430b1fdbf">
+    (function(root) {
+        function now() {
+            return new Date();
+        }
+    
+        const force = false;
+    
+        if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+            root._bokeh_onload_callbacks = [];
+            root._bokeh_is_loading = undefined;
+        }
+    
+        
+    
+        const element = document.getElementById("201ccafe-dddb-4305-94aa-ceb430b1fdbf");
+        if (element == null) {
+            console.warn("Bokeh: autoload.js configured with elementid '201ccafe-dddb-4305-94aa-ceb430b1fdbf' but no matching script tag was found.")
+        }
+    
+        function run_callbacks() {
+            try {
+            root._bokeh_onload_callbacks.forEach(function(callback) {
+                if (callback != null)
+                callback();
+            });
+            } finally {
+            delete root._bokeh_onload_callbacks
+            }
+            console.debug("Bokeh: all callbacks have finished");
+        }
+    
+        function load_libs(css_urls, js_urls, callback) {
+            if (css_urls == null) css_urls = [];
+            if (js_urls == null) js_urls = [];
+    
+            root._bokeh_onload_callbacks.push(callback);
+            if (root._bokeh_is_loading > 0) {
+                console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+                return null;
+            }
+            if (js_urls == null || js_urls.length === 0) {
+                run_callbacks();
+                return null;
+            }
+            console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+            root._bokeh_is_loading = css_urls.length + js_urls.length;
+    
+            function on_load() {
+                root._bokeh_is_loading--;
+                if (root._bokeh_is_loading === 0) {
+                    console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+                    run_callbacks()
+                }
+            }
+    
+            function on_error(url) {
+                console.error("failed to load " + url);
+            }
+    
+            for (let i = 0; i < css_urls.length; i++) {
+                const url = css_urls[i];
+                const element = document.createElement("link");
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.rel = "stylesheet";
+                element.type = "text/css";
+                element.href = url;
+                console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+                document.body.appendChild(element);
+            }
+    
+            for (let i = 0; i < js_urls.length; i++) {
+                const url = js_urls[i];
+                const element = document.createElement('script');
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.async = false;
+                element.src = url;
+                console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+                document.head.appendChild(element);
+            }
+        };
+    
+        function inject_raw_css(css) {
+            const element = document.createElement("style");
+            element.appendChild(document.createTextNode(css));
+            document.body.appendChild(element);
+        }
+    
+        const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.min.js"];
+        const css_urls = [];
+    
+        const inline_js = [
+            function(Bokeh) {
+                (function() {
+                    const fn = function() {
+                        Bokeh.safely(function() {
+                            (function(root) {
+                                function embed_document(root) {
+                                    const docs_json = {"201ccafe-dddb-4305-94aa-ceb430b1fdbf":{"roots":{"references":[{"attributes":{},"id":"601","type":"ResetTool"},{"attributes":{"label":{"field":"fruits"},"renderers":[{"id":"606"}]},"id":"609","type":"LegendItem"},{"attributes":{"text":"Fruit Counts"},"id":"587","type":"Title"},{"attributes":{},"id":"593","type":"LinearScale"},{"attributes":{"start":0.0,"end":9.0},"id":"589","type":"DataRange1d"},{"attributes":{},"id":"599","type":"WheelZoomTool"},{"attributes":{"data":{"fruits":["Apples","Pears","Nectarines","Plums","Grapes","Strawberries"],"counts":[5,3,4,2,4,6]}},"id":"604","type":"ColumnDataSource"},{"attributes":{},"id":"600","type":"SaveTool"},{"attributes":{},"id":"591","type":"LinearAxis"},{"attributes":{"axis":{"id":"591"},"dimension":1},"id":"595","type":"Grid"},{"attributes":{"left":[{"id":"591"}],"above":[],"toolbar_location":null,"below":[{"id":"590"}],"height":350,"right":[],"center":[{"id":"594"},{"id":"595"},{"id":"608"}],"renderers":[{"id":"606"}],"toolbar":{"id":"596"},"x_range":{"id":"588"},"y_range":{"id":"589"},"y_scale":{"id":"593"},"title":{"id":"587"},"x_scale":{"id":"592"}},"id":"586","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"598","type":"BoxZoomTool"},{"attributes":{},"id":"597","type":"PanTool"},{"attributes":{"glyph":{"id":"605"},"view":{"id":"607"},"data_source":{"id":"604"}},"id":"606","type":"GlyphRenderer"},{"attributes":{"factors":["Apples","Pears","Nectarines","Plums","Grapes","Strawberries"]},"id":"588","type":"FactorRange"},{"attributes":{},"id":"602","type":"HelpTool"},{"attributes":{},"id":"590","type":"CategoricalAxis"},{"attributes":{"axis":{"id":"590"},"grid_line_color":null,"dimension":0},"id":"594","type":"Grid"},{"attributes":{"factors":["Apples","Pears","Nectarines","Plums","Grapes","Strawberries"],"palette":["#3288bd","#99d594","#e6f598","#fee08b","#fc8d59","#d53e4f"]},"id":"603","type":"CategoricalColorMapper"},{"attributes":{"line_color":{"value":"#ffffff"},"top":{"field":"counts"},"x":{"field":"fruits"},"hatch_color":{"value":"#1f77b4"},"fill_color":{"field":"fruits","transform":{"id":"603"}},"width":{"value":0.9}},"id":"605","type":"VBar"},{"attributes":{"source":{"id":"604"}},"id":"607","type":"CDSView"},{"attributes":{"items":[{"id":"609"}],"location":"top_center","orientation":"horizontal"},"id":"608","type":"Legend"},{"attributes":{},"id":"592","type":"CategoricalScale"},{"attributes":{"tools":[{"id":"597"},{"id":"598"},{"id":"599"},{"id":"600"},{"id":"601"},{"id":"602"}]},"id":"596","type":"Toolbar"}],"root_ids":["586"]},"title":"Bokeh Application","defs":[],"version":"2.4.2"}};
+                                    const render_items = [{"roots":{"586":"201ccafe-dddb-4305-94aa-ceb430b1fdbf"},"docid":"201ccafe-dddb-4305-94aa-ceb430b1fdbf","root_ids":["586"]}];
+                                    root.Bokeh.embed.embed_items(docs_json, render_items);
+                                }
+                                if (root.Bokeh !== undefined) {
+                                  embed_document(root);
+                                } else {
+                                  let attempts = 0;
+                                  const timer = setInterval(function(root) {
+                                    if (root.Bokeh !== undefined) {
+                                      clearInterval(timer);
+                                      embed_document(root);
+                                    } else {
+                                      attempts++;
+                                      if (attempts > 100) {
+                                        clearInterval(timer);
+                                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                                      }
+                                    }
+                                  }, 10, root)
+                                }
+                              })(window);
+                              
+                        });
+                    };
+                    if (document.readyState != "loading") fn();
+                    else document.addEventListener("DOMContentLoaded", fn);
+                })();
+            }
+        ];
+    
+        function run_inline_js() {
+            for (let i = 0; i < inline_js.length; i++) {
+                inline_js[i].call(root, root.Bokeh);
+            }
+        }
+    
+        if (root._bokeh_is_loading === 0) {
+            console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+            run_inline_js();
+        } else {
+            load_libs(css_urls, js_urls, function() {
+            console.debug("Bokeh: BokehJS plotting callback run at", now());
+            run_inline_js();
+            });
+        }
+    }(window));
+</script>
+<hr/><p><em>This page was generated using <a href="https://github.com/johnnychen94/DemoCards.jl">DemoCards.jl</a> and <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 11 October 2022 10:03">Tuesday 11 October 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

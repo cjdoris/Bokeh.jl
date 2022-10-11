@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hex Tiling · Bokeh</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../democards/listtheme.css" rel="stylesheet" type="text/css"/><link href="../../../assets/customstyle.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="Bokeh logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Bokeh</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><a class="tocitem" href="../../">Gallery</a></li><li><a class="tocitem" href="../../../guide/">User Guide</a></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../../../plotting/">Plotting</a></li><li><a class="tocitem" href="../../../misc/">Settings, Theming &amp; Backends</a></li><li><a class="tocitem" href="../../../interaction/">Interaction</a></li><li><a class="tocitem" href="../../../data/">Sample Data</a></li><li><a class="tocitem" href="../../../models/">Models</a></li><li><a class="tocitem" href="../../../colors/">Named Colors</a></li><li><a class="tocitem" href="../../../palettes/">Palettes</a></li><li><a class="tocitem" href="../../../themes/">Themes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Hex Tiling</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Hex Tiling</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cjdoris/Bokeh.jl/blob/main/docs/gallery/Basic/hex_tile.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="hex_tile"><a class="docs-heading-anchor" href="#hex_tile">Hex Tiling</a><a id="hex_tile-1"></a><a class="docs-heading-anchor-permalink" href="#hex_tile" title="Permalink"></a></h1><p><a href="../hex_tile.jl"><img src="https://img.shields.io/badge/download-julia-brightgreen.svg" alt="Source code"/></a></p><p>Reproduces the plot from <a href="https://docs.bokeh.org/en/latest/docs/gallery/hex_tile.html">https://docs.bokeh.org/en/latest/docs/gallery/hex_tile.html</a>.</p><pre><code class="language-julia hljs">using Bokeh
+
+n = 50_000
+size = 0.1
+
+x = randn(n)
+y = randn(n)
+
+bins = Bokeh.hexbin(x, y; size)
+
+p = figure(
+    title = &quot;Manual hex bin for $n points&quot;,
+    tools = [WheelZoomTool(), PanTool(), ResetTool()],
+    match_aspect = true,
+    background_fill_color = &quot;#440154&quot;,
+)
+
+p.grids.visible = false
+
+plot!(p, HexTile;
+    q=&quot;q&quot;,
+    r=&quot;r&quot;,
+    size,
+    line_color=nothing,
+    source=bins,
+    fill_color=linear_cmap(&quot;count&quot;, &quot;Viridis256&quot;; low=0),
+)
+
+p</code></pre><script id="89644242-35bc-466f-b331-f7f0e2bdf4ad">
+    (function(root) {
+        function now() {
+            return new Date();
+        }
+    
+        const force = false;
+    
+        if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+            root._bokeh_onload_callbacks = [];
+            root._bokeh_is_loading = undefined;
+        }
+    
+        
+    
+        const element = document.getElementById("89644242-35bc-466f-b331-f7f0e2bdf4ad");
+        if (element == null) {
+            console.warn("Bokeh: autoload.js configured with elementid '89644242-35bc-466f-b331-f7f0e2bdf4ad' but no matching script tag was found.")
+        }
+    
+        function run_callbacks() {
+            try {
+            root._bokeh_onload_callbacks.forEach(function(callback) {
+                if (callback != null)
+                callback();
+            });
+            } finally {
+            delete root._bokeh_onload_callbacks
+            }
+            console.debug("Bokeh: all callbacks have finished");
+        }
+    
+        function load_libs(css_urls, js_urls, callback) {
+            if (css_urls == null) css_urls = [];
+            if (js_urls == null) js_urls = [];
+    
+            root._bokeh_onload_callbacks.push(callback);
+            if (root._bokeh_is_loading > 0) {
+                console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+                return null;
+            }
+            if (js_urls == null || js_urls.length === 0) {
+                run_callbacks();
+                return null;
+            }
+            console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+            root._bokeh_is_loading = css_urls.length + js_urls.length;
+    
+            function on_load() {
+                root._bokeh_is_loading--;
+                if (root._bokeh_is_loading === 0) {
+                    console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+                    run_callbacks()
+                }
+            }
+    
+            function on_error(url) {
+                console.error("failed to load " + url);
+            }
+    
+            for (let i = 0; i < css_urls.length; i++) {
+                const url = css_urls[i];
+                const element = document.createElement("link");
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.rel = "stylesheet";
+                element.type = "text/css";
+                element.href = url;
+                console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+                document.body.appendChild(element);
+            }
+    
+            for (let i = 0; i < js_urls.length; i++) {
+                const url = js_urls[i];
+                const element = document.createElement('script');
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.async = false;
+                element.src = url;
+                console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+                document.head.appendChild(element);
+            }
+        };
+    
+        function inject_raw_css(css) {
+            const element = document.createElement("style");
+            element.appendChild(document.createTextNode(css));
+            document.body.appendChild(element);
+        }
+    
+        const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.min.js"];
+        const css_urls = [];
+    
+        const inline_js = [
+            function(Bokeh) {
+                (function() {
+                    const fn = function() {
+                        Bokeh.safely(function() {
+                            (function(root) {
+                                function embed_document(root) {
+                                    const docs_json = {"89644242-35bc-466f-b331-f7f0e2bdf4ad":{"roots":{"references":[{"attributes":{},"id":"405","type":"LinearScale"},{"attributes":{"left":[{"id":"404"}],"match_aspect":true,"below":[{"id":"403"}],"background_fill_color":"#440154","center":[{"id":"407"},{"id":"408"}],"renderers":[{"id":"413"}],"toolbar":{"id":"409"},"x_range":{"id":"401"},"y_range":{"id":"402"},"y_scale":{"id":"406"},"title":{"id":"400"},"x_scale":{"id":"405"}},"id":"399","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"406","type":"LinearScale"},{"attributes":{"text":"Manual hex bin for 50000 points"},"id":"400","type":"Title"},{"attributes":{},"id":"396","type":"WheelZoomTool"},{"attributes":{},"id":"402","type":"DataRange1d"},{"attributes":{"low":0.0,"palette":["#440154","#440255","#440357","#450558","#45065A","#45085B","#46095C","#460B5E","#460C5F","#460E61","#470F62","#471163","#471265","#471466","#471567","#471669","#47186A","#48196B","#481A6C","#481C6E","#481D6F","#481E70","#482071","#482172","#482273","#482374","#472575","#472676","#472777","#472878","#472A79","#472B7A","#472C7B","#462D7C","#462F7C","#46307D","#46317E","#45327F","#45347F","#453580","#453681","#443781","#443982","#433A83","#433B83","#433C84","#423D84","#423E85","#424085","#414186","#414286","#404387","#404487","#3F4587","#3F4788","#3E4888","#3E4989","#3D4A89","#3D4B89","#3D4C89","#3C4D8A","#3C4E8A","#3B508A","#3B518A","#3A528B","#3A538B","#39548B","#39558B","#38568B","#38578C","#37588C","#37598C","#365A8C","#365B8C","#355C8C","#355D8C","#345E8D","#345F8D","#33608D","#33618D","#32628D","#32638D","#31648D","#31658D","#31668D","#30678D","#30688D","#2F698D","#2F6A8D","#2E6B8E","#2E6C8E","#2E6D8E","#2D6E8E","#2D6F8E","#2C708E","#2C718E","#2C728E","#2B738E","#2B748E","#2A758E","#2A768E","#2A778E","#29788E","#29798E","#287A8E","#287A8E","#287B8E","#277C8E","#277D8E","#277E8E","#267F8E","#26808E","#26818E","#25828E","#25838D","#24848D","#24858D","#24868D","#23878D","#23888D","#23898D","#22898D","#228A8D","#228B8D","#218C8D","#218D8C","#218E8C","#208F8C","#20908C","#20918C","#1F928C","#1F938B","#1F948B","#1F958B","#1F968B","#1E978A","#1E988A","#1E998A","#1E998A","#1E9A89","#1E9B89","#1E9C89","#1E9D88","#1E9E88","#1E9F88","#1EA087","#1FA187","#1FA286","#1FA386","#20A485","#20A585","#21A685","#21A784","#22A784","#23A883","#23A982","#24AA82","#25AB81","#26AC81","#27AD80","#28AE7F","#29AF7F","#2AB07E","#2BB17D","#2CB17D","#2EB27C","#2FB37B","#30B47A","#32B57A","#33B679","#35B778","#36B877","#38B976","#39B976","#3BBA75","#3DBB74","#3EBC73","#40BD72","#42BE71","#44BE70","#45BF6F","#47C06E","#49C16D","#4BC26C","#4DC26B","#4FC369","#51C468","#53C567","#55C666","#57C665","#59C764","#5BC862","#5EC961","#60C960","#62CA5F","#64CB5D","#67CC5C","#69CC5B","#6BCD59","#6DCE58","#70CE56","#72CF55","#74D054","#77D052","#79D151","#7CD24F","#7ED24E","#81D34C","#83D34B","#86D449","#88D547","#8BD546","#8DD644","#90D643","#92D741","#95D73F","#97D83E","#9AD83C","#9DD93A","#9FD938","#A2DA37","#A5DA35","#A7DB33","#AADB32","#ADDC30","#AFDC2E","#B2DD2C","#B5DD2B","#B7DD29","#BADE27","#BDDE26","#BFDF24","#C2DF22","#C5DF21","#C7E01F","#CAE01E","#CDE01D","#CFE11C","#D2E11B","#D4E11A","#D7E219","#DAE218","#DCE218","#DFE318","#E1E318","#E4E318","#E7E419","#E9E419","#ECE41A","#EEE51B","#F1E51C","#F3E51E","#F6E61F","#F8E621","#FAE622","#FDE724"]},"id":"410","type":"LinearColorMapper"},{"attributes":{},"id":"401","type":"DataRange1d"},{"attributes":{},"id":"398","type":"ResetTool"},{"attributes":{},"id":"403","type":"LinearAxis"},{"attributes":{},"id":"404","type":"LinearAxis"},{"attributes":{"line_color":{"value":null},"hatch_color":{"value":"#1f77b4"},"r":{"field":"r"},"size":0.1,"q":{"field":"q"},"fill_color":{"field":"count","transform":{"id":"410"}}},"id":"412","type":"HexTile"},{"attributes":{"tools":[{"id":"396"},{"id":"397"},{"id":"398"}]},"id":"409","type":"Toolbar"},{"attributes":{"data":{"count":[137,13,9,20,67,7,1,2,2,2,139,36,56,5,30,170,27,2,8,5,1,10,67,21,4,4,77,7,3,7,155,62,17,4,8,20,34,193,29,14,64,40,24,189,92,20,44,27,158,3,1,2,135,26,7,3,9,14,16,7,15,4,83,20,110,2,27,2,1,184,2,1,14,2,24,1,2,16,2,23,2,60,18,40,30,25,2,1,16,2,29,3,6,1,1,6,19,1,1,2,1,4,45,188,9,4,1,1,68,1,30,11,1,14,149,66,4,1,140,6,2,93,12,11,1,1,13,10,3,1,4,1,1,1,4,7,25,2,137,1,4,27,2,25,61,10,12,12,104,32,1,45,1,11,32,19,15,8,47,1,10,167,17,6,2,6,8,171,7,179,1,3,1,1,2,4,1,31,131,1,2,20,38,2,183,168,71,8,3,22,10,10,1,7,8,13,3,11,21,4,38,5,25,44,83,4,10,6,8,13,1,4,2,4,16,3,69,69,1,1,196,47,2,4,1,1,18,14,72,6,48,33,6,1,98,4,29,1,90,1,1,3,1,1,1,16,108,65,15,36,18,2,1,64,2,206,2,37,4,12,1,10,1,113,60,1,16,83,2,168,30,2,2,5,1,1,11,4,120,2,49,8,118,5,6,3,6,2,8,156,112,7,176,178,2,2,2,4,1,5,58,63,1,3,9,2,1,2,71,1,27,72,4,91,3,13,2,1,5,21,28,1,66,55,4,3,25,2,20,36,1,1,2,2,18,1,1,11,3,92,12,4,2,3,2,2,24,29,72,1,53,2,1,8,107,1,1,2,1,67,3,175,1,63,161,2,1,72,2,193,8,4,1,1,4,6,36,173,8,16,1,33,5,7,1,6,1,1,7,148,180,94,2,1,8,177,191,1,70,1,29,3,1,8,1,65,111,30,2,7,28,11,120,151,151,5,51,6,5,41,20,3,4,66,22,51,6,1,16,11,1,67,128,1,26,92,200,41,39,11,79,1,3,4,76,120,57,1,7,126,37,21,80,3,71,116,3,5,32,1,80,165,3,17,73,20,1,1,9,60,25,15,1,92,72,17,3,84,20,1,129,10,6,21,1,17,88,1,152,29,18,23,196,4,4,1,1,6,2,114,14,8,2,101,1,9,95,1,1,16,1,193,2,5,7,1,1,9,56,1,14,2,1,148,184,41,1,6,2,57,47,27,5,2,25,202,48,2,4,77,9,2,22,3,18,22,1,96,1,11,83,8,150,211,162,90,12,1,1,1,44,9,39,143,116,3,1,126,81,4,2,4,49,8,106,86,4,1,2,1,16,19,17,2,1,2,18,1,96,59,113,7,11,2,106,6,4,3,2,63,1,52,4,1,11,181,3,17,3,1,11,118,67,5,1,1,60,137,2,201,83,20,6,67,102,15,136,6,5,54,81,30,36,75,22,2,5,1,56,4,34,84,22,6,4,2,1,2,4,2,159,10,1,2,18,3,7,121,1,21,63,17,38,100,3,1,1,12,74,41,186,146,140,8,3,12,34,23,33,157,162,3,4,1,151,7,30,1,123,7,2,123,7,1,11,1,68,2,113,4,1,44,3,23,158,1,1,85,4,95,1,6,66,14,51,12,16,11,33,1,1,38,1,66,19,163,6,119,2,3,25,2,1,3,43,88,44,205,47,190,1,109,4,51,103,5,38,6,19,3,32,30,59,14,31,2,36,156,39,1,125,43,4,6,5,5,4,1,2,6,1,90,191,60,35,3,206,13,135,11,3,26,26,41,5,109,48,2,43,87,4,6,6,2,1,1,32,127,18,4,38,43,9,1,4,172,109,1,2,2,54,138,13,9,44,11,23,50,2,1,78,63,25,7,73,2,27,134,12,2,11,6,135,4,5,85,8,16,4,69,144,3,25,14,5,145,3,6,34,1,10,2,2,76,4,46,3,9,2,1,3,7,2,81,53,1,4,44,172,1,46,1,43,4,8,9,49,14,35,2,1,2,99,125,6,139,68,33,1,1,4,163,41,58,4,23,15,33,11,213,14,17,10,16,43,3,3,1,14,2,14,2,3,9,72,5,1,1,43,2,122,1,2,17,29,20,12,4,1,86,64,12,32,38,15,10,32,9,1,30,4,2,94,7,111,88,61,96,2,2,127,24,92,1,171,2,32,33,5,1,7,1,101,2,37,19,1,34,112,10,151,3,1,15,21,1,50,7,10,1,10,65,17,52,7,20,3,42,1,8,5,26,11,53,9,9,3,2,160,56,2,169,14,50,40,27,32,4,1,23,190,1,1,88,13,4,13,1,14,4,77,185,3,55,134,5,35,2,123,97,48,1,70,7,3,6,10,1,3,17,1,67,13,10,149,5,6,3,2,15,15,147,111,78,9,33,95,2,23,53,83,9,74,64,57,175,89,21,2,10,13,1,1,164,1,45,23,6,1,3,46,7,65,74,13,40,13,1,7,3,14,13,1,201,157,16,90,14,128,7,2,23,1,1,56,28,103,1,66,21,11,2,227,14,2,176,18,18,1,13,138,2,89,1,1,34,81,6,1,139,2,27,1,33,73,5,1,56,8,1,3,8,29,2,81,70,177,33,32,11,1,60,2,15,99,12,19,99,13,19,7,135,12,46,46,12,35,4,112,6,3,1,7,1,11,1,2,14,1,1,14,26,69,14,1,1,59,5,10,11,1,3,3,3,28,7,94,18,5,48,6,2,1,39,1,9,132,53,180,3,102,9,106,21,5,4,93,4,1,2,3,11,108,1,118,113,23,35,20,115,1,157,13,5,5,18,20,183,20,84,44,6,5,2,2,2,1,37,78,87,1,3,5,35,77,7,29,101,9,4,15,103,1,19,8,4,10,1,39,4,4,2,33,83,84,14,43,1,12,3,18,3,2,25,76,6,1,8,2,170,69,1,4,6,4,3,30,96,24,50,23,1,43,59,15,5,3,14,2,69,24,4,2,139,3,11,6,6,6,107,1,35,9,58,49,5,1,201,161,1,23,65,151,24,3,20,11,56,20,65,81,10,2,16,149,3,32,10,3,22,4,1,1,78,102,15,4,1,5,8,8,7,11,23,4,1,8,4,110,190,128,19,29,31,5,47,24,3,36,13,6,3,7,1,2,115,5,4,119,137,4,1,2,2,7,15,1,1,10,55,8,19,11,1,3,1,117,29,1,24,49,187,31,70,3,5,104,11,4,2,38,142,4,1,1,2,2,207,95,93,46,18,5],"r":[6,15,-12,-14,-7,18,-27,-18,19,1,7,-10,11,-6,13,-4,-14,-2,18,12,-18,-11,0,13,-9,-5,1,6,5,13,-4,-11,15,-15,-14,8,11,1,-7,-13,-2,10,-11,1,6,-10,11,-13,4,14,25,8,6,7,-8,-14,16,9,12,14,10,15,6,8,-4,-16,9,12,-9,4,0,-18,3,7,-2,24,17,15,20,1,-4,4,-13,11,7,3,22,-14,15,-5,-12,-16,14,-7,27,10,2,22,15,7,-3,16,-11,-1,17,6,18,-16,-6,27,2,-3,-2,14,5,-5,9,6,-1,16,-18,4,-15,-12,-17,-25,-2,8,-4,2,-3,15,22,-9,-14,-18,-6,0,-4,5,-14,14,-21,-5,-4,16,7,-14,-1,13,2,9,-8,-15,12,5,10,-9,0,-21,-7,1,10,9,-8,-13,17,3,-18,-4,-10,14,20,5,16,10,-24,3,6,21,-18,-14,5,-16,2,-3,-4,-6,1,14,-13,-8,2,16,13,0,7,11,-2,5,10,18,14,2,-3,-5,16,14,-11,1,16,-7,-17,-1,15,19,-9,10,-10,-19,-1,-4,11,-9,13,-23,6,1,-9,-13,-1,-11,4,-22,1,-18,-13,19,8,-11,14,6,22,-20,-2,0,-8,10,1,5,-13,-18,19,9,-21,-1,-8,6,-6,4,24,15,-7,7,-8,11,12,8,6,3,-4,17,-10,-17,-14,-22,-5,-7,-1,21,8,-16,-4,17,10,-11,-17,16,12,-4,7,19,2,-3,13,15,-21,4,25,-14,7,10,-24,-2,-7,5,2,4,1,21,-13,10,-10,-1,18,-2,-19,-23,-16,11,10,-21,8,-9,12,-20,0,21,6,-4,-5,18,17,-9,14,-15,21,16,-11,7,-14,-2,-1,13,-22,23,-14,4,-8,1,-1,-22,15,-14,-7,-6,24,22,-8,9,-7,-1,17,-10,5,10,-21,-7,6,-1,-6,-17,-10,0,-5,14,-10,3,16,9,-18,11,-5,12,-23,-12,10,-18,12,5,-2,3,-23,-22,-6,2,-3,-2,5,12,13,14,19,15,-20,-2,-4,-1,16,-5,-14,9,2,-3,1,-15,4,-13,0,-11,12,18,-18,-9,13,3,8,18,0,-4,20,10,6,-17,13,5,1,12,-12,-13,-9,25,-12,7,2,-3,1,-4,8,-6,-12,-11,-7,0,-8,6,-6,17,-10,-3,-6,-5,-7,15,6,-4,-24,-5,7,12,13,-15,-10,-8,-9,9,-17,-5,10,-15,-4,11,18,9,-16,-15,1,-22,-1,-4,15,11,-2,-9,3,19,9,-17,20,3,15,12,21,6,7,10,-8,-11,-25,3,-20,0,-3,-1,2,14,7,19,9,18,4,16,10,2,-3,12,-7,-14,-8,0,4,12,-17,-20,2,3,-3,-18,-1,9,12,1,15,-13,-12,8,18,-4,-17,-14,-9,5,3,2,-3,-6,-1,-12,-14,20,-9,18,7,-1,-7,-20,-20,-5,9,18,17,-18,-10,10,2,-3,-16,4,-15,2,5,-1,11,-5,-24,-11,14,-25,-8,-9,-7,-18,16,-15,3,19,13,11,17,-10,20,-8,-18,-14,9,-2,-17,-9,1,-21,14,2,-3,16,12,5,8,4,-17,0,-8,14,3,9,-7,16,-2,6,10,-10,9,4,1,-1,-13,18,-16,-5,7,-7,9,3,-8,-9,2,-17,-16,-20,20,-10,3,-16,5,21,6,-14,-18,3,-20,-12,2,14,-3,-2,15,-17,-17,16,-4,12,2,-3,-6,1,-19,-13,5,-8,-12,2,-3,9,-2,-19,-5,-19,11,-1,-6,-9,6,-4,-15,-23,3,-22,10,19,-7,17,-10,-9,-21,-4,-5,-24,17,-10,-22,-9,19,18,-7,-15,-12,13,12,2,-3,20,17,-10,21,10,8,4,-8,-6,6,-11,1,-12,-13,-2,10,-7,-8,0,8,-2,22,-5,17,-10,-8,-6,-4,-16,7,12,-9,-14,5,-15,6,23,-2,0,-7,-16,-1,7,-17,18,15,17,-10,8,-22,-17,-15,9,-2,10,-8,14,-1,15,3,-14,16,13,-7,-12,20,0,-11,-19,-1,-2,-11,17,-4,-10,21,-20,11,-6,-12,-18,1,-11,-17,25,7,2,-3,0,3,12,-6,-5,9,11,6,-15,-12,8,17,-10,-2,-5,3,-3,-1,2,-9,-6,-15,20,-7,8,4,-20,17,7,-10,9,-12,-7,-5,3,2,5,-3,-7,17,11,-10,16,15,-13,9,4,-16,-6,0,7,-2,-6,-15,-9,17,3,-10,-4,12,5,0,-27,-8,22,-5,2,-3,3,-2,-16,0,-12,14,16,2,-3,-1,-2,-4,-6,-17,5,13,-2,-7,4,10,-11,2,-3,-8,0,14,-10,-9,13,-5,16,-11,18,1,-19,-16,5,-15,9,-9,-17,17,21,1,10,0,-13,24,11,-9,-4,6,-12,-16,8,3,11,-2,12,-8,-12,6,-6,8,-12,-19,1,-8,-13,7,-6,2,-3,13,-1,5,-5,0,10,-6,-17,12,-8,15,-15,4,-19,-5,9,11,5,1,12,4,-17,-5,-15,-26,15,14,18,-1,16,-15,3,-17,-9,4,-7,-4,-12,0,11,6,-16,17,-10,13,-6,-18,-16,18,2,4,0,-20,1,-7,12,-11,-13,-5,18,-22,10,0,1,-13,-8,-10,19,-1,21,-15,-20,11,0,15,1,-2,-16,-13,-19,4,6,-11,-7,9,-19,-18,17,-17,22,21,6,-16,8,-2,-7,3,11,18,20,-19,-4,-10,5,4,9,-14,0,-7,15,8,-11,7,-2,-10,9,11,2,-3,-7,22,-12,-1,-20,15,3,-19,11,-10,14,20,-21,7,16,-6,3,11,10,-2,-21,4,20,14,16,0,2,-3,13,-5,8,-2,-12,-23,-9,-22,-15,2,-3,4,23,9,-2,-6,21,1,-13,-25,4,7,-14,22,-5,4,-14,3,-13,11,-9,-7,12,20,6,-15,-14,-6,-8,-10,-16,-9,-11,-12,19,-22,-16,-1,-5,2,-3,0,-12,-11,-6,12,-8,-4,-12,-6,4,-5,-2,15,8,-8,5,-15,-11,8,-4,-6,0,-5,-9,-19,28,14,1,-16,-17,16,-15,17,25,7,-5,5,10,12,14,7,-11,0,-15,2,-4,-3,19,10,7,8,-8,13,11,0,21,-18,-12,-20,-14,0,5,1,12,7,9,8,-13,-11,-9,-6,13,21,19,-14,0,-5,29,1,6,-13,-7,12,7,20,4,-15,17,9,-10,11,-4,-1,8,6,-8,13,2,-3,-4,-16,3,-7,-4,-23,-11,17,-10,1,15,-13,7,-7,19,14,-2,-17,-11,16,-1,17,-10,10,18,11,9,2,-3,0,8,-11,19,5,-16,4,-13,15,6,5,10,-19,3,-18,-2,8,22,-21,7,5,4,-2,8,12,-9,-7,9,8,4,-3,2,-10,17,-19,7,-11,13,15,5,-16,-12,-14,13,4,7,0,9,-16,7,-6,1,-21,-1,1,-1,-14,-8,5,-13,11,-9,-16,-2,-12,-1,-5,18,-21,3,-4,8,1,6,-18,-13,-15,-19,-12,6,-6,13,-7,-4,-17,-18,-19,-10,-6,2,-3,24,6,7,-5,1,5,-13,-14,-8,-19,10,13,-15,4,-5,14,16,15,7,-14,6,11,15,1,0,-12,-13,-2,-20,-17,-16,-9,14,-11,9,5,-6,12,24,19,-24,6,13,-21,12,3,0,-5,5,20,15,1,-11,4,-13,0,5,-19,-8,17,-20,14,-1,8,5,2,-3,13],"q":[-7,-6,18,4,10,-15,25,-1,-14,-17,-4,10,-5,18,-9,1,11,-18,-12,-20,21,15,-8,-3,-11,18,-9,-17,12,3,5,6,-7,18,0,-14,-2,-3,14,-3,10,1,13,3,-9,14,-10,3,-5,-16,-14,15,-3,-14,-11,-6,-16,-15,2,4,5,-17,3,6,7,-5,-12,9,22,-2,18,23,-15,15,14,-18,-21,-9,-15,12,19,-10,12,-8,6,-12,-2,-7,-3,-18,10,-2,0,-13,-15,7,-15,-10,3,13,-15,0,8,1,-13,12,2,-10,10,-12,-12,-12,-21,-6,-4,10,-20,-22,5,-6,1,-8,10,14,22,18,-13,8,-16,17,17,12,-8,-12,-9,5,14,-18,4,16,-3,-7,12,14,11,-7,8,3,7,-4,-20,2,-15,14,-1,-14,-16,17,10,26,-11,-4,4,9,-12,-4,-11,2,7,0,-11,-17,2,15,-17,11,5,9,-4,-16,19,12,6,18,2,2,-6,-13,16,-9,16,17,20,-9,-14,14,-19,-18,-11,13,0,-1,-3,9,9,-13,-3,3,-5,-14,3,22,17,-16,-4,-5,2,-6,22,18,4,-7,10,20,6,12,-14,15,9,15,11,-2,-18,5,6,4,6,-2,-5,-10,12,15,-18,17,22,-13,2,-7,13,8,13,11,-10,-1,16,0,20,6,-11,10,-11,-14,-15,-5,9,-23,1,-2,13,-1,-9,-15,-15,2,-4,7,-11,-12,-6,-7,-10,10,-3,-12,-17,-8,9,-24,5,3,-2,-8,-1,-1,8,6,15,14,-10,16,-10,-9,11,-15,17,-19,21,-23,8,-17,8,-3,17,-7,1,-12,10,-4,14,-13,3,13,-8,-1,7,9,-11,-9,8,12,22,5,-20,21,-4,22,-3,-4,18,-8,15,17,-17,-19,4,-14,6,-13,-1,-19,-9,11,8,13,2,-15,-15,-13,21,1,20,-3,2,2,-5,-22,8,9,-19,3,-12,-1,20,22,-15,-14,9,1,-14,5,-3,-11,-12,-16,6,17,-24,3,4,-2,2,5,13,24,17,1,1,20,-10,11,-5,6,-18,-19,-1,9,-4,12,6,17,8,7,5,5,-5,17,-11,-5,-15,10,0,-16,12,1,-2,7,-18,4,-12,16,7,-4,-5,23,-10,-8,-2,-6,2,-2,5,-18,20,-18,7,7,-10,-14,10,2,9,14,-1,17,1,-2,20,-1,-1,19,9,2,21,-5,-10,15,12,20,10,-7,-8,2,21,5,7,-16,1,9,-14,20,6,-15,-6,4,22,9,-8,3,-4,13,-2,-12,-1,19,-16,-21,11,5,-16,4,-10,-17,-14,-8,14,6,7,-13,17,11,1,2,-16,16,-16,-19,-23,-13,0,-7,-15,-19,13,4,4,-9,23,-5,19,9,-12,-3,7,5,11,0,11,16,-14,-6,3,18,-8,18,-1,-13,-17,8,19,-2,4,-18,-6,0,0,-1,15,21,-10,-6,11,-9,-13,6,1,7,25,-1,-7,-3,1,15,1,8,-6,-6,17,-20,-1,24,10,13,2,21,16,-11,-5,9,4,0,5,6,-5,21,-7,-11,-18,9,5,5,-7,11,13,-8,-17,1,4,-6,-18,18,-2,-7,-7,-2,-24,14,-11,2,11,-1,0,-10,-17,-9,7,-10,5,-18,-19,7,-3,9,10,8,10,-22,2,23,-11,19,3,-9,-6,-7,-17,0,20,4,-9,19,-3,9,-21,-19,10,18,8,3,11,1,-9,-8,-9,7,-18,24,-6,-8,-5,-4,-3,-3,1,14,2,14,-13,-7,5,3,3,12,19,20,1,9,-1,-19,5,-9,14,-2,1,18,12,6,-5,-15,4,-16,-16,-3,10,-10,5,8,4,4,13,3,-12,-4,11,5,7,-13,-14,12,12,-22,11,11,-5,-2,-15,-1,-9,7,-21,17,-13,19,-13,-16,-10,0,-3,1,-12,4,-1,7,0,0,3,19,-8,-1,-15,6,12,10,-11,7,-13,-18,11,5,-6,21,-5,-12,-3,-14,-21,-6,-6,17,8,3,19,-4,0,-8,12,-18,-2,-13,-4,14,-18,-11,-7,4,-4,7,2,21,-10,-6,20,-7,18,-7,-8,3,1,4,11,-2,-11,9,12,-20,-20,-4,-4,19,16,8,11,4,-14,5,-11,4,0,2,-17,-17,-7,11,-14,16,-8,16,-4,0,11,-14,-9,9,1,12,-9,2,-9,6,-6,-3,0,15,-14,-15,-14,3,-3,7,-3,-23,-11,22,13,5,1,-6,-16,9,-17,24,0,16,3,6,3,-18,-19,-12,4,14,-4,5,-6,15,15,13,-9,5,11,-7,-21,-21,6,6,18,-3,10,-7,-4,17,-15,3,12,7,-18,-1,13,13,16,0,-13,12,15,-12,-7,-13,21,-19,-15,5,7,-20,-7,8,6,16,-22,-18,-12,10,-6,-12,-17,-16,13,14,-15,-9,19,-1,8,4,12,-5,15,-3,-12,-9,21,3,7,17,6,17,-1,-3,8,8,-20,-18,2,-9,-7,14,3,15,-2,13,-15,-9,-16,19,-3,-19,0,9,-20,-10,4,6,3,-3,16,-12,-11,-5,10,-11,3,-19,13,8,11,-4,-13,12,-17,-6,-20,4,-4,-4,2,12,10,11,-2,-19,0,-9,6,2,16,-8,1,2,12,-10,18,-13,-3,20,20,8,16,1,14,-21,12,13,-7,3,-20,9,-4,0,9,4,-6,2,5,-14,-5,11,14,-14,8,-6,-13,9,-6,1,16,15,-5,-17,-8,-5,0,-11,15,-1,-7,-2,17,12,6,2,5,7,1,-14,6,-10,-9,-5,-5,13,-7,-4,-13,8,9,-2,-6,-3,13,-15,-2,20,5,-15,-4,-10,3,-11,15,9,-17,-10,-12,-12,-24,-2,-2,-1,-4,7,6,16,17,-5,10,-4,-10,-10,-9,-20,-8,13,16,-11,-1,-1,12,-3,7,2,-9,16,3,20,-8,21,12,-2,8,-18,-8,-1,16,9,-14,-5,8,-3,-10,4,15,-16,14,3,-11,-14,-8,-8,-4,6,11,15,10,-2,-15,13,6,12,15,8,-1,-16,-10,1,15,0,4,-12,13,16,6,-8,3,-14,2,23,12,-2,2,6,-19,-16,-16,13,5,-15,14,9,4,-6,-14,13,18,17,18,-6,-12,11,0,-8,1,-4,15,-15,22,8,-2,-1,6,7,1,-21,0,-18,-6,1,-7,18,8,5,-12,-7,21,13,8,-17,5,1,5,-5,-13,-6,-18,-4,8,-5,10,-5,-14,2,-12,-7,5,18,7,-18,-18,20,-4,10,-2,9,21,-9,-2,-2,7,1,7,-7,-10,-9,-1,-5,18,-3,-1,17,-10,-10,2,-13,6,14,10,10,8,-17,3,-3,-16,16,-14,19,5,7,4,9,-4,14,17,-2,-9,-14,5,-17,11,15,-10,-3,-11,10,-8,-21,3,6,14,14,-8,-8,16,-9,12,-16,7,0,15,-5,1,4,13,-3,-19,-13,6,3,-5,-16,7,2,4,20,5,10,-6,4,8,14,13,-8,-2,9,-5,-11,19,-13,-1,12,11,-16,2,11,-5,15,-10,4,-2,0,18,21,10,9,6,18,-10,-13,-13,-10,11,12,-2,0,-7,0,7,14,13,-1,-6,-2,8,-10,1,1,-16,-22,19,0,-19,4,-6,-5,-8,24,18,10,14,8,-13,5,-4,-11,-17,-8,-15,-8,-4,9,-6,-7,11,-12,-11,-2,-8,-9,-11,0,-7,16,-19,-7,-10,-3,8,-13,-18,14,7,-1,-4,3,-11,-11,-17]}},"id":"411","type":"ColumnDataSource"},{"attributes":{"source":{"id":"411"}},"id":"414","type":"CDSView"},{"attributes":{},"id":"397","type":"PanTool"},{"attributes":{"glyph":{"id":"412"},"view":{"id":"414"},"data_source":{"id":"411"}},"id":"413","type":"GlyphRenderer"},{"attributes":{"visible":false,"axis":{"id":"404"},"dimension":1},"id":"408","type":"Grid"},{"attributes":{"visible":false,"axis":{"id":"403"},"dimension":0},"id":"407","type":"Grid"}],"root_ids":["399"]},"title":"Bokeh Application","defs":[],"version":"2.4.2"}};
+                                    const render_items = [{"roots":{"399":"89644242-35bc-466f-b331-f7f0e2bdf4ad"},"docid":"89644242-35bc-466f-b331-f7f0e2bdf4ad","root_ids":["399"]}];
+                                    root.Bokeh.embed.embed_items(docs_json, render_items);
+                                }
+                                if (root.Bokeh !== undefined) {
+                                  embed_document(root);
+                                } else {
+                                  let attempts = 0;
+                                  const timer = setInterval(function(root) {
+                                    if (root.Bokeh !== undefined) {
+                                      clearInterval(timer);
+                                      embed_document(root);
+                                    } else {
+                                      attempts++;
+                                      if (attempts > 100) {
+                                        clearInterval(timer);
+                                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                                      }
+                                    }
+                                  }, 10, root)
+                                }
+                              })(window);
+                              
+                        });
+                    };
+                    if (document.readyState != "loading") fn();
+                    else document.addEventListener("DOMContentLoaded", fn);
+                })();
+            }
+        ];
+    
+        function run_inline_js() {
+            for (let i = 0; i < inline_js.length; i++) {
+                inline_js[i].call(root, root.Bokeh);
+            }
+        }
+    
+        if (root._bokeh_is_loading === 0) {
+            console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+            run_inline_js();
+        } else {
+            load_libs(css_urls, js_urls, function() {
+            console.debug("Bokeh: BokehJS plotting callback run at", now());
+            run_inline_js();
+            });
+        }
+    }(window));
+</script>
+<hr/><p><em>This page was generated using <a href="https://github.com/johnnychen94/DemoCards.jl">DemoCards.jl</a> and <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 11 October 2022 10:03">Tuesday 11 October 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
