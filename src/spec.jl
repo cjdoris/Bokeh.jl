@@ -633,8 +633,10 @@ const PALETTE_GROUP_TAGS = Dict(
     "Blues" => ["continuous", "linear"],
     "Bokeh" => ["categorical"],
     "BrBG" => ["continuous", "diverging"],
+    "Bright" => ["continuous", "diverging"],
     "BuGn" => ["continuous", "linear"],
     "BuPu" => ["continuous", "linear"],
+    "BuRd" => ["continuous", "diverging"],
     "Category10" => ["categorical"],
     "Category20" => ["categorical"],
     "Category20b" => ["categorical"],
@@ -645,9 +647,14 @@ const PALETTE_GROUP_TAGS = Dict(
     "GnBu" => ["continuous", "linear"],
     "Greens" => ["continuous", "linear"],
     "Greys" => ["continuous", "linear"],
+    "HighContrast" => ["continuous", "diverging"],
     "Inferno" => ["continuous", "linear"],
+    "Iridescent" => ["continuous", "diverging"],
     "Julia" => ["categorical"],
+    "Light" => ["continuous", "diverging"],
     "Magma" => ["continuous", "linear"],
+    "MediumContrast" => ["continuous", "diverging"],
+    "Muted" => ["continuous", "diverging"],
     "OrRd" => ["continuous", "linear"],
     "Oranges" => ["continuous", "linear"],
     "PRGn" => ["continuous", "diverging"],
@@ -671,7 +678,12 @@ const PALETTE_GROUP_TAGS = Dict(
     "Set2" => ["categorical"],
     "Set3" => ["categorical"],
     "Spectral" => ["continuous", "diverging"],
+    "Sunset" => ["continuous", "diverging"],
+    "TolPRGn" => ["continuous", "diverging"],
+    "TolRainbow" => ["continuous", "diverging"],
+    "TolYlOrBr" => ["continuous", "diverging"],
     "Turbo" => ["continuous", "diverging"],
+    "Vibrant" => ["continuous", "diverging"],
     "Viridis" => ["continuous", "linear"],
     "YlGn" => ["continuous", "linear"],
     "YlGnBu" => ["continuous", "linear"],
@@ -709,7 +721,11 @@ function generate_palettes()
     palette_groups = Dict(String(k)=>Dict(parse(Int,String(k))=>collect(String,v) for (k,v) in v) for (k,v) in data["grouped"])
     palette_groups["Julia"] = Dict(2=>Julia2, 3=>Julia3, 4=>Julia4)
     # ensure the tags have full coverage
-    @assert keys(palette_groups) == keys(PALETTE_GROUP_TAGS)
+    if keys(palette_groups) != keys(PALETTE_GROUP_TAGS)
+        @show setdiff(keys(palette_groups), keys(PALETTE_GROUP_TAGS))
+        @show setdiff(keys(PALETTE_GROUP_TAGS), keys(palette_groups))
+        @assert false
+    end
     # interpolate 256-color versions of continuous palettes
     for (pg, tags) in PALETTE_GROUP_TAGS
         "continuous" in tags || continue
