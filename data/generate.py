@@ -1,5 +1,5 @@
 import bokeh
-assert bokeh.__version__ == '2.4.3'
+assert bokeh.__version__ == '3.0.3'
 
 import importlib
 import json

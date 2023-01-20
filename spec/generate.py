@@ -10,7 +10,7 @@
 # modified from https://github.com/bokeh/bokeh/blob/2.4.2/scripts/spec.py
 
 import bokeh
-assert bokeh.__version__ == '2.4.3'
+assert bokeh.__version__ == '3.0.3'
 
 import json
 import inspect
@@ -21,6 +21,7 @@ import docutils.utils
 from bokeh.core.property.bases import UndefinedType
 from bokeh.core.property.descriptors import AliasPropertyDescriptor
 from bokeh.core.property_mixins import HasProps
+from bokeh.core.serialization import Serializer
 from bokeh.model import Model
 
 import bokeh.plotting  # so that Figure is included when enumerating model types
@@ -69,9 +70,9 @@ def _walkdoc(doc):
 def _name(model):
     return 'Model' if model is Model else model.__qualified_model__
 
-def _proto(obj, defaults=False):
+def _proto(obj):
     t = type(obj)
-    x = obj.to_json(defaults)
+    x = obj.to_serializable(Serializer())
     del x['id']  # id is not informative, by excluding it we can find more inherited props
     x['__type__'] = _name(t)
     return json.dumps(x, sort_keys=True, indent=None)
@@ -79,6 +80,7 @@ def _proto(obj, defaults=False):
 data = []
 for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.items())):
     assert _name(m) == name
+    print('Model:', name)
     item = {
         'name'  : _name(m),
         'bases' : [_name(t) for t in m.__bases__ if issubclass(t, Model)],
@@ -103,6 +105,7 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
         for prop_name in m.__properties__: # __properties__ does not include inherited props
             if prop_name in props_names:
                 continue
+            print('Property:', prop_name)
             descriptor = m.lookup(prop_name)
             if isinstance(descriptor, AliasPropertyDescriptor):
                 continue
@@ -124,11 +127,19 @@ for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.it
             if isinstance(default, Model):
                 default = _proto(default)
 
-            if isinstance(default, (list, tuple)) and any(isinstance(x, Model) for x in default):
+            if isinstance(default, (list, tuple, set)) and any(isinstance(x, Model) for x in default):
                 default = [_proto(x) for x in default]
 
             if isinstance(default, dict) and any(isinstance(x, Model) for x in default.values()):
                 default = { k: _proto(v) for k, v in default.items() }
+
+            if isinstance(default, (bokeh.core.property.vectorization.Field, bokeh.core.property.vectorization.Value)):
+                default = default.to_serializable(Serializer())
+
+            if isinstance(default, (list, tuple, set)):
+                default = list(default)
+
+            assert default is None or isinstance(default, (str, bool, float, list, int, dict))
 
             detail['default'] = default
 
