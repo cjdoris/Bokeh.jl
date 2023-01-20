@@ -12,7 +12,7 @@ import Markdown
 import Tables
 import UUIDs
 
-const BOKEH_VERSION = v"2.4.2"
+const BOKEH_VERSION = v"2.4.3"
 const SRC_DIR = @__DIR__
 
 export Field, Value, Document, Theme

@@ -10,7 +10,7 @@
 # modified from https://github.com/bokeh/bokeh/blob/2.4.2/scripts/spec.py
 
 import bokeh
-assert bokeh.__version__ == '2.4.2'
+assert bokeh.__version__ == '2.4.3'
 
 import json
 import inspect
