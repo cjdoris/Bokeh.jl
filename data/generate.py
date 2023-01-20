@@ -1,3 +1,6 @@
+import bokeh
+assert bokeh.__version__ == '2.4.3'
+
 import importlib
 import json
 import pandas as pd
@@ -16,8 +19,16 @@ def save_df(data, name, datecols=[], timecols=[], datetimecols=[], numberlistcol
         if col['name'] in datecols:
             assert col['type'] == 'string'
             col['type'] = 'date'
-            assert all(x.endswith('T00:00:00.000Z') for x in col['data'])
-            col['data'] = [x[:-14] for x in col['data']]
+            newdata = []
+            for x in col['data']:
+                if x.endswith('T00:00:00.000Z'):
+                    newdata.append(x[:-14])
+                elif x.endswith('T00:00:00.000'):
+                    newdata.append(x[:-13])
+                else:
+                    print(x)
+                    assert False
+            col['data'] = newdata
         elif col['name'] in timecols:
             assert col['type'] == 'string'
             col['type'] = 'time'

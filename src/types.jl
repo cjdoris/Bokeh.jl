@@ -401,7 +401,7 @@ function validate_color(x; detail)
         else
             error()
         end
-        x = "#$(Colors.hex(c))"
+        x = "#$(Colors.hex(c, :RRGGBBAA))"
     else
         x = get(NAMED_COLORS, x, x)
     end
