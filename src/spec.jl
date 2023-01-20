@@ -1,5 +1,7 @@
 function load_spec(name)
-    open(JSON3.read, joinpath(dirname(@__DIR__), "spec", "$name.json"))
+    open(joinpath(dirname(@__DIR__), "spec", "$name.json")) do io
+        JSON3.read(io; allow_inf=true)
+    end
 end
 
 function parse_prop_type_expr(ex, ts)
@@ -243,7 +245,7 @@ end
 
 function parse_prop_default_modelinstance(x, mts)
     # parse the JSON
-    j = try; JSON3.read(x); catch; return; end
+    j = try; JSON3.read(x; allow_inf=true); catch; return; end
     j isa JSON3.Object || return
     # skip anything with nested models
     occursin("\"id\":", x) && return
@@ -479,6 +481,10 @@ function generate_model_types()
 
     # put the models in dependency order
     order = flatten_dag(Dict(k=>collect(v.bases) for (k,v) in mspecs))
+    if order[1] != "Model"
+        @show order
+        @show "Model" in order
+    end
     @assert order[1] == "Model"
     @assert length(order) == length(mspecs)
 

@@ -78,7 +78,7 @@ def _proto(obj):
     return json.dumps(x, sort_keys=True, indent=None)
 
 data = []
-for name, m in sorted([("Model", Model)] + list(Model.model_class_reverse_map.items())):
+for name, m in sorted(Model.model_class_reverse_map.items()):
     assert _name(m) == name
     print('Model:', name)
     item = {
