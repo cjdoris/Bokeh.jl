@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Linked Panning · Bokeh</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../democards/listtheme.css" rel="stylesheet" type="text/css"/><link href="../../../assets/customstyle.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.png" alt="Bokeh logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">Bokeh</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">Home</a></li><li><a class="tocitem" href="../../">Gallery</a></li><li><a class="tocitem" href="../../../guide/">User Guide</a></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../../../plotting/">Plotting</a></li><li><a class="tocitem" href="../../../misc/">Settings, Theming &amp; Backends</a></li><li><a class="tocitem" href="../../../interaction/">Interaction</a></li><li><a class="tocitem" href="../../../data/">Sample Data</a></li><li><a class="tocitem" href="../../../models/">Models</a></li><li><a class="tocitem" href="../../../colors/">Named Colors</a></li><li><a class="tocitem" href="../../../palettes/">Palettes</a></li><li><a class="tocitem" href="../../../themes/">Themes</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Linked Panning</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Linked Panning</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cjdoris/Bokeh.jl/blob/main/docs/gallery/Interactions/linked_panning.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="linked_panning"><a class="docs-heading-anchor" href="#linked_panning">Linked Panning</a><a id="linked_panning-1"></a><a class="docs-heading-anchor-permalink" href="#linked_panning" title="Permalink"></a></h1><p><a href="../linked_panning.jl"><img src="https://img.shields.io/badge/download-julia-brightgreen.svg" alt="Source code"/></a></p><p>By setting the same range in different plots, when one plot is panned then the others are panned also.</p><p>The second plot shares both its <code>x_range</code> and <code>y_range</code> with the first plot, so that panning is linked in both the x- and y-axis. The third plot only shares <code>x_range</code> so that only the x-axis is linked and its y-axis is independent.</p><p>Reproduces the plot from <a href="https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/linking.html#linked-panning">https://docs.bokeh.org/en/2.4.2/docs/user_guide/interaction/linking.html#linked-panning</a>.</p><pre><code class="language-julia hljs">using Bokeh
+
+x = 0:10
+y0 = x
+y1 = [10-xx for xx in x]
+y2 = [abs(xx-5) for xx in x]
+
+s1 = figure(title=nothing)
+plot!(s1, Scatter; x, y=y0, size=10, color=&quot;navy&quot;, alpha=0.5, marker=&quot;circle&quot;)
+
+s2 = figure(x_range=s1.x_range, y_range=s1.y_range, title=nothing)
+plot!(s2, Scatter; x, y=y1, size=10, color=&quot;firebrick&quot;, alpha=0.5, marker=&quot;triangle&quot;)
+
+s3 = figure(x_range=s1.x_range, title=nothing)
+plot!(s3, Scatter; x, y=y2, size=10, color=&quot;olive&quot;, alpha=0.5, marker=&quot;square&quot;)
+
+grid([s1 s2 s3], merge_tools=true, toolbar_location=nothing, item_width=250, item_height=250)</code></pre><script id="eb0ac517-09ee-44f5-94ff-e276650a482c">
+    (function(root) {
+        function now() {
+            return new Date();
+        }
+    
+        const force = false;
+    
+        if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+            root._bokeh_onload_callbacks = [];
+            root._bokeh_is_loading = undefined;
+        }
+    
+        
+    
+        const element = document.getElementById("eb0ac517-09ee-44f5-94ff-e276650a482c");
+        if (element == null) {
+            console.warn("Bokeh: autoload.js configured with elementid 'eb0ac517-09ee-44f5-94ff-e276650a482c' but no matching script tag was found.")
+        }
+    
+        function run_callbacks() {
+            try {
+            root._bokeh_onload_callbacks.forEach(function(callback) {
+                if (callback != null)
+                callback();
+            });
+            } finally {
+            delete root._bokeh_onload_callbacks
+            }
+            console.debug("Bokeh: all callbacks have finished");
+        }
+    
+        function load_libs(css_urls, js_urls, callback) {
+            if (css_urls == null) css_urls = [];
+            if (js_urls == null) js_urls = [];
+    
+            root._bokeh_onload_callbacks.push(callback);
+            if (root._bokeh_is_loading > 0) {
+                console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+                return null;
+            }
+            if (js_urls == null || js_urls.length === 0) {
+                run_callbacks();
+                return null;
+            }
+            console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+            root._bokeh_is_loading = css_urls.length + js_urls.length;
+    
+            function on_load() {
+                root._bokeh_is_loading--;
+                if (root._bokeh_is_loading === 0) {
+                    console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+                    run_callbacks()
+                }
+            }
+    
+            function on_error(url) {
+                console.error("failed to load " + url);
+            }
+    
+            for (let i = 0; i < css_urls.length; i++) {
+                const url = css_urls[i];
+                const element = document.createElement("link");
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.rel = "stylesheet";
+                element.type = "text/css";
+                element.href = url;
+                console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+                document.body.appendChild(element);
+            }
+    
+            for (let i = 0; i < js_urls.length; i++) {
+                const url = js_urls[i];
+                const element = document.createElement('script');
+                element.onload = on_load;
+                element.onerror = on_error.bind(null, url);
+                element.async = false;
+                element.src = url;
+                console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+                document.head.appendChild(element);
+            }
+        };
+    
+        function inject_raw_css(css) {
+            const element = document.createElement("style");
+            element.appendChild(document.createTextNode(css));
+            document.body.appendChild(element);
+        }
+    
+        const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.3.min.js","https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.3.min.js"];
+        const css_urls = [];
+    
+        const inline_js = [
+            function(Bokeh) {
+                (function() {
+                    const fn = function() {
+                        Bokeh.safely(function() {
+                            (function(root) {
+                                function embed_document(root) {
+                                    const docs_json = {"eb0ac517-09ee-44f5-94ff-e276650a482c":{"roots":{"references":[{"attributes":{"tools":[{"id":"717"},{"id":"718"},{"id":"719"},{"id":"720"},{"id":"721"},{"id":"722"}]},"id":"716","type":"Toolbar"},{"attributes":{},"id":"695","type":"LinearScale"},{"attributes":{"line_color":{"value":"#b22222"},"fill_alpha":{"value":0.5},"marker":{"value":"triangle"},"x":{"field":"x"},"line_alpha":{"value":0.5},"hatch_color":{"value":"#b22222"},"size":{"value":10.0},"fill_color":{"value":"#b22222"},"hatch_alpha":{"value":0.5},"y":{"field":"y"}},"id":"724","type":"Scatter"},{"attributes":{"axis":{"id":"711"},"dimension":1},"id":"715","type":"Grid"},{"attributes":{},"id":"729","type":"LinearAxis"},{"attributes":{},"id":"728","type":"DataRange1d"},{"attributes":{"data":{"x":[0,1,2,3,4,5,6,7,8,9,10],"y":[0,1,2,3,4,5,6,7,8,9,10]}},"id":"705","type":"ColumnDataSource"},{"attributes":{"axis":{"id":"729"},"dimension":0},"id":"733","type":"Grid"},{"attributes":{"glyph":{"id":"743"},"view":{"id":"745"},"data_source":{"id":"742"}},"id":"744","type":"GlyphRenderer"},{"attributes":{},"id":"722","type":"HelpTool"},{"attributes":{"tools":[{"id":"699"},{"id":"700"},{"id":"701"},{"id":"702"},{"id":"703"},{"id":"704"}]},"id":"698","type":"Toolbar"},{"attributes":{},"id":"721","type":"ResetTool"},{"attributes":{"line_color":{"value":"#000080"},"fill_alpha":{"value":0.5},"marker":{"value":"circle"},"x":{"field":"x"},"line_alpha":{"value":0.5},"hatch_color":{"value":"#000080"},"size":{"value":10.0},"fill_color":{"value":"#000080"},"hatch_alpha":{"value":0.5},"y":{"field":"y"}},"id":"706","type":"Scatter"},{"attributes":{"left":[{"id":"711"}],"toolbar_location":null,"below":[{"id":"710"}],"height":250,"center":[{"id":"714"},{"id":"715"}],"width":250,"renderers":[{"id":"725"}],"toolbar":{"id":"716"},"x_range":{"id":"690"},"y_range":{"id":"691"},"y_scale":{"id":"713"},"title":null,"x_scale":{"id":"712"}},"id":"709","subtype":"Figure","type":"Plot"},{"attributes":{"axis":{"id":"710"},"dimension":0},"id":"714","type":"Grid"},{"attributes":{},"id":"704","type":"HelpTool"},{"attributes":{"line_color":{"value":"#808000"},"fill_alpha":{"value":0.5},"marker":{"value":"square"},"x":{"field":"x"},"line_alpha":{"value":0.5},"hatch_color":{"value":"#808000"},"size":{"value":10.0},"fill_color":{"value":"#808000"},"hatch_alpha":{"value":0.5},"y":{"field":"y"}},"id":"743","type":"Scatter"},{"attributes":{},"id":"711","type":"LinearAxis"},{"attributes":{},"id":"730","type":"LinearAxis"},{"attributes":{},"id":"701","type":"WheelZoomTool"},{"attributes":{},"id":"719","type":"WheelZoomTool"},{"attributes":{},"id":"738","type":"WheelZoomTool"},{"attributes":{},"id":"699","type":"PanTool"},{"attributes":{"glyph":{"id":"706"},"view":{"id":"708"},"data_source":{"id":"705"}},"id":"707","type":"GlyphRenderer"},{"attributes":{"data":{"x":[0,1,2,3,4,5,6,7,8,9,10],"y":[5,4,3,2,1,0,1,2,3,4,5]}},"id":"742","type":"ColumnDataSource"},{"attributes":{},"id":"703","type":"ResetTool"},{"attributes":{},"id":"713","type":"LinearScale"},{"attributes":{},"id":"692","type":"LinearAxis"},{"attributes":{},"id":"718","type":"BoxZoomTool"},{"attributes":{},"id":"712","type":"LinearScale"},{"attributes":{},"id":"731","type":"LinearScale"},{"attributes":{"glyph":{"id":"724"},"view":{"id":"726"},"data_source":{"id":"723"}},"id":"725","type":"GlyphRenderer"},{"attributes":{},"id":"702","type":"SaveTool"},{"attributes":{"source":{"id":"705"}},"id":"708","type":"CDSView"},{"attributes":{},"id":"694","type":"LinearScale"},{"attributes":{"left":[{"id":"693"}],"toolbar_location":null,"below":[{"id":"692"}],"height":250,"center":[{"id":"696"},{"id":"697"}],"width":250,"renderers":[{"id":"707"}],"toolbar":{"id":"698"},"x_range":{"id":"690"},"y_range":{"id":"691"},"y_scale":{"id":"695"},"title":null,"x_scale":{"id":"694"}},"id":"689","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"739","type":"SaveTool"},{"attributes":{},"id":"693","type":"LinearAxis"},{"attributes":{"source":{"id":"723"}},"id":"726","type":"CDSView"},{"attributes":{"children":[[{"id":"689"},0,0,1,1],[{"id":"709"},0,1,1,1],[{"id":"727"},0,2,1,1]]},"id":"746","type":"GridBox"},{"attributes":{"axis":{"id":"730"},"dimension":1},"id":"734","type":"Grid"},{"attributes":{},"id":"717","type":"PanTool"},{"attributes":{},"id":"737","type":"BoxZoomTool"},{"attributes":{},"id":"740","type":"ResetTool"},{"attributes":{},"id":"690","type":"DataRange1d"},{"attributes":{},"id":"741","type":"HelpTool"},{"attributes":{"left":[{"id":"730"}],"toolbar_location":null,"below":[{"id":"729"}],"height":250,"center":[{"id":"733"},{"id":"734"}],"width":250,"renderers":[{"id":"744"}],"toolbar":{"id":"735"},"x_range":{"id":"690"},"y_range":{"id":"728"},"y_scale":{"id":"732"},"title":null,"x_scale":{"id":"731"}},"id":"727","subtype":"Figure","type":"Plot"},{"attributes":{},"id":"720","type":"SaveTool"},{"attributes":{},"id":"700","type":"BoxZoomTool"},{"attributes":{},"id":"691","type":"DataRange1d"},{"attributes":{"axis":{"id":"692"},"dimension":0},"id":"696","type":"Grid"},{"attributes":{"source":{"id":"742"}},"id":"745","type":"CDSView"},{"attributes":{"tools":[{"id":"736"},{"id":"737"},{"id":"738"},{"id":"739"},{"id":"740"},{"id":"741"}]},"id":"735","type":"Toolbar"},{"attributes":{"axis":{"id":"693"},"dimension":1},"id":"697","type":"Grid"},{"attributes":{},"id":"732","type":"LinearScale"},{"attributes":{},"id":"736","type":"PanTool"},{"attributes":{},"id":"710","type":"LinearAxis"},{"attributes":{"data":{"x":[0,1,2,3,4,5,6,7,8,9,10],"y":[10,9,8,7,6,5,4,3,2,1,0]}},"id":"723","type":"ColumnDataSource"}],"root_ids":["746"]},"title":"Bokeh Application","defs":[],"version":"2.4.3"}};
+                                    const render_items = [{"roots":{"746":"eb0ac517-09ee-44f5-94ff-e276650a482c"},"docid":"eb0ac517-09ee-44f5-94ff-e276650a482c","root_ids":["746"]}];
+                                    root.Bokeh.embed.embed_items(docs_json, render_items);
+                                }
+                                if (root.Bokeh !== undefined) {
+                                  embed_document(root);
+                                } else {
+                                  let attempts = 0;
+                                  const timer = setInterval(function(root) {
+                                    if (root.Bokeh !== undefined) {
+                                      clearInterval(timer);
+                                      embed_document(root);
+                                    } else {
+                                      attempts++;
+                                      if (attempts > 100) {
+                                        clearInterval(timer);
+                                        console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+                                      }
+                                    }
+                                  }, 10, root)
+                                }
+                              })(window);
+                              
+                        });
+                    };
+                    if (document.readyState != "loading") fn();
+                    else document.addEventListener("DOMContentLoaded", fn);
+                })();
+            }
+        ];
+    
+        function run_inline_js() {
+            for (let i = 0; i < inline_js.length; i++) {
+                inline_js[i].call(root, root.Bokeh);
+            }
+        }
+    
+        if (root._bokeh_is_loading === 0) {
+            console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+            run_inline_js();
+        } else {
+            load_libs(css_urls, js_urls, function() {
+            console.debug("Bokeh: BokehJS plotting callback run at", now());
+            run_inline_js();
+            });
+        }
+    }(window));
+</script>
+<hr/><p><em>This page was generated using <a href="https://github.com/johnnychen94/DemoCards.jl">DemoCards.jl</a> and <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 21 January 2023 22:56">Saturday 21 January 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
