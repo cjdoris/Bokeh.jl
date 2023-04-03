@@ -124,7 +124,8 @@ function doc_standalone_html(sdoc; autoload=true, title="Bokeh Plot", kw...)
     """
 end
 
-function Base.show(io::IO, ::MIME"text/html", doc::Document)
+function Base.show(io::IO, m::MIME"text/html", doc::Document)
+    setting(:display) === NullDisplayBackend() || throw(MethodError(show, (io, m, doc)))
     sdoc = serialize(doc)
     write(io, doc_inline_html(sdoc; autoload=true))
     return
@@ -133,4 +134,18 @@ end
 function Base.show(io::IO, m::MIME"text/html", x::ModelInstance)
     ismodelinstance(x, LayoutDOM) || throw(MethodError(show, (io, m, x)))
     show(io, m, Document(x))
+    return
+end
+
+function Base.show(io::IO, m::MIME"juliavscode/html", doc::Document)
+    setting(:display) === NullDisplayBackend() || throw(MethodError(show, (io, m, doc)))
+    sdoc = serialize(doc)
+    write(io, doc_standalone_html(sdoc; autoload=true))
+    return
+end
+
+function Base.show(io::IO, m::MIME"juliavscode/html", x::ModelInstance)
+    ismodelinstance(x, LayoutDOM) || throw(MethodError(show, (io, m, x)))
+    show(io, m, Document(x))
+    return
 end
