@@ -18,4 +18,3 @@ plot!(p, Image, image=[data], x=0, y=0, dw=10, dh=10, level="image", palette="Sp
 p
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

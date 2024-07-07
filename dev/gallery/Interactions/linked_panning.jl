@@ -17,4 +17,3 @@ plot!(s3, Scatter; x, y=y2, size=10, color="olive", alpha=0.5, marker="square")
 grid([s1 s2 s3], merge_tools=true, toolbar_location=nothing, item_width=250, item_height=250)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

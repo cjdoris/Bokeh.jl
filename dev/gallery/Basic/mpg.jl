@@ -38,4 +38,3 @@ p.outline_line_color = nothing
 p
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

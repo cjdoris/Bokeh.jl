@@ -25,4 +25,3 @@ js_on_change(slider, "value", callback)
 column(slider, fig)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

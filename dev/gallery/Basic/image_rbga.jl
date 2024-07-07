@@ -26,4 +26,3 @@ plot!(p, ImageRGBA, image=[img], x=0, y=0, dw=10, dh=10)
 p
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

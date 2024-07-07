@@ -9,4 +9,3 @@ js_link(slider, "value", r.glyph, "radius")
 column(p, slider)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

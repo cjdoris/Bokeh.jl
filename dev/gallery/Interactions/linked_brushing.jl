@@ -17,4 +17,3 @@ plot!(right, Scatter; x="x", y="y1", source)
 grid([left right], merge_tools=true, item_width=300, item_height=300)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-
