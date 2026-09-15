@@ -18,6 +18,7 @@ Colors = "0.12.8, 0.13"
 DefaultApplication = "1.1.0"
 JSON3 = "1.9.4"
 Tables = "1.7.0"
+UUIDs = "< 0.0.1, 1.6"
 julia = "1.6"
 
 [extras]
